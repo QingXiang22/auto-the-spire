@@ -14,7 +14,7 @@ Lantern在首次玩家侧开始加能量，BloodVial在首次玩家Late回复生
 | --- | --- | --- |
 | TC01 | Player 增加 Hp／MaxHp／Energy／MaxEnergy／TurnNumber／TurnOpen；开始战斗置 TurnNumber=0、Energy=0、Block=0、TurnOpen=false 后再发 BeforeCombatStart | 新周期从 0 回合 0 能量开始；监听器观察到的仍是已活跃状态；HP 不在开始战斗时重置 |
 | TC02 | BeginDevelopmentTurn 只在活跃战斗允许，先保存本侧Power开始量，再发BeforePlayerSideTurnStart并准备敌人招式；旧回合号>0才查询清格挡，随后AfterBlockCleared与能量重置／AfterEnergyReset，再增加编号、起手抽牌和三个玩家开始阶段／侧开始 | 第一回合保留开始战斗获得的格挡；第二回合开始时格挡先被清空、监听器再补格挡；能量在监听器之前重置 |
-| TC03 | BeginDevelopmentTurn 置 TurnOpen=true 并把同回合的再次开始拒绝；EndDevelopmentTurn 只在 TurnOpen 时允许，执行当前手牌结束流程、完整敌方阶段，再置TurnOpen=false；普通开发入口与下一次显式开始分开，正常动作的自动返回按正常Run接口验收 | 未开始回合不能结束；结束后不能重复结束；两次结束之间必须有一个开始；拒绝在守卫处发生且无状态变化 |
+| TC03 | BeginDevelopmentTurn 在开始阶段全部结束后置 TurnOpen=true 并把同回合的再次开始拒绝；EndDevelopmentTurn 只在 TurnOpen 时允许，先置TurnOpen=false，再执行当前手牌结束流程与完整敌方阶段；普通开发入口与下一次显式开始分开，正常动作的自动返回按正常Run接口验收 | 未开始回合不能结束；结束后不能重复结束；两次结束之间必须有一个开始；拒绝在守卫处发生且无状态变化 |
 | TC04 | Heal(owner, amount) 增加 Hp 并按 MaxHp 截断；不处理复活、治疗修正或死亡 | 满血回复不变；超过上限只到 MaxHp |
 | TC05 | GainEnergy(owner, amount) 增加 Energy，可超过 MaxEnergy；回合开始的重置仍按 MaxEnergy | Lantern 在 3 能量上限上得到 4 |
 | TC06 | 四个模板按持有者、DefinitionId、IsMelted 过滤，只调用本批资源操作；HappyFlower 用实例 Counter，跨战斗保留 | 无遗物／已移除／熔化／别的持有者不触发；两件同时持有各自触发一次 |

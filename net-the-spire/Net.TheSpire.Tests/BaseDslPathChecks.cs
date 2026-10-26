@@ -623,7 +623,7 @@ internal static class BaseDslPathChecks
                 Check.Equal(child.InstanceId, EntityValue(snapshot.Entities.Single(e => e.InstanceId == parent.InstanceId), "EventVisit.CombatVisit"), "parent retains actual child");
                 Check.Equal("150", Public(snapshot, "Enemy.Hp"), "real tier-two source enemy");
                 Check.False(snapshot.LegalActions.Any(a => a.ActionType is "net:action:base-spire:EndDevelopmentCombat" or "net:action:base-spire:Draw" or "net:action:base-spire:CloseDevelopmentEvent"), "cannot bypass real combat");
-                for (var turn = 1; turn <= 3; turn++) { Action("EndDevelopmentTurn"); if (turn < 3) Action("BeginDevelopmentTurn"); }
+                for (var turn = 1; turn <= 3; turn++) Action("EndTurn");
                 var finished = snapshot.Entities.Single(e => e.InstanceId == parent.InstanceId);
                 child = snapshot.Entities.Single(e => e.InstanceId == child.InstanceId);
                 Check.Equal("finished", EntityValue(finished, "EventVisit.Status"), "same parent finishes after timeout");
@@ -739,6 +739,9 @@ internal static class BaseDslPathChecks
                 }
                 void StepOpening(LegalActionDto candidate)
                 {
+                    var prior = snapshot.ObservationId;
+                    var endingTurn = candidate.ActionType == "net:action:base-spire:EndTurn";
+                    var priorTurn = endingTurn ? int.Parse(Public(snapshot, "Player.TurnNumber"), System.Globalization.CultureInfo.InvariantCulture) : 0;
                     var request = Request("normal-opening-" + ++stepNumber, Operation.Step,
                         ("session_id", WireValue.Str(sessionId)),
                         ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)),
@@ -746,6 +749,19 @@ internal static class BaseDslPathChecks
                     var first = Send(request); var repeated = Send(request);
                     Check.Equal(WireCanonical.Text(first.ToWire()), WireCanonical.Text(repeated.ToWire()), "same request repeats the cached result");
                     snapshot = Snapshot(Send(Request("normal-observe-" + stepNumber, Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                    Check.False(snapshot.LegalActions.Any(a => a.ActionType is "net:action:base-spire:BeginDevelopmentTurn" or "net:action:base-spire:EndDevelopmentTurn"), "normal flow exposes complete turns only");
+                    if (endingTurn)
+                    {
+                        Send(Request("normal-stale-end-" + stepNumber, Operation.Step, ("session_id", WireValue.Str(sessionId)),
+                            ("expected_observation_id", WireValue.Integer(prior)), ("candidate_id", WireValue.Str(candidate.CandidateId))), false);
+                        var afterStale = Snapshot(Send(Request("normal-after-stale-" + stepNumber, Operation.Observe, ("session_id", WireValue.Str(sessionId)))));
+                        Check.Equal(WireCanonical.Text(snapshot.ToWire()), WireCanonical.Text(afterStale.ToWire()), "cached and stale end requests cannot repeat the turn");
+                        if (PublicBool(snapshot, "Player.CombatActive"))
+                        {
+                            Check.Equal((priorTurn + 1).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Player.TurnNumber"), "one request advances one ordinary turn");
+                            Check.True(PublicBool(snapshot, "Player.TurnOpen"), "next manual turn is open at the returned boundary");
+                        }
+                    }
                 }
                 StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:StartNormalRun"));
                 Check.Equal("80", Public(snapshot, "Player.Hp"), "normal Ironclad source HP");
@@ -802,8 +818,7 @@ internal static class BaseDslPathChecks
                     {
                         var candidate = snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:PlayAttackFromHand")
                             ?? snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:PlayCardFromHand")
-                            ?? snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:EndDevelopmentTurn")
-                            ?? snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:BeginDevelopmentTurn");
+                            ?? snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:EndTurn");
                         StepOpening(candidate);
                     }
                     Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "source starter deck wins without injected damage");
@@ -874,8 +889,7 @@ internal static class BaseDslPathChecks
                             {
                                 var candidate = snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:PlayAttackFromHand")
                                     ?? snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:PlayCardFromHand")
-                                    ?? snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:EndDevelopmentTurn")
-                                    ?? snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:BeginDevelopmentTurn");
+                                    ?? snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:EndTurn");
                                 StepOpening(candidate);
                             }
                             Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "real public policy defeats four Wrigglers");
@@ -1079,7 +1093,7 @@ internal static class BaseDslPathChecks
                     Check.True(++moves <= 20, "starter combat completes within twenty public moves");
                     var attack = snapshot.LegalActions.FirstOrDefault(a => a.ActionType == "net:action:base-spire:PlayAttackFromHand");
                     if (attack is not null) StepCardReward(attack);
-                    else { Named("EndDevelopmentTurn"); if (PublicBool(snapshot, "Player.CombatActive")) Named("BeginDevelopmentTurn"); }
+                    else Named("EndTurn");
                 }
                 Check.Equal("victory", Public(snapshot, "Player.CombatOutcome"), "real starter-card victory without HP injection");
                 Check.Equal("rewards", Public(snapshot, "Player.Room"), "reward room opens");

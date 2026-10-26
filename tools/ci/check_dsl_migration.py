@@ -450,6 +450,10 @@ def main() -> int:
         for case in boundaries["cases"]:
             if case["diagnostics_read_only"] is not True or case["status"] not in ("passed", "diverged"):
                 raise ValueError("Boundary diagnostics changed gameplay or failed to execute")
+            if case["return_difference"] is not None:
+                raise ValueError("Complete combat actions must return the same stable state without adapter continuation")
+            if case["id"].endswith((":turn-return", ":two-end-effects")) and case["status"] != "passed":
+                raise ValueError("Ordinary full EndTurn and its effect-card draw boundary must match the reference")
             for side in ("left", "right"):
                 trace = case[side]
                 if (not trace["final_state"] or not trace["raw"] or not trace["points"]

@@ -76,7 +76,7 @@ internal static class NormalRunChecks
         Apply(new("neow", ["base-spire:booming-conch"])); Apply(new("leave-neow", []));
         Apply(left.Semantic(left.Action("ChooseMapPoint")));
         for (var i = 0; left.Phase == "combat" && i < 100; i++)
-            Apply(left.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }.Select(left.Find).First(a => a is not null)!));
+            Apply(left.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndTurn" }.Select(left.Find).First(a => a is not null)!));
         Require(left.Phase == "rewards", "potion mapping check reaches real rewards");
         var victory = left.Capture("victory");
         var generatedReward = System.Text.Json.JsonSerializer.Deserialize<NormalRewardSetView[]>(victory.Values["public.reward_sets"])!.Single();
@@ -271,7 +271,7 @@ internal static class NormalRunChecks
         var map = observed.Semantic(observed.Action("ChooseMapPoint")); observed.Apply(map); plain.Apply(map); Check();
         for (var i = 0; i < 3; i++)
         {
-            var action = observed.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }
+            var action = observed.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndTurn" }
                 .Select(observed.Find).First(a => a is not null)!);
             observed.Apply(action); plain.Apply(action); Check();
         }

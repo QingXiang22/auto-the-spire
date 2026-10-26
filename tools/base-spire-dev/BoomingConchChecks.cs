@@ -15,7 +15,7 @@ internal static partial class PackageChecks
             } }
             action ConchElite { role = player body = { call = { procedure = ConchRoom args = { room = "elite" } } } }
             action ConchMonster { role = player body = { call = { procedure = ConchRoom args = { room = "monster" } } } }
-            action ConchBegin { role = player body = { call = { procedure = BeginDevelopmentCombat args = { owner = first(type(Player)) } } } }
+            action ConchBegin { role = player body = { call = { procedure = BeginDevelopmentCombat args = { owner = first(type(Player)) } } call = { procedure = BeginDevelopmentTurn args = { owner = first(type(Player)) } } } }
             action ConchObtain { role = player body = { call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = "base-spire:booming-conch" } } } }
             action ConchOther { role = player locals = { other = Binding } body = {
               create = { type = Player scope = frameScope() into = other }
@@ -28,9 +28,9 @@ internal static partial class PackageChecks
         Case("RELIC BoomingConch: real Elite first turn draws two extra cards and grants one energy, later turns do not", () =>
         {
             var s = Start(compiled); Submit(s, "Ironclad.Initialize"); Submit(s, "FuzzyWurmCrawler.Spawn"); Submit(s, "ConchElite"); Submit(s, "ConchObtain");
-            Submit(s, "ConchBegin"); Submit(s, "BeginDevelopmentTurn");
+            Submit(s, "ConchBegin");
             Equal(7, Hand(s).Count, "source Elite opening hand"); Equal(4L, IntField(s, Player(s), "Player", "Energy"), "source Elite opening energy");
-            Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
+            Submit(s, "EndTurn");
             Equal(5, Hand(s).Count, "turn two returns to normal draw"); Equal(3L, IntField(s, Player(s), "Player", "Energy"), "turn two returns to normal energy");
         });
         Case("RELIC BoomingConch: Monster room, other holder and melted instances do not grant Elite benefits", () =>
@@ -44,14 +44,14 @@ internal static partial class PackageChecks
                     var relic = Members(s, "Relics").Single(r => TextField(s, r, "Relic", "DefinitionId") == "base-spire:booming-conch");
                     Set(s, relic, "Relic", "IsMelted", Value.Of(true));
                 }
-                Submit(s, "ConchBegin"); Submit(s, "BeginDevelopmentTurn");
+                Submit(s, "ConchBegin");
                 Equal(5, Hand(s).Count, "inactive source draw: " + inactive); Equal(3L, IntField(s, Player(s), "Player", "Energy"), "inactive source energy: " + inactive);
             }
         });
         Case("RELIC BoomingConch: two owned instances each modify the same Elite turn and pure observation draws no RNG", () =>
         {
             var s = Start(compiled); Submit(s, "Ironclad.Initialize"); Submit(s, "ConchElite"); Submit(s, "ConchObtain"); Submit(s, "ConchObtain");
-            Submit(s, "ConchBegin"); Submit(s, "BeginDevelopmentTurn");
+            Submit(s, "ConchBegin");
             Equal(9, Hand(s).Count, "two independent draw modifiers"); Equal(5L, IntField(s, Player(s), "Player", "Energy"), "two independent energy reactions");
             var state = s.State.StateHash(); var draws = s.Random.TotalDraws;
             s.LegalActions(s.Participant(0)); s.LegalActions(s.Participant(0));

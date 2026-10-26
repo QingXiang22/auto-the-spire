@@ -6,8 +6,7 @@
   "combat_action_priority": [
     "PlayAttackFromHand",
     "PlayCardFromHand",
-    "EndDevelopmentTurn",
-    "BeginDevelopmentTurn"
+    "EndTurn"
   ],
   "binding_choice": "first-legal-binding",
   "maximum_combat_actions": 100,

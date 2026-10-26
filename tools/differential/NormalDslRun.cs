@@ -173,7 +173,7 @@ internal sealed class NormalDslRun : IDisposable
         var name = action.ActionType.Split(':')[^1];
         var kind = name switch
         {
-            "PlayAttackFromHand" or "PlayCardFromHand" => "play", "PlayTargetedCard" => "targeted-play", "EndDevelopmentTurn" => "end-turn",
+            "PlayAttackFromHand" or "PlayCardFromHand" => "play", "PlayTargetedCard" => "targeted-play", "EndTurn" => "end-turn",
             "ChooseMapPoint" => "map", "ClaimDevelopmentCardReward" => "claim-card",
             "DiscardPotion" => "discard-potion",
             "ClaimDevelopmentPotionReward" => "claim-potion", "SkipDevelopmentPotionReward" => "skip-potion",
@@ -195,9 +195,6 @@ internal sealed class NormalDslRun : IDisposable
                 || !Snapshot.LegalActions.Any(c => c.ActionType.EndsWith(":PlayAttackFromHand", StringComparison.Ordinal) && c.Fields.SequenceEqual(a.Fields)))
             .First(a => TrySemantic(a)?.Key == action.Key);
         Step(candidate);
-        // The source driver performs player cleanup, enemies and the next player start in one turn
-        // operation. Consume the DSL's explicit continuation before comparing that common boundary.
-        if (action.Kind == "end-turn" && Find("BeginDevelopmentTurn") is { } begin) Step(begin);
     }
     private NormalAction? TrySemantic(LegalActionDto a) { try { return Semantic(a); } catch (NotSupportedException) { return null; } }
     public NormalBoundary Capture(string kind)

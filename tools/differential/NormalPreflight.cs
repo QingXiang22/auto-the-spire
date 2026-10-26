@@ -144,7 +144,7 @@ internal static class NormalPreflight
             || input.GetProperty("seed").GetString() != "777" || input.GetProperty("neow_relic").GetString() != "base-spire:booming-conch"
             || input.GetProperty("map_choice").GetString() != "first-legal-successor"
             || input.GetProperty("binding_choice").GetString() != "first-legal-binding"
-            || !input.GetProperty("combat_action_priority").EnumerateArray().Select(v => v.GetString()).SequenceEqual(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn", "BeginDevelopmentTurn" })
+            || !input.GetProperty("combat_action_priority").EnumerateArray().Select(v => v.GetString()).SequenceEqual(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndTurn" })
             || input.GetProperty("maximum_combat_actions").GetInt32() != 100
             || !input.GetProperty("reward_paths").EnumerateArray().Select(v => v.GetString()).SequenceEqual(new[] { "claim", "skip" }))
             throw new FormatException("Normal preflight requires the complete registered public policy and both reward paths.");
