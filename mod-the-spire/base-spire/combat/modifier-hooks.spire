@@ -84,7 +84,3 @@ event AfterAutoPostPlayPhaseEntered {
 event AfterCardDrawnEarly {
   payload = { owner = Ref(Player) card = Ref(Card) }
 }
-
-event BeforePlayerAttacked {
-  payload = { owner = Ref(Player) attacker = Ref(Enemy) }
-}

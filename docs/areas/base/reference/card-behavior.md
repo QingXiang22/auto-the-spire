@@ -99,9 +99,9 @@
 | `DamageEnemyFromPlayer` | owner: Ref(Player)、target: Ref(Enemy)、amount: Int(0..999999)；非攻击直接伤害，明确玩家攻击者，card／play保持none |
 | `DamageAllEnemiesFromPlayer` | owner、amount；创建独立DamageBatch，固定存活目标、整批提交、结果通知、死亡通知；不发Before／AfterAttack，嵌套回调不能提前结算胜利 |
 
-DamageResult 保存请求／最终伤害、Blocked、实际 HP 损失 Unblocked、Overkill、BlockBroken、FullyBlocked、Killed，以及 Batch／Attack／hit／card／play／攻击者／受击者引用。直接群伤Batch与Attack分开；DamageDepth、AttackDepth、PlayDepth共同约束外层胜利提交。`DamageResolved(result)` 发布每个结果；`PlayerDamaged(owner,result)` 用于玩家存活后的受伤消费者。直接 `LosePlayerHp` 不自动获取当前卡来源；卡效果使用 `LosePlayerHpFromCard(owner,card,play,amount)`。
+DamageResult 保存请求／最终伤害、Blocked、实际 HP 损失 Unblocked、Overkill、BlockBroken、FullyBlocked、Killed，以及 Batch／Attack／hit／card／play／攻击者／受击者引用。直接群伤Batch与Attack分开；DamageDepth、AttackDepth、PlayDepth共同约束外层胜利提交。`DamageResolved(result)` 是现有base内部的结果摘要；伤害提交前、破挡、实际失血、给予和接收分别使用 `BeforeDamageReceived`、`AfterBlockBroken`、`AfterDamageHpLost`、`AfterDamageGiven`、`AfterDamageReceived`，均携带 `result: Ref(DamageResult)`。接收通知按本次Killed和当前存活状态门禁；Inferno、Rupture、CentennialPuzzle与SelfFormingClay共享这一阶段及实例顺序。直接 `LosePlayerHp` 不自动获取来源；明确玩家造成的自身失血使用 `LosePlayerHpFromPlayer(owner,amount)`，卡效果使用 `LosePlayerHpFromCard(owner,card,play,amount)`（Unpowered|Move|Unblockable）。`DamagePlayerFromCard(owner,card,move,amount)` 显式选择Move，仍可被格挡；Infection传true。dealer、card、play和属性在正文前通知之前已经绑定，不能结算后再补来源。
 
-Vigor 按 Attack 保存开始层数并在对应 AfterAttack 消耗；PenNib 按源使用卡引用及第十次执行计数，不能改成只比较 play 相等。未支持死亡防止、召唤／复活和任意来源模型；当前百分比修正仍使用四位整数中间值，不能宣称完整 decimal 精度。
+Vigor 按 Attack 保存开始层数并在对应 AfterAttack 消耗；PenNib 按源使用卡引用及第十次执行计数，不能改成只比较 play 相等。未支持死亡防止、召唤／复活和任意来源模型；当前比例链使用四位缩放，保留ModifiedScaled、BlockedScaled与HpLossScaled到准确截断点；这些字段为隐藏上下文，事实字段在数值提交后读取。已核对的比例链见[伤害规格](../spec/combat-damage.md)，不据此声明任意decimal乘法或HP修正族已支持。
 
 ## 费用、牌区与关键词
 

@@ -22,7 +22,7 @@ Nunchaku每10次攻击打完+1能量，实例计数跨回合／跨战保留。Ku
 
 BeforePlayerSideTurnStart在清格挡、能量重置与回合编号增加前发出，供当回合计数重置。BeforePlayerSideTurnEnd在回合末自动打出及VeryEarly／Early之后、手牌回合末效果前发出；StoneCalendar在AfterPlayerSideTurnStart保存第七回合资格，在本阶段先清资格再造成群体伤害。各阶段入口复查ending，终局后不得继续敌方行动。EndDevelopmentCombat手动终止不发胜利治疗。
 
-CentennialPuzzle消费已支持的PlayerHpLost站点，要求存活且战斗活跃，先写本实例已用再DrawCards；来源为当前未挡伤害／牌源掉血，未知伤害修正与死亡防止未额外承诺。移除／熔化使后续触发和动态手牌／营火修正失效；每次获得新实例从默认计数开始。
+CentennialPuzzle消费AfterDamageReceived中的正实际HP损失，要求存活且战斗活跃，先写本实例已用再DrawCards；来源为当前未挡伤害／牌源掉血，未知伤害修正与死亡防止未额外承诺。移除／熔化使后续触发和动态手牌／营火修正失效；每次获得新实例从默认计数开始。
 
 ## 伤害与能量修正（DSL-RELIC-CONTENT-02）
 

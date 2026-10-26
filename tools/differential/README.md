@@ -1,5 +1,11 @@
 # DSL 与独立参考比较
 
+## 伤害数值与反应边界
+
+`dotnet run --project tools/differential -c Release -- damage-compare --output .artifacts/differential/damage`执行两个seed的36项组件：负力量与Vigor、分数全挡／破挡／零伤／超杀、大值BodySlam、真实PenNib第十次乘法链、Hemokinesis自伤与Inferno／Rupture反应、致死自伤、Whirlwind同击双杀和Thorns反击致死后中止后续击。PenNib通过九次真实付费Strike准备；场景初值由工具设置，不能当作正常Run。
+
+报告保留每条结果的实际承受者／dealer、Move／Powered／Unblockable、格挡、实际失血、超杀和致死事实，以及伤害提交前、破挡、HP损失、给予、接收与死亡前的顺序；分数金额以10000为单位，群体回调同时观察另一目标HP。双方均实际执行同一场景，诊断开关核对各自完整状态及随机状态不变；只读probe不执行游戏效果。缺源、缺用例、截断和异常非零，差异返回1。成功仅证明所列组件维度与锁定实现一致，normal_run_verified始终为false，不替代11份原suite或完整M01；任意HP修正／转移／防死仍未支持。
+
 ## 战斗动作边界诊断
 
 运行 `dotnet run --project tools/differential -c Release -- combat-boundary-compare --output .artifacts/differential/combat-boundaries`，从两个固定 seed 分别执行开场及完整`EndTurn`（含下一普通玩家开始）、付费 Strike、两张 Infection、第一张移牌时暂停的两张 Infection，以及 Feed 末杀；另覆盖零费Anger、免费自动Whirlwind、真实OneTwoPunch重复Strike与Corruption技能，共18项。`combat-boundary-self-test` 检查比较器拒绝缺通知、错阶段、错牌区、错支付、错招式、错 ending、零执行和重复动作返回。

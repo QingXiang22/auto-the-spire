@@ -14,7 +14,7 @@ procedure CrimsonMantle {
   parameters = { owner = Ref(Player) listener = Ref(Power) }
   body = {
     call = {
-      procedure = LosePlayerHp args = {
+      procedure = LosePlayerHpFromPlayer args = {
         owner = owner amount = field(first(where(type(State), s, equal(field(s, State.Power), listener))), State.Value)
       }
     }

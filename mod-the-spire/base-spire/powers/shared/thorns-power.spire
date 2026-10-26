@@ -6,13 +6,13 @@ template ThornsPowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:thorns-power" } }
 
 procedure Thorns {
-  parameters = { owner = Ref(Player) attacker = Ref(Enemy) listener = Ref(Power) }
+  parameters = { result = Ref(DamageResult) listener = Ref(Power) }
   body = {
     if = {
-      condition = greater(field(listener, Power.Stacks), 0) then = {
+      condition = and(field(result, DamageResult.Powered), and(not(isNone(field(result, DamageResult.DealerEnemy))), greater(field(listener, Power.Stacks), 0))) then = {
         call = {
-          procedure = DamageEnemyFromPlayer args = { owner = owner
-            target = attacker amount = field(listener, Power.Stacks)
+          procedure = DamageEnemyFromPlayer args = { owner = field(result, DamageResult.Player)
+            target = field(result, DamageResult.DealerEnemy) amount = field(listener, Power.Stacks)
           }
         }
       }
@@ -21,7 +21,7 @@ procedure Thorns {
 }
 
 subscription Thorns {
-  event = BeforePlayerAttacked reaction = Thorns instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:thorns-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = BeforeDamageReceived reaction = Thorns instances = where(collection(Powers), p, and(not(isNone(field(result, DamageResult.Player))), and(equal(field(p, Power.HolderPlayer), field(result, DamageResult.Player)), equal(field(p, Power.DefinitionId), "base-spire:thorns-power")))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use ThornsPower { template = ThornsPowerModule }

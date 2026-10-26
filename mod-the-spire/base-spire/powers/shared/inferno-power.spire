@@ -11,10 +11,12 @@ template InfernoPowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:inferno-power" } }
 
 procedure Inferno {
-  parameters = { owner = Ref(Player) listener = Ref(Power) }
+  parameters = { result = Ref(DamageResult) listener = Ref(Power) }
+  locals = { owner = Binding }
   body = {
+    let = { into = owner value = field(result, DamageResult.Player) }
     if = {
-      condition = and(not(field(owner, Player.EnemyPhase)), greater(field(listener, Power.Stacks), 0)) then = {
+      condition = and(greater(field(result, DamageResult.Unblocked), 0), and(not(field(owner, Player.EnemyPhase)), greater(field(listener, Power.Stacks), 0))) then = {
         call = { procedure = DamageAllEnemiesFromPlayer args = { owner = owner amount = field(listener, Power.Stacks) } }
       }
     }
@@ -22,14 +24,14 @@ procedure Inferno {
 }
 
 subscription Inferno {
-  event = PlayerHpLost reaction = Inferno instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:inferno-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
+  event = AfterDamageReceived reaction = Inferno instances = where(collection(Powers), p, and(not(isNone(field(result, DamageResult.Player))), and(equal(field(p, Power.HolderPlayer), field(result, DamageResult.Player)), equal(field(p, Power.DefinitionId), "base-spire:inferno-power")))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 
 procedure InfernoTurn {
   parameters = { owner = Ref(Player) listener = Ref(Power) }
   body = {
     call = {
-      procedure = LosePlayerHp args = {
+      procedure = LosePlayerHpFromPlayer args = {
         owner = owner amount = field(first(where(type(State), s, equal(field(s, State.Power), listener))), State.Value)
       }
     }

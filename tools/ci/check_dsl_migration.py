@@ -402,6 +402,37 @@ def main() -> int:
                     or len(value["returned"]) != (0 if expected_plays or name in ("bowl-move", "enemy-plating") else 1)):
                 raise ValueError("Block comparison omitted per-play history, actual modifier callbacks or return values")
 
+        damage = run("damage", ["damage-compare", "--output", str(args.output / "damage")], 0)
+        damage_names = ("plain", "retaliation-kills-attacker", "whirlwind-double-kill", "self-harm", "self-harm-reactions",
+                        "lethal-self-harm", "negative-strength-vigor", "negative-total", "negative-strength-vigor-weak-vulnerable",
+                        "fraction", "pen-nib-fraction-chain", "fraction-fully-blocked", "fraction-block-remaining", "fraction-broken",
+                        "zero-blocked", "overkill", "body-slam-large", "body-slam-large-chain")
+        damage_ids = [seed + ":" + name for seed in ("777", "A😀B") for name in damage_names]
+        damage_row_fields = {"actor", "dealer", "move", "powered", "unblockable", "blocked", "unblocked", "overkill", "block_broken", "fully_blocked", "killed"}
+        damage_point_fields = {"actor", "stage", "amount_scaled", "hp", "block", "card", "dealer", "other_hp"}
+        if (damage is None or damage["schema"] != "dsl-migration/damage@1" or damage["status"] != "passed"
+                or damage["independent_verified"] is not True or damage["normal_run_verified"] is not False
+                or damage["reference"]["commit"] != lock["commit"] or damage["executed"] != len(damage_ids)
+                or damage["expected_case_ids"] != damage_ids or [c["id"] for c in damage["cases"]] != damage_ids
+                or not re.fullmatch(r"[0-9a-f]{64}", damage["adapter_sha256"])):
+            raise ValueError("Damage comparison must retain and pass every controlled vector with adapter/reference identity")
+        for case in damage["cases"]:
+            value = case["left"]
+            if (case["status"] != "passed" or value != case["right"] or case["diagnostics_read_only"] is not True
+                    or set(value) != {"hp", "block", "energy", "player_hp", "strength", "enemy_hps", "results", "notifications"}
+                    or not value["results"] or not value["notifications"] or not value["enemy_hps"]
+                    or any(set(r) != damage_row_fields for r in value["results"])
+                    or any(set(p) != damage_point_fields for p in value["notifications"])):
+                raise ValueError("Damage comparison omitted attribution, fractional amounts, results or notifications")
+            expected = {"before": len(value["results"]), "given": len(value["results"]),
+                        "received": sum(not r["killed"] for r in value["results"]),
+                        "block": sum(r["block_broken"] for r in value["results"]),
+                        "hp": sum(r["unblocked"] > 0 for r in value["results"]),
+                        "death": sum(r["killed"] for r in value["results"])}
+            if (any(sum(p["stage"] == stage for p in value["notifications"]) != count for stage, count in expected.items())
+                    or any(p["stage"] not in expected for p in value["notifications"])):
+                raise ValueError("Damage diagnostics omitted an actual source callback or invented a duplicate")
+
         causes = run("exhaust-causes", ["exhaust-cause-compare", "--output", str(args.output / "exhaust-causes")], 0)
         cause_names = ("ordinary", "deferred", "current-amount", "no-draw-before", "no-draw-after",
                        "full-hand", "reshuffle", "nested", "remove-replace", "generated",

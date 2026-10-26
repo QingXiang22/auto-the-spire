@@ -6,6 +6,7 @@ using Differential;
 var jsonOptions = new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 try
 {
+    if (args.FirstOrDefault() == "damage-compare") return DamageComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "enemy-birth-compare") return EnemyBirthComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "combat-boundary-compare") return CombatBoundaryComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.SequenceEqual(new[] { "combat-boundary-self-test" })) { CombatBoundaryComparison.SelfTest(); return 0; }

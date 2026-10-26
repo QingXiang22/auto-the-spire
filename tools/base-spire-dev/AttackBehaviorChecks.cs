@@ -99,8 +99,8 @@ internal static partial class PackageChecks
         Case("ATTACK enemy Vigor is holder-specific and pre-damage reactions cannot overwrite newer HP", () =>
         {
             using var copy = new Copy(package.Root); copy.Include("enemy-vigor.spire", """
-                procedure HealBefore { parameters = { owner = Ref(Player) attacker = Ref(Enemy) } body = { call = { procedure = Heal args = { owner = owner amount = 5 } } } }
-                subscription HealBefore { event = BeforePlayerAttacked reaction = HealBefore }
+                procedure HealBefore { parameters = { result = Ref(DamageResult) } body = { if = { condition = not(isNone(field(result, DamageResult.Player))) then = { call = { procedure = Heal args = { owner = field(result, DamageResult.Player) amount = 5 } } } } } }
+                subscription HealBefore { event = BeforeDamageReceived reaction = HealBefore }
                 action Hit { role = player body = {
                   call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:vigor-power" stacks = 3 } }
                   call = { procedure = ApplyEnemyPower args = { target = first(where(type(Enemy), e, not(equal(e, first(type(Enemy)))))) definition = "base-spire:vigor-power" stacks = 7 } }

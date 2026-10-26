@@ -111,7 +111,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | UpgradedAttackDamageRelic模板 | definition: String(64)、amount: Int(0..999) | ModifyAttackAdditive对非空且已升级牌源贡献加值；Holder是攻击者或牌拥有者即可，二者不要求同时满足；MiniatureCannon配置3 |
 | StatusMultiplierRelic模板 | definition: String(64)、vulnerableBonus: Int(0..100)=0、weakReduction: Int(0..75)=0 | 有效持有实例订阅两个状态倍率站点；PaperPhrog配置25、PaperKrane配置15，虚弱倍率最低0；不改变状态层数／时长 |
 | ResetTurnEnergy／AfterEnergyReset | owner: Ref(Player)，过程／事件 | 首回合重置；后续有有效保留能量资格时将最大能量加到余能，上限999，否则重置。该操作绕过禁止获得能量，随后发事件；额外奖励仍调用GainEnergy |
-| DamagePlayer | owner=Ref(Player)、amount=Int(0..999999) | 对玩家执行格挡→生命结算，正的未阻挡伤害发 PlayerHpLost 并检查开发失败；不改变 MaxHp |
+| DamagePlayer | owner=Ref(Player)、amount=Int(0..999999) | 对玩家执行格挡→生命结算，正的实际损失记入HP历史，按完整伤害结果发布给予／接收通知并检查开发失败；不改变 MaxHp |
 | DamagePlayerFromCard | owner=Ref(Player)、card=Ref(Card)、amount=Int(0..999999) | 玩家自伤，保留牌源与空play，可格挡、无加成；经DamageResult、生命损失通知和失败判定，Infection回合末消费 |
 | [LosePlayerHp](../../../../mod-the-spire/base-spire/combat/damage.spire) | owner=Ref(Player)、amount=Int(0..999) | 绕过格挡的生命损失，对应源 `Unblockable | Unpowered` 伤害（Offering／Bloodletting）；不应用伤害修正、不触发受击反应，只保留生命下限 0 |
 | [PlayCard](../../../../mod-the-spire/base-spire/cards/rules/play.spire) | owner=Ref(Player)、card=Ref(Card) | 校验战斗／回合、手牌、共享资格与能量；付款、进入InPlay、执行唯一正文；全部重复完成后提交捕获的结果区 |
