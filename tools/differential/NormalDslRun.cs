@@ -25,6 +25,7 @@ internal sealed class NormalDslRun : IDisposable
     private RequestDto? lastStep;
     private ResponseDto? lastStepResponse;
     private string sessionId = "";
+    private IdentityDto? identity;
     public PublicSnapshotDto Snapshot { get; private set; } = null!;
     private Session Engine => host.GetSessionForTests(sessionId).EngineForTests;
     public string Phase => Field(Instances("Run").Single(), "Run", "Phase").AsString();
@@ -80,6 +81,7 @@ internal sealed class NormalDslRun : IDisposable
     public void Start(string seed)
     {
         var describe = DescribeResultDto.FromWire(Send(Operation.Describe).Result!);
+        identity = describe.Identity;
         var r = Send(Operation.Start, ("seed", WireValue.Str(seed)), ("expected_identity", describe.Identity.ToWire()),
             ("scenario_profile", WireValue.Str(describe.Capabilities.ScenarioProfiles.Single().Id)));
         sessionId = ((WireString)Get(r, "session_id")).Value;
@@ -228,7 +230,9 @@ internal sealed class NormalDslRun : IDisposable
                 holder = Field(p, "Power", "HolderEnemy").IsNone ? "player" : identities[Field(p, "Power", "HolderEnemy").AsRef()],
                 amount = Field(p, "Power", "Stacks").AsInt() }).OrderBy(p => p.holder).ThenBy(p => p.id).ToArray());
         }
-        var actions = Snapshot.LegalActions.Select(TrySemantic).Where(a => a is not null).Select(a => a!.Key).Distinct().Order(StringComparer.Ordinal).ToArray();
+        var actions = Snapshot.LegalActions.Select(TrySemantic).Where(a => a is not null).Select(a => a!.Key).Order(StringComparer.Ordinal).ToArray();
+        if (actions.Distinct(StringComparer.Ordinal).Count() != actions.Length)
+            throw new NotSupportedException("missing_dimension: duplicate public semantic action candidates");
         var unmapped = Snapshot.LegalActions.Where(a => TrySemantic(a) is null).ToArray();
         Put("actions.candidates", actions);
         var decision = Engine.PendingDecision;
@@ -264,12 +268,15 @@ internal sealed class NormalDslRun : IDisposable
         if (trace is not null) Put("random.float32_calls", NormalFloat32Trace.Dsl(trace.Capture(), trace.DroppedRecords));
         if (trace is not null) Put("random.stream_states", Engine.Random.Capture().Streams.OrderBy(s => s.Name, StringComparer.Ordinal)
             .Select(s => new { stream = s.Name, draws = s.Draws, words = new[] { s.S0, s.S1, s.S2, s.S3 }.Select(w => w.ToString("x16")).ToArray() }).ToArray());
-        string[] missing = ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"];
+        NormalPublicSnapshot.ValidateEnvelope(Snapshot, identity ?? throw new InvalidOperationException("No actual Host handshake."), sessionId);
+        var unmappedFields = NormalPublicObservation.UnmappedFields(Snapshot);
+        var publicComplete = NormalPublicSnapshot.Add(v, unmappedFields, Snapshot.Status);
+        string[] missing = [.. (publicComplete ? Array.Empty<string>() : new[] { "public: complete cross-backend projection" }), "random: full initialization candidates/normalization", "events: cross-backend event projection"];
         if (unmapped.Length > 0) missing = [.. missing, $"actions: {unmapped.Length} public candidates have no normal reference mapping"];
         return new(kind, v, missing,
             new { backend = "dsl:public-host", public_snapshot = WireCanonical.Text(Snapshot.ToWire()),
                 unmapped_public_actions = unmapped,
-                unmapped_public_fields = NormalPublicObservation.UnmappedFields(Snapshot),
+                unmapped_public_fields = unmappedFields,
                 unmapped_public_topology = Array.Empty<string>(),
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = Array.Empty<string>(),
