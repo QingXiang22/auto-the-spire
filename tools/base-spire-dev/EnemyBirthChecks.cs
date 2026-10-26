@@ -11,7 +11,7 @@ internal static partial class PackageChecks
             procedure BirthAuditRoom { parameters = { owner = Ref(Player) visit = Ref(RunVisit) } body = {
               if = { condition = exists(type(BirthRoomAudit)) then = {
                 forEach = { query = type(Enemy) item = enemy body = {
-                  if = { condition = or(not(equal(field(enemy, Enemy.MoveId), "none")), not(exists(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), enemy))))) then = { fail = { message = "Room entry requires empty initialized move graphs" } } }
+                  if = { condition = or(not(equal(field(enemy, Enemy.MoveId), "none")), not(exists(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), enemy))))) then = { fail = { message = "Room entry requires initialized graphs without a published move" } } }
                 } }
                 set = { target = first(type(BirthRoomAudit)) field = BirthRoomAudit.Entered value = true }
               } }

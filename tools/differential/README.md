@@ -219,6 +219,8 @@ Player.RoomUsed 和 PendingForge 表示休息点选项已使用及锻造目标�
 
 ## 敌人出生与选招边界组件
 
-`dotnet run --project tools/differential -c Release -- enemy-birth-compare --output .artifacts/differential/enemy-birth`运行两seed共18项受控判别。反向槽位编队使用真实CombatRoom.Prepare，先登记玩家，再按4、1、3、2工厂顺序创建Wriggler并排序；比较源CombatId、逐只HP、个体RNG初始状态、实际行动顺序、niche每次参数／结果／游标及完整终态。另保留第三幕位置种子、零HP但仍在侧列表、完整移除后编号不复用、显式新战斗重置、重复MaxHp去重与固定HP仍消费的场景。位置／HP／移除设置明确为工具状态，不证明正常可达。
+`dotnet run --project tools/differential -c Release -- enemy-birth-compare --output .artifacts/differential/enemy-birth`运行两seed共20项受控判别。反向槽位编队使用真实CombatRoom.Prepare，先登记玩家，再按4、1、3、2工厂顺序创建Wriggler并排序；比较源CombatId、逐只HP、个体RNG初始状态、实际行动顺序、niche每次参数／结果／游标及完整终态。另保留第三幕位置种子、零HP但仍在侧列表、完整移除后编号不复用、显式新战斗重置、重复MaxHp去重与固定HP仍消费的场景。位置／HP／移除设置明确为工具状态，不证明正常可达。
 
 入场条件使用原生SlumberingBeetle的真实入场Power及SLEEP_CHECK图；DSL仅加载工具专用条件探针，比较BeforeCombatStart、玩家BeforeSideTurnStart、AfterEnergyReset和敌方末的节点／历史，再验证下一回合。回合前移除原生Slumber与改变探针条件用于判别提前选招。该场景不登记SlumberingBeetle或Slumber为正式支持，不认证其伤害／Power全效果。组件显式执行DSL End+Begin，正常EndTurn自动进入下一可行动回合仍独立验收。新组件不替代原11份suite或正常Run比较。
+
+固定首招的补充判别使用真实TwigSlimeM，比较建图后的初始历史与尚未发布的NextMove、首次Roll，以及普通玩家回合后的额外玩家入口。原生调用真实额外回合StartTurn入口；DSL显式关闭开发回合标志后再次Begin，只认证保存招式／历史及AI四字状态不变，不声明正式额外回合动作或完整生命周期。`--package MANIFEST`可对指定生产包复现差异；migration要求包含原18项和新增两seed的extra-ready，未知／重复参数被拒绝。

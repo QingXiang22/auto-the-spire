@@ -131,7 +131,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | CreateSourceEncounterEnemy／RollEncounterEnemyHp | definition=String(64)、min／max=Int(1..9999) → Binding；后者仅min／max → Int | 按当前敌侧成员的不同MaxHp排除候选，niche候选偏移或原区间回退；固定HP也消费一次，非法范围抽样前失败 |
 | CreateEncounterEnemy | definition=String(64)、hp=Int(1..9999) → Binding | 给定HP的开发／下层创建，保存单调BirthOrder、CombatId与源个体MonsterSeed，不抽HP或选招 |
 | PrepareEnemyBirthContext／SortEncounterEnemies | 无参数 | 前者仅允许非活动战斗且敌侧为空时重置出生计数；后者按SlotIndex与BirthOrder整理SpawnOrder，不修改实例编号及种子 |
-| [ResetEnemyMoves](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire) | target=Ref(Enemy) | 删除该实例旧历史，按定义建空图，不选首招。生成只建实例与内容私有状态；战斗开始在房间／敌人入场效果前统一建图／重置，不重置随机流 |
+| [ResetEnemyMoves](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire) | target=Ref(Enemy) | 删除该实例旧历史，按定义初始化图；固定初始move预记历史，但不发布NextMove。生成只建实例与内容私有状态；战斗开始在房间／敌人入场效果前统一建图／重置，不重置随机流 |
 | ClearEnemyMoves／RemoveCombatEnemy | target=Ref(Enemy) | 前者只清招式及历史；后者依次移除Power、清招式、发EnemyRemoving供内容清私有状态，再销毁敌人。正常访问关闭复用后者 |
 | Wriggler.Create | slot=String(16)、startStunned=Bool → Binding | 验证四个真实槽名后抽HP，登记模块私有出生状态，不初始化图或选招；条件节点不消费AI随机，未知槽位拒绝 |
 | PerformEnemyMove | owner=Ref(Player)、target=Ref(Enemy) | 复核双方生命，按保存节点分派ExecuteEnemyMove；完成后标记需要选招，暂停续接不重放正文 |

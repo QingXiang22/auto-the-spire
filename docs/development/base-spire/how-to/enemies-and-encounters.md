@@ -10,7 +10,7 @@
 
 为目标敌人记录开场、状态机节点、分支条件、历史回避、意图与动作的源顺序。DSL 中先决定并保存下一行动，再让公开投影读取同一行动，不能显示一个意图却执行另一条逻辑。多击意图需明确每击修正与显示合计的关系。
 
-固定和随机节点复用[共享招式图](../../../design/mod-the-spire/enemy-turn/spec.md#共享图的当前操作与失败方式)：内容文件组合EnemyMoveGraphDefinition、EnemyMoveNodeDefinition与EnemyMoveBranchDefinition，绑定ExecuteEnemyMove正文。TwigSlimeM示范固定首招与随机历史限制，FuzzyWurmCrawler示范源顺序固定轮转。生成入口只创建敌人与内容私有状态；战斗开始先为全部敌人建图，再执行入场效果与BeforeCombatStart。普通玩家BeforePlayerSideTurnStart完成后、清格挡前才保存首招或后继，敌方阶段结束不选招；观察读取Enemy.MoveId／MoveIndex／Intent，不能调用SelectNextEnemyMove生成意图。
+固定和随机节点复用[共享招式图](../../../design/mod-the-spire/enemy-turn/spec.md#共享图的当前操作与失败方式)：内容文件组合EnemyMoveGraphDefinition、EnemyMoveNodeDefinition与EnemyMoveBranchDefinition，绑定ExecuteEnemyMove正文。TwigSlimeM示范固定首招与随机历史限制，FuzzyWurmCrawler示范源顺序固定轮转。生成入口只创建敌人与内容私有状态；战斗开始先为全部敌人初始化图，再执行入场效果与BeforeCombatStart。普通玩家BeforePlayerSideTurnStart完成后、清格挡前才保存首招或后继，敌方阶段结束不选招；观察读取Enemy.MoveId／MoveIndex／Intent，不能调用SelectNextEnemyMove生成意图。
 
 把敌人动作写成共享操作组合，目标使用真实存活集合与源资格。行动、回合末衰减和切换意图的时点由战斗流程调用，不为每个敌人再写一套轮转调度器。
 

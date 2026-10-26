@@ -42,7 +42,7 @@ EnemyAttack接收attacker、defender、amount和hits，拒绝负命中数，一�
 
 每个敌人保存独立的出生编号、源CombatId、槽位序号和源个体种子。种子以uint64加法计算run根种子+地图列+地图行+幕索引+CombatId；无Run位置的开发上下文位置项为0。正常入口和真实事件子战斗在创建前显式准备新上下文。所有HP抽样和私有状态创建按工厂顺序完成，随后按遭遇Slots序号稳定排列行动／监听顺序；无槽位对应源索引-1，稳定出生编号及种子不随排序改变。
 
-战斗开始依次建齐图、发布正常房间进入通知、执行敌人入场效果、BeforeCombatStart；事件子战斗不重复父房间进入通知。图条件直到普通玩家BeforePlayerSideTurnStart完成之后才解析，首次与后续准备均位于清格挡之前；入场Power或该通知改变条件时必须读取改变后的值。敌方执行只使用保存招式，结束时保留已执行节点且Ready=false，下一普通玩家入口才迁移。击晕恢复复用已选真实节点，不重新解析条件或随机。观察不产生历史／随机消费。完整移除清图和内容私有状态；新上下文和会话不串历史。
+战斗开始依次初始化全部图、发布正常房间进入通知、执行敌人入场效果、BeforeCombatStart；事件子战斗不重复父房间进入通知。图条件直到普通玩家BeforePlayerSideTurnStart完成之后才解析，首次与后续准备均位于清格挡之前；入场Power或该通知改变条件时必须读取改变后的值。敌方执行只使用保存招式，结束时保留已执行节点且Ready=false，下一普通玩家入口才迁移。击晕恢复复用已选真实节点，不重新解析条件或随机。观察不产生历史／随机消费。完整移除清图和内容私有状态；新上下文和会话不串历史。
 
 出生与槽位比较使用玩家先登记的原生准备顺序，并保留源原始CombatId、HP调用参数、个体种子和行动顺序。先AddMonster后StartCombat的受控旧组件只证明各自明确归一化的维度，不能作为正常出生编号的依据。工具专用入场／条件探针不登记为正式内容；召唤、复活、额外回合和其他未迁移机制仍明确未支持。
 
@@ -78,7 +78,7 @@ StunEnemy保存当前已选真实节点，以公开STUNNED／stun替换下一行
 
 定义位于[敌人schema](../../../../mod-the-spire/base-spire/enemies/schema.spire)，注册、校验、选招和历史位于[共享规则](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire)。启动时先登记图、再按源顺序登记节点和分支，最后检查初始节点、后继、重复定义／节点／分支及动作分派。定义表仅在启动时构造，逐实例状态由Engine保存；不存在C#敌人调度器。
 
-`EnemyMoveState`保存敌人、所属图、当前已选节点、Ready、FirstPerformed、连续次数及历史序号，`EnemyMoveHistory`保存该实例每次已选招式。首次实际选招才入历史，固定首招不抽样。`ResetEnemyMoves`仅建空图状态；生成只建敌人与内容私有状态，不建图或选招。战斗开始在全部敌人的EnemyAddedToCombat之前统一重置图；BeforeCombatStart不再次清历史或选招，保留局内随机流位置。`PerformEnemyMove`复核目标生命并执行保存结果；`SelectNextEnemyMove`只处理尚未准备且存活的实例。内容生成和`SpawnDevelopmentEnemy`只创建实例；战斗入口在批量创建后统一调用图初始化。
+`EnemyMoveState`保存敌人、所属图、当前已选节点、Ready、FirstPerformed、连续次数及历史序号，`EnemyMoveHistory`保存该实例每次已选招式。初始节点是固定move时，建图即保存该状态和首条历史，但NextMove仍为空；第一次Roll只发布该move，不重复写历史或抽样。条件／随机初始节点直到首次实际解析才写入招式历史。`ResetEnemyMoves`初始化状态图；生成只建敌人与内容私有状态，不建图或选招。战斗开始在全部敌人的EnemyAddedToCombat之前统一初始化图；BeforeCombatStart不再次清历史或选招，保留局内随机流位置。`PerformEnemyMove`复核目标生命并执行保存结果；`SelectNextEnemyMove`只处理尚未准备且存活的实例。内容生成和`SpawnDevelopmentEnemy`只创建实例；战斗入口在批量创建后统一调用图初始化。
 
 随机节点根据实例历史计算有效权重：MaxRepeats=0为无限制，正值限制连续次数；Cooldown检查最近指定数量的已选招式；Once排除曾选过的目标。权重以源binary32位型保存，总权重按LINQ Sum(float)的顺序用double累加，最后转binary32。当前静态权重参数为Fixed六位小数，转换成binary32后执行；动态权重函数仍未支持。TwigSlimeM的两个真实分支权重均为1，整数参数2不会变成权重。
 

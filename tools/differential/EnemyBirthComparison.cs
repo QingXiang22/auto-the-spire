@@ -25,17 +25,24 @@ namespace Differential;
 internal static class EnemyBirthComparison
 {
     private const string Niche = "base-spire:run:niche";
-    private static readonly string[] Modes = ["reverse-slots", "located-slots", "new-combat", "fixed-hp", "zero-hp-member", "detached", "duplicate-max", "entry-condition", "before-side-condition"];
+    private static readonly string[] Modes = ["reverse-slots", "located-slots", "new-combat", "fixed-hp", "zero-hp-member", "detached", "duplicate-max", "entry-condition", "before-side-condition", "extra-ready"];
     private sealed record Birth(long Id, long Hp, ulong[] MonsterRng);
     private sealed record HpCall(long Min, long Max, long Value, long Before, long After);
     private sealed record Phase(string At, long Id, string Move, long History);
-    private sealed record Trace(Birth[] Births, long[] ActionOrder, HpCall[] HpCalls, long NicheDraws, ulong[] NicheState, Phase[] Phases, long[] RandomTargets);
+    private sealed record Trace(Birth[] Births, long[] ActionOrder, HpCall[] HpCalls, long NicheDraws, ulong[] NicheState, Phase[] Phases, long[] RandomTargets, long AiDraws, ulong[] AiState);
 
     internal static int Run(string repository, string[] args)
     {
-        if (args.Length != 0 && (args.Length != 2 || args[0] != "--output")) throw new FormatException("Use enemy-birth-compare [--output DIRECTORY].");
+        string? output = null, manifest = null;
+        if (args.Length % 2 != 0) throw new FormatException("Use enemy-birth-compare [--output DIRECTORY] [--package MANIFEST].");
+        for (var i = 0; i < args.Length; i += 2)
+        {
+            if (args[i] == "--output" && output is null) output = args[i + 1];
+            else if (args[i] == "--package" && manifest is null) manifest = args[i + 1];
+            else throw new FormatException("Unknown or repeated enemy birth comparison option.");
+        }
         var reference = Repository.VerifyReference(repository);
-        var original = DslPackage.Load(Path.Combine(repository, "mod-the-spire/base-spire/package.json"));
+        var original = DslPackage.Load(manifest ?? Path.Combine(repository, "mod-the-spire/base-spire/package.json"));
         using var fixture = new Fixture(original.Root);
         var package = DslPackage.Load(Path.Combine(fixture.Root, "package.json"));
         var results = new List<object>(); var passed = true;
@@ -43,18 +50,19 @@ internal static class EnemyBirthComparison
         {
             var left = Dsl(package, seed, mode); var right = Native(seed, mode);
             var same = NormalPreflight.Json(left) == NormalPreflight.Json(right); passed &= same;
-            var expectedBirths = mode.EndsWith("-slots", StringComparison.Ordinal) ? 4 : mode is "fixed-hp" or "new-combat" ? 2 : mode.EndsWith("condition", StringComparison.Ordinal) ? 1 : mode == "duplicate-max" ? 3 : 6;
+            var expectedBirths = mode.EndsWith("-slots", StringComparison.Ordinal) ? 4 : mode is "fixed-hp" or "new-combat" ? 2 : mode.EndsWith("condition", StringComparison.Ordinal) || mode == "extra-ready" ? 1 : mode == "duplicate-max" ? 3 : 6;
             if (left.Births.Length != expectedBirths || left.HpCalls.Length != expectedBirths || right.Births.Length != expectedBirths
-                || (mode is "reverse-slots" or "located-slots" or "entry-condition" or "before-side-condition" && left.Phases.Length != 6 * expectedBirths))
+                || (mode is "reverse-slots" or "located-slots" or "entry-condition" or "before-side-condition" or "extra-ready" && left.Phases.Length != (mode == "extra-ready" ? 8 : 6) * expectedBirths))
                 throw new InvalidOperationException("Incomplete enemy birth case: " + seed + ":" + mode);
+            if (mode == "extra-ready" && (left.AiDraws != 1 || right.AiDraws != 1)) throw new InvalidOperationException("Extra turn must retain the saved random move without a second AI draw.");
             results.Add(new { id = seed + ":" + mode, status = same ? "passed" : "diverged", left, right });
         }
         var report = new { schema = "dsl-migration/enemy-birth@1", scope = "controlled-component", reference,
             package_digest = original.Digest, fixture_digest = package.Digest, status = passed ? "passed" : "diverged",
             independent_verified = passed, normal_run_verified = false,
-            setup = "Factory/slot cases use actual CombatRoom.Prepare with players first and real Wrigglers in factory order 4,1,3,2. HP cases preserve actual source draws; zero HP, removal and duplicate MaxHp are explicit controlled mutations. Beetle source runs its real entry Powers and conditional graph; DSL uses a tool-only condition probe, not registered SlumberingBeetle content or Slumber support. Located case sets explicit third-act map coordinates on both sides; it does not prove normal access. New-combat explicitly creates a fresh empty context. The slot cases also compare eight real random-target selections from source-ordered living candidates. Both sides have empty decks. DSL End+Begin is explicit component stepping, not normal EndTurn certification. MonsterSeed is checked against the source's actual fresh monster RNG state, without reseeding it.", cases = results };
+            setup = "Factory/slot cases use actual CombatRoom.Prepare with players first and real Wrigglers in factory order 4,1,3,2. HP cases preserve actual source draws; zero HP, removal and duplicate MaxHp are explicit controlled mutations. Beetle source runs its real entry Powers and conditional graph; DSL uses a tool-only condition probe, not registered SlumberingBeetle content or Slumber support. Located case sets explicit third-act map coordinates on both sides; it does not prove normal access. New-combat explicitly creates a fresh empty context. The slot cases also compare eight real random-target selections from source-ordered living candidates. The extra-ready case invokes the native private extra-player StartTurn entry and compares a controlled DSL start with no intervening enemy turn; only saved move/history and AI state are certified, not a production extra-turn action. Both sides have empty decks. DSL End+Begin is explicit component stepping, not normal EndTurn certification. MonsterSeed is checked against the source's actual fresh monster RNG state, without reseeding it.", cases = results };
         var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
-        if (args.Length != 0) { Directory.CreateDirectory(args[1]); File.WriteAllText(Path.Combine(args[1], "result.json"), json); }
+        if (output is not null) { Directory.CreateDirectory(output); File.WriteAllText(Path.Combine(output, "result.json"), json); }
         Console.WriteLine(json); return passed ? 0 : 1;
     }
 
@@ -82,6 +90,7 @@ internal static class EnemyBirthComparison
         }
         if (mode.EndsWith("-slots", StringComparison.Ordinal)) { foreach (var slot in new[] { 4, 1, 3, 2 }) Born("BirthSlot" + slot); }
         else if (mode.EndsWith("condition", StringComparison.Ordinal)) Born("BirthBeetle");
+        else if (mode == "extra-ready") Born("BirthTwig");
         else if (mode == "new-combat") { Born("BirthSlot1"); Submit("BirthRemoveFirst"); Submit("BirthNewContext"); Born("BirthSlot1"); }
         else if (mode == "fixed-hp") { Born("BirthFixed"); Born("BirthFixed"); }
         else
@@ -99,10 +108,11 @@ internal static class EnemyBirthComparison
         }
         Submit("BirthSort");
         var actionOrder = All("Enemy").OrderBy(e => Field(e, "Enemy", "SpawnOrder").AsInt()).Select(e => Field(e, "Enemy", "CombatId").AsInt()).ToArray();
-        if (mode is "reverse-slots" or "located-slots" or "entry-condition" or "before-side-condition")
+        if (mode is "reverse-slots" or "located-slots" or "entry-condition" or "before-side-condition" or "extra-ready")
         {
             if (mode == "before-side-condition") Submit("BirthWake");
             Submit("BirthStart"); Submit("BeginDevelopmentTurn"); Submit("EndDevelopmentTurn"); Submit("BeginDevelopmentTurn");
+            if (mode == "extra-ready") { Set(player, "Player", "TurnOpen", Value.Of(false)); Submit("BeginDevelopmentTurn"); }
         }
         if (mode.EndsWith("-slots", StringComparison.Ordinal)) for (var i = 0; i < 8; i++) Submit("BirthPickTarget");
         if (s.Debug!.DroppedRecords != 0) throw new InvalidOperationException("Enemy birth diagnostics truncated.");
@@ -114,7 +124,9 @@ internal static class EnemyBirthComparison
         }).ToArray();
         var rng = s.Random.Capture().Streams.Single(r => r.Name == Niche);
         var phases = All("BirthPhase").Select(p => new Phase(Field(p, "BirthPhase", "At").AsString(), Field(p, "BirthPhase", "Id").AsInt(), Field(p, "BirthPhase", "Move").AsString(), Field(p, "BirthPhase", "History").AsInt())).ToArray();
-        return new(births.ToArray(), actionOrder, calls, rng.Draws, [rng.S0, rng.S1, rng.S2, rng.S3], phases, All("BirthPick").Select(p => Field(p, "BirthPick", "Id").AsInt()).ToArray());
+        var ai = s.Random.Capture().Streams.SingleOrDefault(r => r.Name == "base-spire:run:monster_ai");
+        var aiState = ai is null ? MonsterState(s.Random.Capture().ExplicitSeeds["base-spire:run:monster_ai"]) : new[] { ai.S0, ai.S1, ai.S2, ai.S3 };
+        return new(births.ToArray(), actionOrder, calls, rng.Draws, [rng.S0, rng.S1, rng.S2, rng.S3], phases, All("BirthPick").Select(p => Field(p, "BirthPick", "Id").AsInt()).ToArray(), s.Random.DrawCount("base-spire:run:monster_ai"), aiState);
     }
 
     private static ulong[] MonsterState(ulong seed)
@@ -159,8 +171,9 @@ internal static class EnemyBirthComparison
             else
             {
                 combat = new CombatState(run); combat.AddPlayerCreature(player.Creature);
-                Creature Born(bool beetle = false) { var e = combat.AddMonster((MonsterModel)(beetle ? ModelDb.Monster<SlumberingBeetle>().MutableClone() : ModelDb.Monster<Wriggler>().MutableClone()), CombatSide.Enemy, beetle ? null : "wriggler1"); births.Add(Take(e)); return e; }
+                Creature Born(bool beetle = false, bool twig = false) { var e = combat.AddMonster((MonsterModel)(twig ? ModelDb.Monster<TwigSlimeM>().MutableClone() : beetle ? ModelDb.Monster<SlumberingBeetle>().MutableClone() : ModelDb.Monster<Wriggler>().MutableClone()), CombatSide.Enemy, beetle || twig ? null : "wriggler1"); births.Add(Take(e)); return e; }
                 if (mode.EndsWith("condition", StringComparison.Ordinal)) Born(true);
+                else if (mode == "extra-ready") Born(twig: true);
                 else if (mode == "new-combat") { Born(); combat.RemoveCreature(combat.Enemies.Single()); combat = new CombatState(run); combat.AddPlayerCreature(player.Creature); Born(); }
                 else if (mode == "fixed-hp") { Born(true); Born(true); }
                 else
@@ -174,16 +187,19 @@ internal static class EnemyBirthComparison
             }
             var actionOrder = combat.Enemies.Select(e => (long)e.CombatId!.Value).ToArray();
             var phases = new List<Phase>();
-            if (mode is "reverse-slots" or "located-slots" or "entry-condition" or "before-side-condition")
+            if (mode is "reverse-slots" or "located-slots" or "entry-condition" or "before-side-condition" or "extra-ready")
             {
                 var probe = (BirthPhaseProbeRelic)new BirthPhaseProbeRelic().MutableClone(); probe.AssignOwner(player); player.AddRelicInternal(probe);
                 probe.BeforePlayer = () => { if (mode == "before-side-condition" && combat.Enemies[0].GetPower<SlumberPower>() is { } slumber) PowerCmd.Remove(slumber).GetAwaiter().GetResult(); };
                 probe.Capture = at => { foreach (var e in combat.Enemies) phases.Add(new(at, e.CombatId!.Value, e.Monster!.NextMove?.Id ?? "none", e.Monster.MoveStateMachine!.StateLog.Count)); };
                 var engine = new CombatEngine(combat); engine.StartCombatAsync().GetAwaiter().GetResult(); engine.EndPlayerTurnAsync().GetAwaiter().GetResult();
+                if (mode == "extra-ready")
+                    ((Task)typeof(CombatEngine).GetMethod("StartTurnAsync", BindingFlags.Instance | BindingFlags.NonPublic, null, [typeof(Player)], null)!.Invoke(engine, [player])!).GetAwaiter().GetResult();
             }
             var picks = mode.EndsWith("-slots", StringComparison.Ordinal) ? Enumerable.Range(0, 8).Select(_ => (long)(run.Rng.CombatTargets.NextItem(combat.HittableEnemies) ?? throw new InvalidOperationException("Native random target set is empty.")).CombatId!.Value).ToArray() : Array.Empty<long>();
             var state = rng.ToSerializable();
-            return new(births.ToArray(), actionOrder, calls.ToArray(), state.counter, [state.state0, state.state1, state.state2, state.state3], phases.ToArray(), picks);
+            var ai = run.Rng.MonsterAi.ToSerializable();
+            return new(births.ToArray(), actionOrder, calls.ToArray(), state.counter, [state.state0, state.state1, state.state2, state.state3], phases.ToArray(), picks, ai.counter, [ai.state0, ai.state1, ai.state2, ai.state3]);
         }
         finally { hook.SetValue(rng, null); RngDiagnostics.DrawObserver = null; }
 #else
@@ -208,6 +224,7 @@ internal static class EnemyBirthComparison
                 } }
                 entity BirthFlag { fields = { Asleep = { type = Bool default = false } Wake = { type = Bool default = false } } }
                 entity BirthPhase { fields = { At = { type = String(length = 32) } Id = { type = Int } Move = { type = String(length = 64) } History = { type = Int } } }
+                action BirthTwig { role = player locals = { target = Binding } body = { call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:twig-slime-m" min = 26 max = 28 } into = target } } }
                 action BirthBeetle { role = player locals = { target = Binding flag = Binding } body = {
                   call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:birth-beetle-probe" min = 86 max = 86 } into = target }
                   create = { type = BirthFlag scope = frameScope() into = flag }
