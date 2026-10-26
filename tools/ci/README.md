@@ -20,7 +20,7 @@ python tools/ci/check.py docs
 python tools/ci/check.py base net migration docs
 ```
 
-各组按给定顺序自动运行并在最后统一汇总；组内失败停止依赖它的后续步骤，其他组继续执行。任一组失败则整批返回非零，保留第一个失败退出码。默认各组仍写入`.artifacts/ci/<组名>/`，汇总写入`.artifacts/ci/batch-result.json`；多组命令的`--output`指定共同父目录，单组命令仍指定该组目录。一次批次只列实际受影响的组，不在每张卡完成后重复调用各内部步骤。定向排障命令见[base验证指南](../../docs/development/base-spire/how-to/verify-and-debug.md)。
+各组按给定顺序自动运行并在最后统一汇总；组内失败停止依赖它的后续步骤，其他组继续执行。任一组失败则整批返回非零，保留第一个失败退出码。默认各组仍写入`.artifacts/ci/<组名>/`，汇总写入`.artifacts/ci/batch-result.json`；多组命令的`--output`指定共同父目录，单组命令仍指定该组目录。一次批次只列实际受影响的组，不在每张卡完成后重复调用各内部步骤。定向排障命令见[base验证指南](../../docs/areas/base/how-to/verify-and-debug.md)。
 
 | 组 | 实际执行 | 结论边界 |
 | --- | --- | --- |

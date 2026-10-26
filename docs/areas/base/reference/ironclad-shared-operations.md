@@ -1,8 +1,8 @@
 # 铁甲战士使用的共享 DSL 操作
 
-本页供内容作者查询调用入口，适用于 `base-spire-dsl-relic-draw-dev-v1` 的单人、全部解锁开发配置。范围与验证条件见[约定](spec.md)，当前进度见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。这些过程由 Engine 执行；Host 只投影状态和提交合法候选。
+文档类型：参考（Reference）。本页供内容作者查询调用入口，适用于 `base-spire-dsl-relic-draw-dev-v1` 的单人、全部解锁开发配置。范围与验证条件见[约定](../../../design/mod-the-spire/ironclad-dsl/spec.md)，当前进度见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。这些过程由 Engine 执行；Host 只投影状态和提交合法候选。
 
-单消费者也可供mod组合的[手牌、生成、条件值、伤害成长及致死操作](../../../development/base-spire/reference/card-behavior.md#供内容与mod组合的公共操作)由公共过程提供，卡牌配置参数和顺序。新增正文分派、费用、攻击、附魔和永久选择的准确签名见[行为操作参考](../../../development/base-spire/reference/card-behavior.md)。
+单消费者也可供mod组合的[手牌、生成、条件值、伤害成长及致死操作](card-behavior.md#供内容与mod组合的公共操作)由公共过程提供，卡牌配置参数和顺序。新增正文分派、费用、攻击、附魔和永久选择的准确签名见[行为操作参考](card-behavior.md)。
 
 ## 定义、实例与牌区
 
@@ -20,10 +20,10 @@
 | `SelectHandCard` | `owner, upgradeOnly` → Binding | 空域返回 none，单张自动选，多张发布必须单选的原生决策。升级模式仅选 CanUpgrade 且未升级牌；当前 InPlay 不属于手牌 |
 | `SelectDiscardCard` | `owner` → Binding | 同样按 0／1／多张处理，仅选该玩家弃牌。Headbutt 消费结果并移到抽牌堆顶部 |
 | `UpgradeCard` | `card` | 验证实际可升级性，先标记升级，再发 CardUpgraded；不会把战斗副本反写到永久源 |
-| `UpgradeRandomPermanentCards` | `owner: Ref(Player), kind: String(16), amount: Int(1..999)` | kind为attack／skill／all；仅筛选本拥有者RunDeck中可升级且未升级的实例，按源排序后完整Fisher-Yates(Niche)，再按洗后顺序升级前amount张。永久顺序不变、不发AfterShuffle；每调用独立临时状态并在返回前清理。拾取模板与边界见[约定](../relic-combat-start/content-lifecycle.md#拾取随机永久升级dsl-relic-content-04relic-g01) |
+| `UpgradeRandomPermanentCards` | `owner: Ref(Player), kind: String(16), amount: Int(1..999)` | kind为attack／skill／all；仅筛选本拥有者RunDeck中可升级且未升级的实例，按源排序后完整Fisher-Yates(Niche)，再按洗后顺序升级前amount张。永久顺序不变、不发AfterShuffle；每调用独立临时状态并在返回前清理。拾取模板与边界见[约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#拾取随机永久升级dsl-relic-content-04relic-g01) |
 | `GenerateCombatCard` | `owner, attacksOnly` → Binding | 从完整已解锁单人源池按 CardFactory 的生成资格抽样。85 张源标识全部保留；78 张可随机生成。Feed／NotYet、Basic／Ancient 按源排除；GiantRock／Shockwave 不混入铁甲池 |
 
-`RemoveFromCombatPiles` 是上述完整操作的内部移动接缝，不代表获得、复制或耗尽。永久获得与战斗重建继续使用[永久牌组约定](../permanent-deck-smith/spec.md)；直接 `create Card` 不替代这些操作。
+`RemoveFromCombatPiles` 是上述完整操作的内部移动接缝，不代表获得、复制或耗尽。永久获得与战斗重建继续使用[永久牌组约定](../../../design/mod-the-spire/permanent-deck-smith/spec.md)；直接 `create Card` 不替代这些操作。
 
 ## 费用、出牌与历史
 
@@ -49,8 +49,8 @@ CardPlays／CardLibrary 和内部引用不作为完整公开历史或牌区发�
 
 `GainBlock`与怪物招式格挡共用`GainCombatBlock`，以显式旗标、目标与card／play计算Dexterity／Frail／Unmovable；`GainUnpoweredBlock`的Unpowered且无Move组合绕过这些现有修正。中间量以百万分之一格挡保存，最终取整且上限999999999；Juggernaut消费正的未截断通知量，即使实际整数格挡未增加。EvilEye按源分别得挡，不能合并通知或本次play的历史。攻击通过独立Attack和DamageResult归集结果；现有伤害修正使用四位整数中间量至最终取整，尚不能宣称与原版decimal完全等价。兼容`DamageEnemyPowered`／`DamagePlayerPowered`共用此链，前者接 Strength／Weak／Vulnerable／Cruelty，后者接敌方修正和 Colossus。HpLossCount 是事件次数，不是失血总量。
 
-`ApplyPlayerPowerFromCard`／`ApplyEnemyPowerFromCard`显式传来源与play，普通非卡来源仍可调用不带来源的入口；定义决定实例匹配策略。`powers/shared`所属模块按定义标识消费通知／修正，准确生命周期见[Power参考](../../../development/base-spire/reference/powers.md)；不再由调用方kind选择行为。已有消费者覆盖耗尽抽牌／格挡、受损 Strength／群伤、每回合 Strength／自伤／格挡、第三次攻击复制、下一攻击重复、抽到 Strike 自动打出、回合末自动打出、临时 Strength 恢复和费用／格挡／伤害修正。Rupture 的牌源自伤 Strength 延后到该次出牌结束；敌方阶段不触发 Rupture／Inferno。Power 通用目录仍保留 260 项来源，不能把这些角色处理器视为全 Power 目录已迁移。
+`ApplyPlayerPowerFromCard`／`ApplyEnemyPowerFromCard`显式传来源与play，普通非卡来源仍可调用不带来源的入口；定义决定实例匹配策略。`powers/shared`所属模块按定义标识消费通知／修正，准确生命周期见[Power参考](powers.md)；不再由调用方kind选择行为。已有消费者覆盖耗尽抽牌／格挡、受损 Strength／群伤、每回合 Strength／自伤／格挡、第三次攻击复制、下一攻击重复、抽到 Strike 自动打出、回合末自动打出、临时 Strength 恢复和费用／格挡／伤害修正。Rupture 的牌源自伤 Strength 延后到该次出牌结束；敌方阶段不触发 Rupture／Inferno。Power 通用目录仍保留 260 项来源，不能把这些角色处理器视为全 Power 目录已迁移。
 
-随机选择使用 `vanilla-uniform@1` 与源布局：`base-spire:run:combat_card_selection`、`base-spire:run:combat_targets`、`base-spire:run:combat_card_generation`；初始洗牌、弃牌重洗与 Stampede 共用 `base-spire:run:shuffle`。空资格不抽样，连续命中重建存活候选。初始洗牌直接 Fisher-Yates，重洗先按源条目与升级排序；精确布局和整局前置消费边界见[随机约定](../run-domain/randomness.md)。
+随机选择使用 `vanilla-uniform@1` 与源布局：`base-spire:run:combat_card_selection`、`base-spire:run:combat_targets`、`base-spire:run:combat_card_generation`；初始洗牌、弃牌重洗与 Stampede 共用 `base-spire:run:shuffle`。空资格不抽样，连续命中重建存活候选。初始洗牌直接 Fisher-Yates，重洗先按源条目与升级排序；精确布局和整局前置消费边界见[随机约定](../../../design/mod-the-spire/run-domain/randomness.md)。
 
-显式 `Ironclad.Initialize` 已接入源基础初态、开发流初始洗牌、自动回合抽牌和首回合 Innate 排序，准确入口见[角色初态约定](../character-combat/ironclad-start.md)。本页不承诺含 Neow 的正常角色开局、解锁进度、多人、无限生命目标、完整附着种类／其他未迁移 Power、正常 Run 或原版逐步一致；继承开发范围的资源字段上限。需要这些行为时继续扩展对应约定，不在内容里绕过共享接口。
+显式 `Ironclad.Initialize` 已接入源基础初态、开发流初始洗牌、自动回合抽牌和首回合 Innate 排序，准确入口见[角色初态约定](../../../design/mod-the-spire/character-combat/ironclad-start.md)。本页不承诺含 Neow 的正常角色开局、解锁进度、多人、无限生命目标、完整附着种类／其他未迁移 Power、正常 Run 或原版逐步一致；继承开发范围的资源字段上限。需要这些行为时继续扩展对应约定，不在内容里绕过共享接口。

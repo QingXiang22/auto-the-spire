@@ -54,7 +54,7 @@ $baseMetadata.content.'base-spire:Relic'.content_ids += 'tutorial:practice-beads
 dotnet run --no-build --project tools/base-spire-dev -- validate $baseManifest
 ```
 
-加载应成功。动作由 DSL 声明派生，公开内容名称来自元数据；无需在 net 添加逐遗物注册代码。正式原版内容的来源与 definition 登记另见[扩展内容](../development/base-spire/how-to/extend-content.md)。
+加载应成功。动作由 DSL 声明派生，公开内容名称来自元数据；无需在 net 添加逐遗物注册代码。正式原版内容的来源与 definition 登记另见[扩展内容](../areas/base/how-to/extend-content.md)。
 
 ## 4. 逐次观察真实抽牌
 
@@ -75,4 +75,4 @@ python -X utf8 docs/examples/base-dsl/run_relic_lesson.py --manifest $baseManife
 
 第二个会话第一次洗牌获得练习 TheAbacus 的 8 点，再由新遗物每张获得 2 点，最终 14。两种机制共用同一状态、抽牌过程和 Engine 执行器。
 
-你已完成共享模板、内容配置、显式组合和公开执行。把这套方法用于正式内容前，还需[迁移完整机制](../development/base-spire/how-to/migrate-mechanism.md)规定的源依据、生命周期边界和行为执行结果；教学成功不构成原版独立参考比较。
+你已完成共享模板、内容配置、显式组合和公开执行。把这套方法用于正式内容前，还需[迁移完整机制](../areas/base/how-to/migrate-mechanism.md)规定的源依据、生命周期边界和行为执行结果；教学成功不构成原版独立参考比较。

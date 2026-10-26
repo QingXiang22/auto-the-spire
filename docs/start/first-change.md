@@ -12,7 +12,7 @@ git status --short
 
 | 本次修改 | 先读哪里 |
 | --- | --- |
-| 已有卡牌数值、Power 或遗物 | [base 修改指南](../development/base-spire/how-to/edit-content.md)；先用精确 ID 找到规则所属文件 |
+| 已有卡牌数值、Power 或遗物 | [base 修改指南](../areas/base/how-to/edit-content.md)；先用精确 ID 找到规则所属文件 |
 | 编译、通用状态或 Session 调用 | [core 开发入口](../areas/core/README.md)与[核心接口要求](../contracts/core-engine-baseline.md) |
 | 公开字段、Host 或客户端 | [net 开发入口](../areas/net/README.md)与协议参考 |
 | 公开观察编码或概率输出 | [AI 开发入口](../areas/ai/README.md)及对应约定 |
@@ -20,7 +20,7 @@ git status --short
 
 ## 修改并验证
 
-第一次修改原版数值时，在隔离副本按[第一个遗物教程](first-relic.md)观察修改前后结果；卡牌修改的准确字段与普通／升级判别见[单个内容指南](../development/base-spire/how-to/edit-content.md)。练习结果不覆盖正式原版预期。
+第一次修改原版数值时，在隔离副本按[第一个遗物教程](first-relic.md)观察修改前后结果；卡牌修改的准确字段与普通／升级判别见[单个内容指南](../areas/base/how-to/edit-content.md)。练习结果不覆盖正式原版预期。
 
 只改文档运行 `python tools/ci/check.py docs`；运行时按[CI 说明](../../tools/ci/README.md)选择受影响组。失败先定位具体差异，保留原用例、来源范围和断言，不能删检查使其通过。
 

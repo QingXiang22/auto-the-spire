@@ -1,6 +1,6 @@
 # 共享 DSL 操作参考
 
-文档类型：参考（Reference）。适用于 core/0.3 与纯 DSL base 的开发态战斗包。只列实际存在的声明；这里没有列出的游戏操作不能按名字猜测可调用。文件路径相对 `mod-the-spire/base-spire/`，精确实现通过各行链接定位。铁甲战士新增费用／选择／历史／生成／复制／自动出牌与 Power 反应的完整签名见[专项操作参考](../../../design/mod-the-spire/ironclad-dsl/shared-operations.md)。
+文档类型：参考（Reference）。适用于 core/0.3 与纯 DSL base 的开发态战斗包。只列实际存在的声明；这里没有列出的游戏操作不能按名字猜测可调用。文件路径相对 `mod-the-spire/base-spire/`，精确实现通过各行链接定位。铁甲战士新增费用／选择／历史／生成／复制／自动出牌与 Power 反应的完整签名见[专项操作参考](ironclad-shared-operations.md)。
 
 Power定义、施加命令、通知顺序及私有清理的准确签名见[Power参考](powers.md)。卡牌普通攻击的基础值位于CardDefinition；下方效果模板表不再接受重复伤害值或Power行为kind。
 

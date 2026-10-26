@@ -4,7 +4,7 @@
 
 先打开[交互图文](combat-engine-comparison.html)：六个主题分别展示架构、开始阶段、结束阶段、监听与攻击、Power和遗物。点击节点可定位锁定源码，支持突出差异、导出SVG和打印全部图文。下面的静态图与文字适合在仓库内阅读。
 
-本文比较[锁定sts2-sim](../../../../reference/README.md)的提交`611cea2b498ee1eba3743d185c210c6b2a4624a6`（声明版本v0.111.0），以及base-spire提交`4aa22d16dfc59430580fa8ceefa129a3487797b0`（包版本`0.7.0-dsl.74`）。图中展示这两个版本的主要路径；差异节点表示当前实现边界，不表示已修复。具体接口仍查[操作参考](../reference/operations.md)和[Power参考](../reference/powers.md)。
+本文比较[锁定sts2-sim](../../../../reference/README.md)的提交`611cea2b498ee1eba3743d185c210c6b2a4624a6`（声明版本v0.111.0），以及base-spire提交`4aa22d16dfc59430580fa8ceefa129a3487797b0`（包版本`0.7.0-dsl.74`）。图中展示这两个版本的主要路径；差异节点表示当前实现边界，不表示已修复。具体接口仍查[操作参考](../../../areas/base/reference/operations.md)和[Power参考](../../../areas/base/reference/powers.md)。
 
 ## 两侧的职责与状态
 

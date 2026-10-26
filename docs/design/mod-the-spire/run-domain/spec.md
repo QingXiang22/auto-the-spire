@@ -1,6 +1,6 @@
 # 整局操作行为要求
 
-归属 ENV-T09 资源／遗物与 ENV-T06 永久牌组。下列操作名称用于说明源行为和待恢复范围，旧编译接口不作为当前可调用 API；当前签名见[操作参考](../../../development/base-spire/reference/operations.md)和[行为参考](../../../development/base-spire/reference/card-behavior.md)。未实现要求不代表现有开发 scope 已支持。所有可变状态与暂停仍由同一 Engine Session 管理。
+归属 ENV-T09 资源／遗物与 ENV-T06 永久牌组。下列操作名称用于说明源行为和待恢复范围，旧编译接口不作为当前可调用 API；当前签名见[操作参考](../../../areas/base/reference/operations.md)和[行为参考](../../../areas/base/reference/card-behavior.md)。未实现要求不代表现有开发 scope 已支持。所有可变状态与暂停仍由同一 Engine Session 管理。
 
 | 操作 | 前置条件与顺序 | 范围及依据 |
 | --- | --- | --- |

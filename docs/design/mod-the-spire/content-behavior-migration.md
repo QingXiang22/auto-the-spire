@@ -1,6 +1,6 @@
 # 内容行为与执行约定
 
-本文规定纯 DSL base 的出牌、攻击、实例能力与访问边界。准确调用签名见[操作参考](../../development/base-spire/reference/card-behavior.md)，执行范围与任务状态只在[GitHub Issues](https://github.com/QingXiang22/auto-the-spire/issues/28)维护。下列行为要求不代表全部实现或验收通过。
+本文规定纯 DSL base 的出牌、攻击、实例能力与访问边界。准确调用签名见[操作参考](../../areas/base/reference/card-behavior.md)，执行范围与任务状态只在[GitHub Issues](https://github.com/QingXiang22/auto-the-spire/issues/28)维护。下列行为要求不代表全部实现或验收通过。
 
 ## 出牌正文与上下文
 
@@ -40,9 +40,9 @@ MoveCombatCard 统一拥有者、永久／战斗资格、原区／目的区、�
 
 CardCloned、CardCombatCopied、CardRemoving 是附属能力的复制与清理接缝。Stomp 的费用与 HowlFromBeyond 的耗尽堆自动行为归所属模块；通用 Card 不再保存它们的专属开关。CardAttachment 保存附魔标识与状态，Sown 在明确附魔阶段回能后禁用；永久→战斗副本与战斗克隆按各自来源复制，升级不重置状态，销毁前清理。公开附属实体采用通用 identity_from 依附卡标识，隐藏抽牌堆不泄漏附魔或卡引用。
 
-Power施加接收applierPlayer／applierEnemy／card／play，按shared／per-applier／independent匹配后，与直接Modify共用一次Before、Given加法／乘法、Received计算、提交、修正者After和改量通知。隐藏计算上下文记录实际接收修正者，Artifact在计算后消费自身；powerType／stackType与实例模式分别声明，single不抑制锁定参考的再施加增量。完整接口与零量、ending、临时力量约定见[Power参考](../../development/base-spire/reference/powers.md)。Vigor保留敌我攻击资格与层数快照，Rupture消费实际DamageResult来源。
+Power施加接收applierPlayer／applierEnemy／card／play，按shared／per-applier／independent匹配后，与直接Modify共用一次Before、Given加法／乘法、Received计算、提交、修正者After和改量通知。隐藏计算上下文记录实际接收修正者，Artifact在计算后消费自身；powerType／stackType与实例模式分别声明，single不抑制锁定参考的再施加增量。完整接口与零量、ending、临时力量约定见[Power参考](../../areas/base/reference/powers.md)。Vigor保留敌我攻击资格与层数快照，Rupture消费实际DamageResult来源。
 
-准确类型、调用签名和阶段见[行为操作参考](../../development/base-spire/reference/card-behavior.md)。
+准确类型、调用签名和阶段见[行为操作参考](../../areas/base/reference/card-behavior.md)。
 
 ## 资源、访问与登记
 

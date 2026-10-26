@@ -1,6 +1,6 @@
 # 当前 base 控制流程与模块
 
-文档类型：解释（Explanation）。本页按纯 DSL base `0.7.0-dsl.40` 描述现行职责。调用签名见[行为操作参考](../../development/base-spire/reference/card-behavior.md)，来源顺序与限制见[迁移约定](content-behavior-migration.md)。旧 C# CardPlayPipeline 等模块不进入生产。
+文档类型：解释（Explanation）。本页按纯 DSL base `0.7.0-dsl.40` 描述现行职责。调用签名见[行为操作参考](../../areas/base/reference/card-behavior.md)，来源顺序与限制见[迁移约定](content-behavior-migration.md)。旧 C# CardPlayPipeline 等模块不进入生产。
 
 ## 当前调用链
 

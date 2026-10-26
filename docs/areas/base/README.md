@@ -41,8 +41,8 @@
 | 查Power定义标志、施加／合并／移除与私有状态事件 | [Power生命周期参考](reference/powers.md) |
 | 查所有领域的落点与前置依赖 | [领域目录参考](reference/domains.md) |
 | 查includes、manifest、静态JSON和内容模块边界 | [包格式参考](../../dsl/core/0.3/package-reference.md) |
-| 理解源目录、内容自有规则与共享操作的关系 | [开发模型](explanation/development-model.md) |
-| 对照sts2-sim战斗阶段、遗物／Power生命周期与复用边界 | [战斗引擎图文对照](explanation/combat-engine-comparison.md) |
+| 理解源目录、内容自有规则与共享操作的关系 | [开发模型](../../development/base-spire/explanation/development-model.md) |
+| 对照sts2-sim战斗阶段、遗物／Power生命周期与复用边界 | [战斗引擎图文对照](../../development/base-spire/explanation/combat-engine-comparison.md) |
 | 审阅后续出牌、攻击、牌区、实例能力与 Run 重构 | [内容行为约定](../../design/mod-the-spire/content-behavior-migration.md)，目标设计不等于现有接口 |
 | 用 agent 做开发，减少重复检索 | [项目 skill](../../../.agents/skills/base-spire-development/SKILL.md) |
 

@@ -8,7 +8,7 @@
 
 | 项目 | 约定 |
 | --- | --- |
-| 当前入口 | [base manifest](../../mod-the-spire/base-spire/package.json)、[开发手册](../development/base-spire/README.md)、[CI 范围](../../tools/ci/README.md) |
+| 当前入口 | [base manifest](../../mod-the-spire/base-spire/package.json)、[开发手册](../areas/base/README.md)、[CI 范围](../../tools/ci/README.md) |
 | 适用范围 | 当前ENV-00～06长任务；通用Engine、base正式内容、net公开出口、tools严格差异测试；AI只做确需的约定兼容 |
 | 关联主规范 | [项目spec](spec.md)、[ENV任务包](environment-completion-and-differential-v1.md)、[公开协议](net-the-spire/protocol.md) |
 | 状态与派单 | 只在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)更新；[开发约定](../../CONTRIBUTING.md)不另定义范围 |

@@ -1,6 +1,6 @@
 # 事件访问与资源行为要求
 
-本规格保留 ENV-T09 的源事件资格、资源顺序和访问行为要求；不保存旧开发计划或实现状态。未恢复的正常 Run 和源事件须明确失败；当前 DSL 接口见[访问指南](../../../development/base-spire/how-to/run-and-rooms.md)与[行为参考](../../../development/base-spire/reference/card-behavior.md)。下列旧接口名称仅表示概念操作，不承诺同名 API 已存在。
+本规格保留 ENV-T09 的源事件资格、资源顺序和访问行为要求；不保存旧开发计划或实现状态。未恢复的正常 Run 和源事件须明确失败；当前 DSL 接口见[访问指南](../../../areas/base/how-to/run-and-rooms.md)与[行为参考](../../../areas/base/reference/card-behavior.md)。下列旧接口名称仅表示概念操作，不承诺同名 API 已存在。
 
 ## 领域边界与语言
 

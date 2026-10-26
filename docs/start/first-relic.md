@@ -68,6 +68,6 @@ if ($LASTEXITCODE -ne 2) { throw '超范围模板参数应被拒绝，退出码�
 [IO.File]::WriteAllText($baseLeaf, [IO.File]::ReadAllText($baseLeaf).Replace('amount = 1000', 'amount = 8'))
 ```
 
-错误应包含真实内容文件位置与参数不符合模板形状的说明。`amount` 的边界来自共享 DSL 模板，不来自 C# 遗物分支。其他模板参数错误见[排障指南](../development/base-spire/how-to/verify-and-debug.md)。
+错误应包含真实内容文件位置与参数不符合模板形状的说明。`amount` 的边界来自共享 DSL 模板，不来自 C# 遗物分支。其他模板参数错误见[排障指南](../areas/base/how-to/verify-and-debug.md)。
 
 你已经完成了加载、修改内容和观察效果。下一篇[共享触发规则教程](shared-rule.md)沿用此副本，创建另一种触发机制。完整模板原理见[开发模型](../development/base-spire/explanation/development-model.md)。

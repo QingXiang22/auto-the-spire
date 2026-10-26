@@ -19,7 +19,7 @@ LoadFiles 的 extensions/dependencies 重载支持扩展感知加载；`core/0.3
 
 `call = { procedure = Grant args = { owner = owner amount = 2 } }` 按参数名绑定；pureCall 同样支持具名参数。缺参、未知参数及重复名拒绝，不以对象枚举顺序猜位置。参数仍有明确类型，Ref(Player) 与 Ref(Power) 不可互换。
 
-宿主须显式传入 owner/card/target/power 等上下文；文本名称本身不会自动获得游戏状态。base 的实际应用见[出牌规则](../../../../mod-the-spire/base-spire/cards/rules/play.spire)与[base 作者约定](../../../development/base-spire/how-to/cards-and-combat.md)。
+宿主须显式传入 owner/card/target/power 等上下文；文本名称本身不会自动获得游戏状态。base 的实际应用见[出牌规则](../../../../mod-the-spire/base-spire/cards/rules/play.spire)与[base 作者约定](../../../areas/base/how-to/cards-and-combat.md)。
 
 ## 实例订阅与只读修正
 

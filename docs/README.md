@@ -6,7 +6,7 @@
 | --- | --- |
 | 准备环境、运行首次检查、提交第一个改动 | [开始贡献](start/README.md)、[环境与首次检查](start/environment.md) |
 | 学习 DSL 或编写 C# 宿主 | [第一份规则](start/first-rule.md)、[第一个宿主](start/first-host.md) |
-| 修改卡牌、Power、遗物或其他原版规则 | [base 开发手册](development/base-spire/README.md) |
+| 修改卡牌、Power、遗物或其他原版规则 | [base 开发手册](areas/base/README.md) |
 | 修改编译、通用执行或 Session 接入 | [core 开发入口](areas/core/README.md) |
 | 运行公开 Host、客户端或手动试玩 | [net 开发入口](areas/net/README.md) |
 | 维护公开观察编码、策略与训练接口 | [AI 开发入口](areas/ai/README.md) |

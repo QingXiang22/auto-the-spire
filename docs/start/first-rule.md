@@ -194,4 +194,4 @@ condition = greaterOrEqual(field(counter, Counter.Score), 5)
 - 想在动作中让玩家选加一还是加二：宿主教程的后半部分会运行 [counter.spire](../examples/core-choice-counter/counter.spire)，观察动作的暂停与续接。
 - 写规则时遇到某个声明或表达式：查 [core/0.3 语言参考](../dsl/core/0.3/language-reference.md)。它供查阅，第一次做这篇教程不需要从头读完。
 
-这个小游戏使用的是通用 core DSL。原版卡牌内容使用 base 的[内容 DSL 作者约定](../development/base-spire/README.md)，其卡牌声明和伤害等语义由游戏内容包提供。
+这个小游戏使用的是通用 core DSL。原版卡牌内容使用 base 的[内容 DSL 作者约定](../areas/base/README.md)，其卡牌声明和伤害等语义由游戏内容包提供。

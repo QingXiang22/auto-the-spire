@@ -19,7 +19,7 @@
 
 ## 2. 实现与来源入口
 
-- 当前支持范围以 [base manifest](../../mod-the-spire/base-spire/package.json)、[开发手册](../development/base-spire/README.md)及所审提交的[检查结果](../../tools/ci/README.md)为准，局部行为检查不代表完整 Run。
+- 当前支持范围以 [base manifest](../../mod-the-spire/base-spire/package.json)、[开发手册](../areas/base/README.md)及所审提交的[检查结果](../../tools/ci/README.md)为准，局部行为检查不代表完整 Run。
 - 独立比较入口见[差异测试工具](../../tools/differential/README.md)，参考提交见[锁定清单](../../reference/baselines/sts2-sim.json)。原 suite 和失败条件继续有效，未支持或零执行不得计通过。
 - 源码核对绑定 sts2-sim 的提交、tree 与实际文件摘要；每次更新先取最新上游再锁定 SHA，不在测试运行时追踪浮动 main。现有旧源码向量只证明其原来源回归，不作为新版符合性测试结果。模拟器已知缺口及与客户端的差异单独报告，不能为关闭阶段而修改完成条件。
 - 五标准角色为 Ironclad、Silent、Regent、Necrobinder、Defect。额外类型是否纳入取决于单人正常可达性；不得按 C# 类总数推断完整内容范围，也不得无依据排除可达内容。
@@ -45,7 +45,7 @@ ENV-03完整Ironclad整局只是中间里程碑，**不自动恢复正式AI实�
 
 base 先用固定能力按机制纵向交付：用正式DSL描述→运行Engine→同批差异测试；确有通用表达缺口再附最小复现交负责人，不自动进入核心开发。复杂地图等计算放在base可追踪算法/受控计算资产，不把可选Lua工程变成全量内容前置。
 
-公共约定变化须说明语法、AST/编译IR、执行语义、兼容/迁移以及受影响Profile。游戏作者入口为[base 开发手册](../development/base-spire/README.md)，通用语言入口为[core DSL](../dsl/core/README.md)。领域玩法使用纯 DSL 和必要静态 JSON，不按卡牌 ID 增加专用指令，不回退旧 C# 玩法。
+公共约定变化须说明语法、AST/编译IR、执行语义、兼容/迁移以及受影响Profile。游戏作者入口为[base 开发手册](../areas/base/README.md)，通用语言入口为[core DSL](../dsl/core/README.md)。领域玩法使用纯 DSL 和必要静态 JSON，不按卡牌 ID 增加专用指令，不回退旧 C# 玩法。
 
 ## 5. ENV-00：版本、完整来源范围及差异测试骨架
 

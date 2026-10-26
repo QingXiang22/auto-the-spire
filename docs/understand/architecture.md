@@ -20,7 +20,7 @@ base 声明游戏规则；core 执行声明；net 为外部调用者发布当前
 
 | 要改变什么 | 所属模块与阅读入口 |
 | --- | --- |
-| 卡牌、伤害、Power、遗物、敌人、房间和 Run 的行为 | `mod-the-spire/base-spire/`；[base 开发手册](../development/base-spire/README.md) |
+| 卡牌、伤害、Power、遗物、敌人、房间和 Run 的行为 | `mod-the-spire/base-spire/`；[base 开发手册](../areas/base/README.md) |
 | 通用类型、DSL 编译、IR、执行、选择续接、随机与观察能力 | `core-the-spire/`；[core 开发入口](../areas/core/README.md) |
 | Host、公开观察、合法动作、协议与客户端 | `net-the-spire/`；[net 开发入口](../areas/net/README.md) |
 | 公开输入编码、概率输出、采样与评价 | `ai-the-spire/`；[AI 开发入口](../areas/ai/README.md) |
