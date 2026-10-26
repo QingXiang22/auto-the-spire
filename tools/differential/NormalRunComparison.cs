@@ -101,7 +101,7 @@ internal static class NormalRunComparison
                     {
                         Apply(left.Semantic(left.Snapshot.LegalActions.First())); Capture("target-resolved:" + moves); continue;
                     }
-                    var candidate = new[] { targeted ? "PlayTargetedCard" : "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }
+                    var candidate = new[] { targeted ? "PlayTargetedCard" : "PlayAttackFromHand", "PlayCardFromHand", "EndTurn" }
                         .Select(left.Find).FirstOrDefault(a => a is not null)
                         ?? throw new NotSupportedException("No registered public combat action.");
                     Apply(left.Semantic(candidate)); Capture("combat-action:" + moves);

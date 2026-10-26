@@ -2,7 +2,7 @@
 
 ## 战斗动作边界诊断
 
-运行 `dotnet run --project tools/differential -c Release -- combat-boundary-compare --output .artifacts/differential/combat-boundaries`，从两个固定 seed 分别执行开场及结束回合、付费 Strike、两张 Infection、第一张移牌时暂停的两张 Infection，以及 Feed 末杀。`combat-boundary-self-test` 检查比较器拒绝缺通知、错阶段、错牌区、错支付、错招式、错 ending、零执行和重复动作返回。
+运行 `dotnet run --project tools/differential -c Release -- combat-boundary-compare --output .artifacts/differential/combat-boundaries`，从两个固定 seed 分别执行开场及完整`EndTurn`（含下一普通玩家开始）、付费 Strike、两张 Infection、第一张移牌时暂停的两张 Infection，以及 Feed 末杀。`combat-boundary-self-test` 检查比较器拒绝缺通知、错阶段、错牌区、错支付、错招式、错 ending、零执行和重复动作返回。
 
 这些是人工设置的组件：空永久牌组、真实 FuzzyWurmCrawler、双方生命设为1000，Feed 的敌人设为10HP。只读通知记录实际回合号、能量、生命、格挡、招式、ending 和五个有序牌区；暂停例分别使用 DSL 的行政选择与参考既有异步通知的未完成 Task，观察后各续接一次，不加入游戏效果或动画等待。Feed 停在房间结算前。报告同时保存双方原始事件／监听信息，以及锁定 Hook 的准确源码、行号、摘要、迭代入口、名单固定和资格检查位置，供逐通知核查；这些源码片段和局部观察不证明全部监听已对齐。
 
@@ -143,7 +143,7 @@ dotnet run --project tools/differential -c Release -- normal-compare --output .a
 dotnet run --project tools/differential -c Release -- normal-compare-self-test
 ```
 
-`normal-compare` 保留固定输入下领取／跳过两条奖励路径，并新增分别使用真实目标决策的领取／跳过路径，共四个用例。DSL 侧通过正式 Host 工厂、协议编码和 `ControlHost.Dispatch` 执行公开候选；内部诊断读取该 Host 正在执行的同一会话。参考侧从原生 RunState、Player 和真实房间入口独立执行同一个语义动作。它与启动 stdio 子进程的 `normal-preflight` 分开报告。
+`normal-compare` 保留固定输入下领取／跳过两条奖励路径，并新增分别使用真实目标决策的领取／跳过路径，共四个用例。DSL 侧通过正式 Host 工厂、协议编码和 `ControlHost.Dispatch` 执行公开候选；结束回合只提交一次生产`EndTurn`，不补发开始动作；内部诊断读取该 Host 正在执行的同一会话。参考侧从原生 RunState、Player 和真实房间入口独立执行同一个语义动作。它与启动 stdio 子进程的 `normal-preflight` 分开报告。
 
 每个共同边界保存正常动作候选、Neow 决策约束、玩家资源、全部初始敌人及 Power、访问阶段与坐标、永久资产和六个有序战斗牌区。永久卡按各自正常起始牌组建立槽位，战斗副本沿 `PermanentSource`／`DeckVersion` 对应；死亡敌人沿参考的 `SpawnedEnemies` 保留最初编号，不按剩余敌人重新编号。Neow 的可选实体集合按语义排序比较，选项原位置仍保留在真实公开快照中。
 

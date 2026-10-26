@@ -69,7 +69,7 @@ internal static partial class PackageChecks
             var draws = s.Random.TotalDraws;
             if (normal)
             {
-                Submit(s, "EndDevelopmentTurn");
+                Submit(s, "EndTurn");
                 Equal("defeated", TextField(s, Members(s, "RunVisits").Single(), "RunVisit", "Status"), "real normal visit commits defeat after cleanup");
                 Equal(0, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:CombatRewardSet").Id).Count, "normal defeat creates no rewards");
                 True(!Legal(s, "ChooseMapPoint"), "normal defeat opens no map successors");

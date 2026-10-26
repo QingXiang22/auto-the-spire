@@ -41,7 +41,7 @@ internal static class NormalSnapshotChecks
         Apply(observed.Semantic(observed.Action("ChooseMapPoint")));
         var moves = 0;
         while (observed.Phase == "combat" && moves++ < 100)
-            Apply(observed.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }
+            Apply(observed.Semantic(new[] { "PlayAttackFromHand", "PlayCardFromHand", "EndTurn" }
                 .Select(observed.Find).First(a => a is not null)!));
         Require(observed.Phase == "rewards", "the real normal run reaches its reward boundary");
         var records = observed.DebugRecords;

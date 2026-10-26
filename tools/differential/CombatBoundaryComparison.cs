@@ -129,12 +129,13 @@ internal static class CombatBoundaryComparison
         {
             var a = session.LegalActions(session.Participant(0)).Single(a => a.Definition.QualifiedId == "base-spire:" + name);
             session.Submit(a.Definition, session.Participant(0), refs.Select(Value.OfRef).ToArray());
-            if (session.Status != SessionStatus.Running && !(plan == "two-end-effects-paused" && name == "EndDevelopmentTurn" && session.Status == SessionStatus.AwaitingDecision))
+            if (session.Status != SessionStatus.Running && !(plan == "two-end-effects-paused" && name == "EndTurn" && session.Status == SessionStatus.AwaitingDecision))
                 throw new InvalidOperationException(name + ": " + session.Fault);
         }
         var player = All("Player").Single();
         session.State.RunAtomic(() => session.State.SetField(player, session.RuleSet.TypeByQualifiedId("base-spire:Player").FieldIndex("UsesRunDeck"), Value.Of(true)));
         Set(player, "Player", "MaxHp", 1000); Set(player, "Player", "Hp", 1000);
+        Set(player, "Player", "AutoDrawPerTurn", 5);
         Submit("BurningBlood.Obtain"); Submit("FuzzyWurmCrawler.Spawn");
         var enemy = All("Enemy").Single(); Set(enemy, "Enemy", "MaxHp", 1000); Set(enemy, "Enemy", "Hp", 1000);
         var boundaries = new List<Point>();
@@ -174,7 +175,7 @@ internal static class CombatBoundaryComparison
         Flush(fixture: true); Take("configured");
         if (plan == "two-end-effects-paused")
             Submit("BoundaryEnablePause");
-        if (plan == "turn-return" || plan.StartsWith("two-end-effects", StringComparison.Ordinal)) Submit("EndDevelopmentTurn");
+        if (plan == "turn-return" || plan.StartsWith("two-end-effects", StringComparison.Ordinal)) Submit("EndTurn");
         else Submit("BoundaryPlay", All("Card").Single());
         if (plan == "two-end-effects-paused")
         {

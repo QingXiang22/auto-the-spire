@@ -111,8 +111,8 @@ internal static class EnemyBirthComparison
         if (mode is "reverse-slots" or "located-slots" or "entry-condition" or "before-side-condition" or "extra-ready")
         {
             if (mode == "before-side-condition") Submit("BirthWake");
-            Submit("BirthStart"); Submit("BeginDevelopmentTurn"); Submit("EndDevelopmentTurn"); Submit("BeginDevelopmentTurn");
-            if (mode == "extra-ready") { Set(player, "Player", "TurnOpen", Value.Of(false)); Submit("BeginDevelopmentTurn"); }
+            Submit("BirthStart"); Submit("EndTurn");
+            if (mode == "extra-ready") { Set(player, "Player", "TurnOpen", Value.Of(false)); Submit("BirthPlayerStart"); }
         }
         if (mode.EndsWith("-slots", StringComparison.Ordinal)) for (var i = 0; i < 8; i++) Submit("BirthPickTarget");
         if (s.Debug!.DroppedRecords != 0) throw new InvalidOperationException("Enemy birth diagnostics truncated.");
@@ -230,7 +230,8 @@ internal static class EnemyBirthComparison
                   create = { type = BirthFlag scope = frameScope() into = flag }
                 } }
                 action BirthFixed { role = player locals = { target = Binding } body = { call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:birth-fixed-probe" min = 86 max = 86 } into = target } } }
-                action BirthStart { role = player body = { call = { procedure = BeginDevelopmentCombat args = { owner = first(type(Player)) } } } }
+                action BirthStart { role = player body = { call = { procedure = BeginDevelopmentCombat args = { owner = first(type(Player)) } } call = { procedure = BeginDevelopmentTurn args = { owner = first(type(Player)) } } } }
+                action BirthPlayerStart { role = player body = { call = { procedure = BeginDevelopmentTurn args = { owner = first(type(Player)) } } } }
                 action BirthNewContext { role = player body = { call = { procedure = PrepareEnemyBirthContext } } }
                 action BirthLocation { role = player locals = { run = Binding node = Binding } body = {
                   create = { type = Run scope = frameScope() into = run fields = { Player = first(type(Player)) ActIndex = 2 } }
