@@ -10,6 +10,8 @@ import re
 import subprocess
 import xml.etree.ElementTree as ET
 
+from normal_report import load_report
+
 ROOT = Path(__file__).resolve().parents[2]
 BASELINE = ROOT / "tools/base-migration-baseline"
 
@@ -113,7 +115,7 @@ def main() -> int:
             (folder / "command.log").write_text(process.stdout + process.stderr, encoding="utf-8")
             if process.returncode not in (expected_code if isinstance(expected_code, tuple) else (expected_code,)):
                 raise ValueError(f"{name}: expected exit {expected_code}, got {process.returncode}; see {folder / 'command.log'}")
-            report = json.loads(result.read_text(encoding="utf-8")) if result.exists() else None
+            report = load_report(result) if result.exists() else None
             if isinstance(expected_code, tuple):
                 if report is None or report.get("status") not in ("passed", "diverged"):
                     raise ValueError(f"{name}: an allowed diagnostic exit still requires an actual comparison report")
