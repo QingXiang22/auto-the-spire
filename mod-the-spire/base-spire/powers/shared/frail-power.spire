@@ -1,27 +1,34 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template FrailPowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:frail-power" powerType = "debuff" } }
-
-procedure Frail {
-  pure = true parameters = { value = Int owner = Ref(Player) listener = Ref(Power) }
-  result = Int body = {
-    if = {
-      condition = greater(field(listener, Power.Stacks), 0) then = {
-        return = { value = divide(multiply(value, 3), 4) }
-      }
+  procedure Amount {
+    pure = true parameters = { player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding listener = Ref(Power) } result = Int
+    body = {
+      if = { condition = and(not(unpowered), and(move, pureCall(BlockTargetMatchesPower, player, enemy, listener))) then = { return = { value = 750000 } } }
+      return = { value = 1000000 }
     }
-    return = { value = value }
   }
-}
-
-subscription Frail {
-  event = ModifyBlockMultiplier reaction = Frail instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:frail-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
-}
-procedure Duration { parameters = { owner = Ref(Player) listener = Ref(Power) } body = { call = { procedure = TickPowerDuration args = { power = listener } } } }
-subscription Duration { event = AfterEnemySideTurnEnd reaction = Duration instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:frail-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
-
+  procedure Query {
+    pure = true parameters = { value = Int player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding listener = Ref(Power) } result = Int
+    body = { return = { value = pureCall(ScaleBlockAmount, value, pureCall(Amount, player, enemy, unpowered, move, card, play, listener)) } }
+  }
+  subscription Query {
+    event = ModifyBlockMultiplier reaction = Query
+    instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:frail-power"))
+    instance_order = pureCall(PowerHookOrder, listener, false)
+  }
+  procedure Modify {
+    parameters = { gain = Ref(BlockGain) listener = Ref(Power) }
+    body = { call = { procedure = MultiplyBlockAmount args = { gain = gain power = listener factorMicros = pureCall(Amount, field(gain, BlockGain.Player), field(gain, BlockGain.Enemy), field(gain, BlockGain.Unpowered), field(gain, BlockGain.Move), field(gain, BlockGain.Card), field(gain, BlockGain.Play), listener) } } }
+  }
+  subscription Modify {
+    event = BlockMultiplying reaction = Modify
+    instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:frail-power"))
+    instance_order = pureCall(PowerHookOrder, listener, false)
+  }
+  procedure Duration { parameters = { owner = Ref(Player) listener = Ref(Power) } body = { call = { procedure = TickPowerDuration args = { power = listener } } } }
+  subscription Duration { event = AfterEnemySideTurnEnd reaction = Duration instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:frail-power")) instance_order = pureCall(PowerHookOrder, listener, false) }
 } }
 use FrailPower { template = FrailPowerModule }

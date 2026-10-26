@@ -145,6 +145,7 @@ procedure ResetEnemyMoves {
   parameters = { target = Ref(Enemy) } locals = { graph = Binding state = Binding node = Binding history = Binding }
   body = {
     call = { procedure = ClearEnemyMoves args = { target = target } }
+    set = { target = target field = Enemy.SpawnedThisTurn value = true }
     let = { into = graph value = first(where(type(EnemyMoveGraph), g, equal(field(g, EnemyMoveGraph.DefinitionId), field(target, Enemy.DefinitionId)))) }
     if = { condition = not(isNone(graph)) then = {
       set = { target = target field = Enemy.MoveId value = "none" }

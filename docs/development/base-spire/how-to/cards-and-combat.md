@@ -45,7 +45,7 @@ Infection保留源费用-1及Unplayable；局部set／add／免费修改不覆�
 
 在 combat/schema 定义权威 HP／最大 HP／Block／Energy 等状态，区分 Run 持久资源与战斗资源。共享获得／支付操作拥有上限、资格、来源和事件；内容不能直接加字段绕过它们。
 
-伤害约定先说明来源、类型、目标、每击计算、加性／乘性修正、格挡吸收、实际失血、Fatal、死亡防止、死亡与胜负判断。多段伤害的每击顺序、批次监听和目标失效不能合并成末端总扣血。当前 GainUnpoweredBlock 只覆盖无加成格挡，不替代普通格挡修正。
+伤害约定先说明来源、类型、目标、每击计算、加性／乘性修正、格挡吸收、实际失血、Fatal、死亡防止、死亡与胜负判断。多段伤害的每击顺序、批次监听和目标失效不能合并成末端总扣血。GainUnpoweredBlock以Unpowered且无Move调用共享格挡命令；怪物招式用GainEnemyBlock，完整目标／来源与通知参数见[操作参考](../reference/operations.md)。
 
 主流程通过foldEvent征询伤害／格挡／费用等纯修正，遗物与Power按同一实例订阅方式贡献结果；Before／After通知负责副作用。新增消费者或迁移旧计算时，沿[监听编写指南](write-effect-listeners.md)复用同一链，预览与真实执行不得各写一份修正算法，也不在战斗主过程增加能力ID或Kind分支。
 

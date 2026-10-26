@@ -13,7 +13,7 @@ entity Player {
     TurnNumber = { type = Int(min = 0, max = 999) default = 0 }
     # Development turn gate. Vanilla tracks PlayerTurnPhase instead; that lifecycle is not migrated.
     TurnOpen = { type = Bool default = false }
-    Block = { type = Int(min = 0, max = 999) default = 0 }
+    Block = { type = Int(min = 0, max = 999999999) default = 0 }
     # Published result of the effect-draw permission query; not an independent switch.
     DrawBlocked = { type = Bool default = false }
     CombatActive = { type = Bool default = false }
@@ -70,7 +70,7 @@ entity Enemy {
     DefinitionId = { type = String(length = 64) }
     Hp = { type = Int(min = 0, max = 999999) default = 0 }
     MaxHp = { type = Int(min = 0, max = 999999) default = 0 }
-    Block = { type = Int(min = 0, max = 999) default = 0 }
+    Block = { type = Int(min = 0, max = 999999999) default = 0 }
     # Ordinary confirmed death detaches the source creature before Power removal callbacks.
     # Keep the instance for damage/play references; non-death escape has its own flag.
     DeathResolved = { type = Bool default = false visibility = Hidden }
@@ -80,6 +80,7 @@ entity Enemy {
     MonsterSeed = { type = Int default = 0 visibility = Hidden }
     SlotIndex = { type = Int(min = -1) default = -1 visibility = Hidden }
     SpawnOrder = { type = Int(min = 0) default = 0 visibility = Hidden }
+    SpawnedThisTurn = { type = Bool default = true visibility = Hidden }
     # Development move position inside the enemy's own rotation; the enemy content template owns the meaning.
     MoveIndex = { type = Int(min = 0, max = 9) default = 0 }
     # Saved source node for migrated move graphs; observations never roll another move.
@@ -101,6 +102,7 @@ entity Power {
     HolderPlayer = { type = Ref(Player) optional = true }
     HolderEnemy = { type = Ref(Enemy) optional = true }
     Stacks = { type = Int(min = -999, max = 999) default = 0 }
+    AmountAtTurnStart = { type = Int(min = -999, max = 999) default = 0 visibility = Hidden }
     ApplierPlayer = { type = Ref(Player) optional = true visibility = Hidden }
     ApplierEnemy = { type = Ref(Enemy) optional = true visibility = Hidden }
     SourceCard = { type = Ref(Card) optional = true visibility = Hidden }

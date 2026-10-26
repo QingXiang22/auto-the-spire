@@ -56,6 +56,7 @@ entity CardPlayRecord {
     PlayCount = { type = Int default = 1 visibility = Hidden }
     Started = { type = Bool default = false visibility = Hidden }
     Finished = { type = Bool default = false }
+    # Positive modified gains with Move and this play, including Unpowered|Move.
     PoweredBlocks = { type = Int default = 0 }
   }
 }

@@ -1,35 +1,26 @@
 # 能力与伤害修正参与者
 
-关联 CORE-AUTHOR-05／**DSL-POWER-MODIFIERS-01**；实施与认领见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本包接在消耗之后，按[纯 DSL 规格](../base-architecture.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在 GitHub Issues 维护。
+关联CORE-AUTHOR-05／**DSL-POWER-MODIFIERS-01**；状态与认领只在[GitHub任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)维护。玩法采用[纯DSL](../base-architecture.md)，规则源见[锁定参考](../../../../reference/README.md)。
 
 ## 已核实来源与范围
 
-新增开发态能力实体 `Power`（持有者可以是玩家或敌人、DefinitionId、层数、以及规则查询用的 `Kind` 修正角色），集合 `Powers`，共享过程 `ApplyPlayerPower`／`ApplyEnemyPower`（同持有者同定义累加层数）。修正链按源顺序接入伤害与格挡：
+Power由所属内容模块登记定义并注册实例监听，调用方显式传definition、持有者、层数和可用来源，不传Kind。共享创建／改量／移除、定义类型、实例模式、临时寿命与死亡清理见[Power参考](../../../development/base-spire/reference/powers.md)。源目录中的条目不等于已加载定义，不用旧迁移数量或空定义表示当前支持范围。
 
-- 卡牌攻击走新的 `DamageEnemyPowered`：先加攻击者的 `damage-additive`（源 `StrengthPower.ModifyDamageAdditive`），再在目标有 `damage-taken-multiplier` 时乘 1.5 向下取整（源 `VulnerablePower.ModifyDamageMultiplicative`），最后按既有格挡→生命顺序。遗物与 Power 的无加成伤害继续用 `DamageEnemy`，因此修正只作用于 `ValueProp.Move` 的卡牌攻击。
-- 卡牌格挡走 `GainBlock`：累加 `block-additive`（源 `DexterityPower.ModifyBlockAdditive`）；遗物的无加成格挡继续用 `GainUnpoweredBlock`。
-- `damage-dealt-multiplier`（Weak）只记录层数；敌方可行动作未迁移，因此它对玩家没有可观察效果。
+攻击使用当前Attack／DamageResult流程：加法、乘法、格挡吸收、生命结果与通知分别处理，不能把Bash／Uppercut的正文伤害和随后施加Power倒置。现有攻击修正仍使用四位整数中间量；完整decimal精度由伤害领域独立校准，格挡组件通过不代表伤害全量对齐。
 
-迁移三张新卡：Bash（2 费 8／10 伤害＋2／3 Vulnerable）、Uppercut（2 费 13 伤害＋Weak 与 Vulnerable 各 1／2）、Shockwave（2 费、消耗、对全部敌人 Weak 与 Vulnerable 各 3／5，属无色卡组）。
-
-后续包 **DSL-POWER-DURATION-01** 在此规格上补齐时长与 Power 牌离场：新增回合末时点 `AfterPlayerSideTurnEnd`（先弃手牌再派发），共享过程 `TickDownDebuffs` 把 debuff 角色能力减一层并在归零时移除；`Card.LeavesPlay` 对应 CardType.Power，结算后进入 `RemovedFromCombat`；并迁移 Inflame（1 费 Power 牌，+2／3 Strength）。源依据：VulnerablePower／WeakPower 在敌方回合结束时 `TickDownDuration`，Power 类牌由 `CardPileCmd.RemoveFromCombat` 离开战斗。
-
-不迁移：能力时长与回合末衰减（Vulnerable／Weak 在源里于敌方回合结束时减层）、能力移除与清零、能力类型与正负规则以外的语义、施加／移除反应、按能力的伤害来源区分、敌方攻击与 Weak 的实际作用。库存 260 条能力源标识保持 `definition` 为空：本包把修正角色写在应用它的卡牌内容里，Power 目录不新增定义文件。
+双方格挡使用同一命令：Dexterity按牌源所有者或无牌时的实际目标贡献加法；Frail仅乘目标的powered Move；Unmovable排除怪物目标并按其他play的正Move格挡历史判断。加法、乘法完成后才非负截断和取整，不能在Frail之后提前丢掉分数。现有无加成入口的Unpowered且无Move组合绕过这三个修正。实际修正者在计算后只回调一次，前后通知保留零量、分数、来源和旗标，详见[双方格挡约定](../combat-turn-resources/spec.md#双方格挡命令)。
 
 ## 行为要求与设计
 
 | ID | 约定 | 判别 |
 | --- | --- | --- |
-| PW01 | Power 由 DefinitionId 与 Kind 描述，层数可正可负；同持有者同定义再次施加只累加，不新建实例 | 连续两次 Uppercut 后 Weak／Vulnerable 各只有一个实例且层数相加 |
-| PW02 | 卡牌攻击按“加 Strength→乘 Vulnerable→扣格挡→扣生命”结算，向下取整 | 6 点攻击对 2 层 Vulnerable 造成 9；Bash 自身先造成 8 再施加 Vulnerable |
-| PW03 | 修正只作用于卡牌攻击／格挡；遗物与 Power 的无加成数值不受影响 | Strength 3 时 MercuryHourglass 仍打 3；Dexterity 2 时 Anchor 仍给 10 |
-| PW04 | `ApplyAllEnemiesPowerEffect` 对每个 `Hp > 0` 的开发目标各施加一次 | Shockwave 让两个目标都拿到 3 层 |
-| PW05 | 能力层数在公开观察中可见，持有者与集合成员关系不公开 | 真实 stdio 轨迹能看到 `Power.Stacks`；Powers 为 not_published |
-| PW06 | 内容文件仅 use 模板参数，源资格、卡牌来源条目总数不变；Power 目录保持源标识不新增定义 | cards catalog 新增三个 definition，powers 仍 260 条 definition 为空 |
+| PW01 | 定义决定负值和实例匹配策略；shared同持有者同定义合并，其他模式分别处理 | 重复施加、正负增量、独立和按施加者实例不串状态 |
+| PW02 | 攻击按源来源与加法／乘法顺序生成DamageResult，正文伤害先于后续施加Power | Bash和Uppercut的伤害、存活／致死及后续能力分别核对 |
+| PW03 | 计算保留目标、牌源、play和旗标，现有无加成数值不误用powered修正 | MercuryHourglass不受Strength加值，Anchor不受Dexterity，怪物Move受本体Frail |
+| PW04 | 群体施加遍历准确的可作用目标，每个实例独立执行完整Power命令 | Shockwave作用于全部存活目标，确认死亡者不被重新施加 |
+| PW05 | 公开观察遵循字段与关系可见性；查询不改状态、版本、随机或层数 | 实际公开轨迹、重复Observe／LegalActions及隐藏计算上下文检查 |
+| PW06 | 内容模块拥有自身行为，共享流程不按内容ID执行玩法 | 修改真实消费者并保留源池、原用例和独立参考，不恢复旧C#回退 |
 
-## 实施与验证顺序
+## 验证
 
-1. 先加 Power 状态与施加过程，再按源顺序把修正接进伤害与格挡，确认无能力时数值不变。
-2. 再加两个面向敌人的能力效果模板与自增益模板，接三张内容、目录与公开元数据。
-3. 在包外补合并层数、乘算取整、无加成隔离、多目标与逐卡数值检查；Strength／Dexterity 用明确标注的开发探针验证。
-4. 通过真实 stdio 验证 Bash 的公开轨迹（伤害与能力层数），更新共享操作参考与领域资料，最后运行 solution 构建、包行为／覆盖、受影响 net 与文档检查。
+复用现有Power改量、回合、敌人和正常公开路径。格挡独立比较应区分早取整、零量遗漏、按实际状态差通知、错误旗标、错误持有者、合并多次得挡与修正者重复回调。组件、正常路径与完整环境分别验收，命令与实际结果维护在PR／CI，不以静态登记或旧向量代替行为验证。

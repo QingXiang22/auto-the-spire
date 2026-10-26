@@ -1,20 +1,37 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template DexterityPowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:dexterity-power" allowNegative = true } }
-
-procedure Dexterity {
-  pure = true parameters = { value = Int owner = Ref(Player) listener = Ref(Power) }
-  result = Int body = {
-    return = { value = add(value, field(listener, Power.Stacks)) }
-    return = { value = value }
+  procedure Amount {
+    pure = true parameters = { player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding listener = Ref(Power) } result = Int
+    body = {
+      if = { condition = unpowered then = { return = { value = 0 } } }
+      if = { condition = not(isNone(card)) then = {
+        if = { condition = pureCall(BlockCardOwnedByPower, card, listener) then = { return = { value = multiply(field(listener, Power.Stacks), 1000000) } } }
+      } else = {
+        if = { condition = pureCall(BlockTargetMatchesPower, player, enemy, listener) then = { return = { value = multiply(field(listener, Power.Stacks), 1000000) } } }
+      } }
+      return = { value = 0 }
+    }
   }
-}
-
-subscription Dexterity {
-  event = ModifyBlockAdditive reaction = Dexterity instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:dexterity-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
-}
+  procedure Query {
+    pure = true parameters = { value = Int player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding listener = Ref(Power) } result = Int
+    body = { return = { value = add(value, pureCall(Amount, player, enemy, unpowered, move, card, play, listener)) } }
+  }
+  subscription Query {
+    event = ModifyBlockAdditive reaction = Query
+    instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:dexterity-power"))
+    instance_order = pureCall(PowerHookOrder, listener, false)
+  }
+  procedure Modify {
+    parameters = { gain = Ref(BlockGain) listener = Ref(Power) }
+    body = { call = { procedure = AddBlockAmount args = { gain = gain power = listener deltaMicros = pureCall(Amount, field(gain, BlockGain.Player), field(gain, BlockGain.Enemy), field(gain, BlockGain.Unpowered), field(gain, BlockGain.Move), field(gain, BlockGain.Card), field(gain, BlockGain.Play), listener) } } }
+  }
+  subscription Modify {
+    event = BlockAdding reaction = Modify
+    instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:dexterity-power"))
+    instance_order = pureCall(PowerHookOrder, listener, false)
+  }
 } }
 use DexterityPower { template = DexterityPowerModule }

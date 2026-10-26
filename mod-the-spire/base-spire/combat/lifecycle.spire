@@ -185,14 +185,15 @@ procedure BeginDevelopmentTurn {
     set = { target = owner field = Player.EffectDepth value = add(field(owner, Player.EffectDepth), 1) }
     set = { target = owner field = Player.LostHpThisTurn value = false }
     set = { target = owner field = Player.ExhaustedCardThisTurn value = false }
+    call = { procedure = SnapshotPowerTurnStart args = { player = owner enemy = none } }
     if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforePlayerSideTurnStart payload = { owner = owner } } } }
     if = { condition = not(pureCall(CombatIsEnding)) then = {
       forEach = { query = sort(where(type(Enemy), e, pureCall(EnemyIsActive, e)), e, field(e, Enemy.SpawnOrder)) item = enemy body = {
         call = { procedure = SelectNextEnemyMove args = { target = enemy } }
       } }
     } }
-    if = { condition = and(not(pureCall(CombatIsEnding)), and(greater(field(owner, Player.TurnNumber), 0), foldEvent(ShouldClearBlock, true, owner))) then = {
-      set = { target = owner field = Player.Block value = 0 }
+    if = { condition = greater(field(owner, Player.TurnNumber), 0) then = {
+      call = { procedure = ClearCombatantBlock args = { player = owner enemy = none } }
     } }
     if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterBlockCleared payload = { owner = owner } } } }
     if = { condition = not(pureCall(CombatIsEnding)) then = { call = { procedure = ResetTurnEnergy args = { owner = owner } } } }

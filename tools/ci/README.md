@@ -34,7 +34,7 @@ python tools/ci/check.py base net migration docs
 
 base组的 `check --normal-run-only` 保留10组固定字符串seed，比较完整前置遗物袋、三幕房间队列、Neow候选、Gaussian拒绝抽样，以及首幕最终节点／房型／父子边和随机游标；源向量的[生成入口](../rng-oracle/README.md#重新生成)与生产规则隔离。公开正向路径从Neow实际获得遗物到首个真实战斗，不注入敌人、清场或奖励。未支持选项／遭遇保留在源池并验证失败无额外状态／随机消费；同组还验证正常首战领取／跳过返回地图、自然死亡与受控末杀／余效顺序；完整整局及逐步双侧比较仍不在本组验收范围。
 
-migration另运行[七个固定轮转敌人组件比较](../differential/README.md#固定轮转敌人组件比较)，要求原50项全部一致，包括玩家致死时Frail清理与Vigor保留。另执行[Power改量组件](../differential/README.md#power改量组件比较)的96项，保留新建／叠加／直接Modify、Artifact、正负增量／零量、临时力量、实例模式及真实来源。两组均实际返回0并核对完整边界；组件初态与部分时点为受控设置，不表示完整正常Run或全部内容验收。
+migration另运行[七个固定轮转敌人组件比较](../differential/README.md#固定轮转敌人组件比较)，要求原50项全部一致，包括玩家致死时Frail清理与Vigor保留。另执行[Power改量组件](../differential/README.md#power改量组件比较)的96项，保留新建／叠加／直接Modify、Artifact、正负增量／零量、临时力量、实例模式及真实来源。另执行16项侧开始／清挡与80项双方格挡命令组件，保留28项回合组件并比较Power开始量。各组均实际返回0并核对完整边界；组件初态与部分时点为受控设置，不表示完整正常Run或全部内容验收。
 
 铁甲战士卡牌检查可单独复查：
 

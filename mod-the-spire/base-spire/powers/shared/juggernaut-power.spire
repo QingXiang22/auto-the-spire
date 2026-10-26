@@ -6,16 +6,16 @@ template JuggernautPowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:juggernaut-power" } }
 
 procedure Juggernaut {
-  parameters = { owner = Ref(Player) amount = Int listener = Ref(Power) }
+  parameters = { gain = Ref(BlockGain) listener = Ref(Power) }
   locals = { target = Binding }
   body = {
     if = {
-      condition = and(greater(amount, 0), greater(field(listener, Power.Stacks), 0)) then = {
+      condition = and(greater(field(gain, BlockGain.AmountMicros), 0), greater(field(listener, Power.Stacks), 0)) then = {
         call = { procedure = RandomLivingEnemy into = target }
         if = {
           condition = not(isNone(target)) then = {
             call = {
-              procedure = DamageEnemyFromPlayer args = { owner = owner
+              procedure = DamageEnemyFromPlayer args = { owner = field(listener, Power.HolderPlayer)
                 target = target amount = field(listener, Power.Stacks)
               }
             }
@@ -27,7 +27,7 @@ procedure Juggernaut {
 }
 
 subscription Juggernaut {
-  event = PlayerBlockGained reaction = Juggernaut instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:juggernaut-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
+  event = AfterBlockGained reaction = Juggernaut instances = where(collection(Powers), p, and(and(not(isNone(field(gain, BlockGain.Player))), equal(field(p, Power.HolderPlayer), field(gain, BlockGain.Player))), equal(field(p, Power.DefinitionId), "base-spire:juggernaut-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 } }
 use JuggernautPower { template = JuggernautPowerModule }

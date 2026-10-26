@@ -38,5 +38,19 @@ procedure PlatingBlock {
 subscription PlatingBlock {
   event = BeforePlayerSideTurnEndEarly reaction = PlatingBlock instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:plating-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
+procedure EnemyInitialBlock { parameters = { owner = Ref(Player) listener = Ref(Power) } body = {
+  if = { condition = lessOrEqual(field(owner, Player.TurnNumber), 0) then = {
+    call = { procedure = GainEnemyUnpoweredBlock args = { target = field(listener, Power.HolderEnemy) amount = maximum(0, field(listener, Power.Stacks)) } }
+  } }
+} }
+subscription EnemyInitialBlock { event = BeforePlayerSideTurnStart reaction = EnemyInitialBlock instances = where(collection(Powers), p, and(not(isNone(field(p, Power.HolderEnemy))), equal(field(p, Power.DefinitionId), "base-spire:plating-power"))) instance_order = pureCall(PowerHookOrder, listener, false) }
+procedure EnemyBlock { parameters = { owner = Ref(Player) listener = Ref(Power) } body = {
+  call = { procedure = GainEnemyUnpoweredBlock args = { target = field(listener, Power.HolderEnemy) amount = maximum(0, field(listener, Power.Stacks)) } }
+} }
+subscription EnemyBlock { event = BeforeEnemySideTurnEndEarly reaction = EnemyBlock instances = where(collection(Powers), p, and(not(isNone(field(p, Power.HolderEnemy))), equal(field(p, Power.DefinitionId), "base-spire:plating-power"))) instance_order = pureCall(PowerHookOrder, listener, false) }
+procedure EnemyDecay { parameters = { owner = Ref(Player) listener = Ref(Power) } body = {
+  if = { condition = greater(field(owner, Player.TurnNumber), 1) then = { call = { procedure = ConsumePower args = { power = listener } } } }
+} }
+subscription EnemyDecay { event = AfterEnemySideTurnStart reaction = EnemyDecay instances = where(collection(Powers), p, and(not(isNone(field(p, Power.HolderEnemy))), equal(field(p, Power.DefinitionId), "base-spire:plating-power"))) instance_order = pureCall(PowerHookOrder, listener, false) }
 } }
 use PlatingPower { template = PlatingPowerModule }
