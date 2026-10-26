@@ -51,20 +51,22 @@ base 先用固定能力按机制纵向交付：用正式DSL描述→运行Engine
 
 差异测试复用`tools/differential/`及既有来源清单和检查工具，恢复独立 DSL 适配并补齐原版源码的内容范围统计。参考依赖只存在于工具／工具测试，不进入生产core/base/net。语义规范留在`docs/`，工具目录只放用法／实现。
 
-待实现用户命令（内部项目命名可自行决定，但保留这些语义和稳定命令）：
+环境验收要求的用户命令如下（包含已实现入口与目标入口，当前可用范围见代码块后说明；内部项目命名可自行决定，但保留这些语义和稳定命令）：
 
 ```powershell
-dotnet run --project tools/differential -- inventory --output artifacts/environment/inventory
-dotnet run --project tools/differential -- compare --suite fixtures-v1 --output artifacts/environment/fixtures
+dotnet run --project tools/differential -- inventory --output .artifacts/environment/inventory
+dotnet run --project tools/differential -- compare --suite fixtures-v1 --output .artifacts/environment/fixtures
 pwsh -File tools/differential/test-env.ps1 -Suite regression
-dotnet run --project tools/differential -- test --suite regression --output artifacts/environment/tests/regression
-dotnet run --project tools/differential -- test --suite ironclad-run --output artifacts/environment/tests/ironclad
-dotnet run --project tools/differential -- test --suite full-singleplayer --output artifacts/environment/tests/full
-dotnet run --project tools/differential -- run --character Ironclad --ascension 0 --seed ENV-IRONCLAD-001 --output artifacts/environment/run
-dotnet run --project tools/differential -- verify --manifest artifacts/environment/candidate/environment-manifest.json --output artifacts/environment/verify
+dotnet run --project tools/differential -- test --suite regression --output .artifacts/environment/tests/regression
+dotnet run --project tools/differential -- test --suite ironclad-run --output .artifacts/environment/tests/ironclad
+dotnet run --project tools/differential -- test --suite full-singleplayer --output .artifacts/environment/tests/full
+dotnet run --project tools/differential -- run --character Ironclad --ascension 0 --seed ENV-IRONCLAD-001 --output .artifacts/environment/run
+dotnet run --project tools/differential -- verify --manifest .artifacts/environment/candidate/environment-manifest.json --output .artifacts/environment/verify
 ```
 
-以上为稳定语义约定，当前test子命令、test-env.ps1和三个严格suite均待实现。compare可继续用于探索性诊断，但其返回码不再用于证明环境测试通过。test须复用已有适配器、Comparator、记录及差异定位自检；禁止重建规则实现或先搭建独立大型测试平台。
+以上为稳定语义约定。当前已实现 `test --suite` 入口，原 11 份 suite 定义保留在 `tools/differential/suites/`，包括有 17 个必测 ID 的 `regression`、`ironclad-act1` 和 9 份 `normal-*`。`regression` 的两个原用例已有双侧适配，其余用例及其他原 suite 仍明确报告 `unsupported`，完整测试集不能视为通过。实际命令、比较范围和结果含义见[差异测试工具](../../tools/differential/README.md)。
+
+`test-env.ps1`、通用 `inventory`／`compare`／`run`／`verify` 入口以及目标 `ironclad-run`、`full-singleplayer` suite 定义尚待实现；已有 `normal-compare` 等专项命令按各自范围报告，不替代这里的完整环境验收。探索性诊断的返回码不能证明环境测试通过。后续 `test` 扩展须复用已有适配器、Comparator、记录及差异定位自检；禁止重建规则实现或先搭建独立大型测试平台。
 
 `inventory`绑定source/reference/built Engine/base内容/DSL前端/适用运行配置的文件摘要；未提交目录不用父Git HEAD冒充版本。生成每内容类别完整ID和状态表：来源确认、解析/编译、Engine加载、能区分正确与错误实现的行为验证、差分结果、适用Host公开可用。旧Legacy状态另列，不计入新 Engine 的已实现数量。未迁移内容明确unsupported且给位置/原因，不因差异测试工具暂不支持而从完整来源范围删除。
 
