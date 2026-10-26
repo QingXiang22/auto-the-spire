@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """JSON Schema 2020-12 的最小子集校验器（仅标准库）。
 
-只实现 ``docs/contracts/net/0.2/wire.schema.json`` 与 ``coverage.schema.json`` 实际使用的
+只实现 ``docs/specs/net/0.2/wire.schema.json`` 与 ``coverage.schema.json`` 实际使用的
 关键字；不是通用 JSON Schema 实现，用于让契约检查不依赖第三方包。
 
 支持：$ref（本地 #/$defs/*）、type、enum、const、required、properties、

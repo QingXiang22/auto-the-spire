@@ -5,8 +5,8 @@
 L0（解析）在 wire_json，L1（结构）在 jsonschema_min，本模块负责 schema 无法表达的
 引用闭合、适用域、数量、唯一性、状态组合与排序。
 
-规则 ID 与 `docs/contracts/net/0.2/invariants.json` 一一对应；出处见该文件与
-`docs/contracts/net/0.2/invariants.md`。
+规则 ID 与 `docs/specs/net/0.2/invariants.json` 一一对应；出处见该文件与
+`docs/specs/net/0.2/invariants.md`。
 """
 
 from __future__ import annotations

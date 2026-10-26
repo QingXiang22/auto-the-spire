@@ -1,9 +1,9 @@
-"""net v0.2 公开协议的纯协议类型（与 ``docs/contracts/net/0.2/wire.schema.json`` 同源）。
+"""net v0.2 公开协议的纯协议类型（与 ``docs/specs/net/0.2/wire.schema.json`` 同源）。
 
 设计边界（encoder-design §1/§2，开工清单 §7.2）：
 
 * 这里**不**重新定义协议或第二个 codec。结构来源是唯一共享资产
-  ``docs/contracts/net/0.2/wire.schema.json``；行为来源是唯一共享参考实现
+  ``docs/specs/net/0.2/wire.schema.json``；行为来源是唯一共享参考实现
   ``tools/contract-check/``（``wire_json`` / ``wire_canonical`` / ``wire_layers`` /
   ``jsonschema_min``）。见 :mod:`ai_the_spire.contracts.shared`。
 * 本包不维护历史、不保存 ``known_top``、不读取隐藏状态、不执行规则、

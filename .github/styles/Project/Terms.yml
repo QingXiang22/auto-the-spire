@@ -1,5 +1,5 @@
 extends: substitution
-message: "建议使用“%s”，替换“%s”；含义与适用范围见 docs/terminology.md。"
+message: "建议使用“%s”，替换“%s”；含义与适用范围见 docs/meta/glossary.md。"
 level: error
 nonword: true
 ignorecase: false

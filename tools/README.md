@@ -1,6 +1,6 @@
 # 工程工具与本地临时文件
 
-迁移资料：[base-migration-baseline](base-migration-baseline/README.md)保留纯DSL切换前的源与检查依据，不是生产规则库、运行回退或当前完整检查入口。该目录纳入Git可见范围以防移动后的资料被忽略丢失；当前迁移状态见[当前开发资料](../docs/design/mod-the-spire/base-architecture.md)。
+迁移资料：[base-migration-baseline](base-migration-baseline/README.md)保留纯DSL切换前的源与检查依据，不是生产规则库、运行回退或当前完整检查入口。该目录纳入Git可见范围以防移动后的资料被忽略丢失；当前迁移状态见[当前开发资料](../docs/understand/base-architecture.md)。
 
 Git仅维护可复用、具有实际消费者的工程工具。一次性修复、提取脚本、实验探针与生成报告保留本地；新增工具目录默认忽略，确认维护用途后再登记白名单。
 

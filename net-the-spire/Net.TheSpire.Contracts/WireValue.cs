@@ -6,7 +6,7 @@ namespace NetTheSpire.Contracts;
 /// wire v0.2 的值模型。规范字节来自这个模型，而不是任意 .NET serializer：
 /// 结构整数保留十进制数字（JSON 整数），精确数值始终是规范字符串，浮点字面量
 /// 只可能出现在宽松解析里并且在规范化时被拒绝。
-/// 规范出处：docs/design/net-the-spire/contract-artifacts.md §2。
+/// 规范出处：docs/areas/net/spec/contract-artifacts.md §2。
 /// </summary>
 public enum WireKind
 {

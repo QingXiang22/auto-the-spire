@@ -20,7 +20,7 @@ python tools/ci/check.py docs
 python tools/ci/check.py base net migration docs
 ```
 
-各组按给定顺序自动运行并在最后统一汇总；组内失败停止依赖它的后续步骤，其他组继续执行。任一组失败则整批返回非零，保留第一个失败退出码。默认各组仍写入`.artifacts/ci/<组名>/`，汇总写入`.artifacts/ci/batch-result.json`；多组命令的`--output`指定共同父目录，单组命令仍指定该组目录。一次批次只列实际受影响的组，不在每张卡完成后重复调用各内部步骤。定向排障命令见[base验证指南](../../docs/development/base-spire/how-to/verify-and-debug.md)。
+各组按给定顺序自动运行并在最后统一汇总；组内失败停止依赖它的后续步骤，其他组继续执行。任一组失败则整批返回非零，保留第一个失败退出码。默认各组仍写入`.artifacts/ci/<组名>/`，汇总写入`.artifacts/ci/batch-result.json`；多组命令的`--output`指定共同父目录，单组命令仍指定该组目录。一次批次只列实际受影响的组，不在每张卡完成后重复调用各内部步骤。定向排障命令见[base验证指南](../../docs/areas/base/how-to/verify-and-debug.md)。
 
 | 组 | 实际执行 | 结论边界 |
 | --- | --- | --- |
@@ -71,7 +71,7 @@ python tools/ci/check_relic_coverage.py .artifacts/ci/base/behavior/package-beha
 
 ## 其他检查
 
-文档组在 PR CI 执行；本地可运行 `python tools/ci/check.py docs`。忽略文件不能作为正式链接目标。本地原版源码核对、Python 客户端完整轨迹、AI 离线检查、完整正常 Run、完整差异测试／120 对矩阵及性能均不包含在上述行为组中。相关要求仍见[任务入口](../../docs/roadmap.md)、[ENV 范围](../../docs/design/environment-completion-and-differential-v1.md)和[参考版本](../../reference/README.md)。不得从开发检查通过推导这些项目已经验收。
+文档组在 PR CI 执行；本地可运行 `python tools/ci/check.py docs`。忽略文件不能作为正式链接目标。本地原版源码核对、Python 客户端完整轨迹、AI 离线检查、完整正常 Run、完整差异测试／120 对矩阵及性能均不包含在上述行为组中。相关要求仍见[任务入口](../../docs/meta/roadmap.md)、[ENV 范围](../../docs/specs/environment.md)和[参考版本](../../reference/README.md)。不得从开发检查通过推导这些项目已经验收。
 
 migration组另严格执行`exhaust-cause-compare`的30个耗尽原因组件，检查全部边界、延迟计数、抽牌事件和随机候选；缺例、缺字段、差异或无参考均失败，正常Run认证保持独立。
 

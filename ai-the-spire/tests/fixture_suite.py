@@ -13,7 +13,7 @@
   不在运行时改写。
 
 负例在 ``fixtures/negative/cases.json``：对上面手写输入做声明式改动，独立写出期望命中的
-共享规则 ID（``I-xx``）；规则 ID 词汇与 ``docs/contracts/net/0.2/invariants.md`` 一致。
+共享规则 ID（``I-xx``）；规则 ID 词汇与 ``docs/specs/net/0.2/invariants.md`` 一致。
 """
 
 from __future__ import annotations
