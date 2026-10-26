@@ -1,6 +1,6 @@
 # net-the-spire 规格
 
-net 向操作者提供当前公开观察与合法候选，负责协议、引用、版本、重发和会话控制。模拟语义来自规则包与 core，真实后端对齐同一协议。支持范围见[公开运行指南](how-to-run-public-game.md)，具体字段见[协议](protocol.md)，验收场景见[共同验收](../ai-net-verification.md)。
+net 向操作者提供当前公开观察与合法候选，负责协议、引用、版本、重发和会话控制。模拟语义来自规则包与 core，真实后端对齐同一协议。支持范围见[公开运行指南](../../areas/net/how-to/run-public-game.md)，具体字段见[协议](../../areas/net/reference/protocol.md)，验收场景见[共同验收](../ai-net-verification.md)。
 
 新增内容的公开语义从规则声明派生，不要求在 net 重写玩法与合法条件。无法表示的字段或决策须显式拒绝并扩展对应协议能力；派生 Profile 不等于所有 mod 和选择类型都已支持。
 

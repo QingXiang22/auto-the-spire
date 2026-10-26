@@ -2,7 +2,7 @@
 
 文档类型：参考（Reference）。
 
-范围：`CoreTheSpire.Engine` 的文件加载、会话驱动和参与者观察接口。运行语义为 engine/ir@0.3，版本与迁移约束见[核心兼容性约定](../../contracts/core-engine-baseline.md)。构建器、扩展、随机 profile 和诊断选项另查[开发者指南](developer-guide.md)。
+范围：`CoreTheSpire.Engine` 的文件加载、会话驱动和参与者观察接口。运行语义为 engine/ir@0.3，版本与迁移约束见[核心兼容性约定](../../../contracts/core-engine-baseline.md)。构建器、扩展、随机 profile 和诊断选项另查[开发者指南](developer-guide.md)。
 
 ## 文件加载与会话
 
@@ -95,7 +95,7 @@ IEnumerable<ProjectionDefinition> ProjectionsFor(ParticipantId participant)
 
 ## 相关文档与源码
 
-- 学习一次完整交互：[第一次写宿主](../../start/first-host.md)。
-- 完成参数化动作接入：[提交动作参数](how-to-submit-parameters.md)。
+- 学习一次完整交互：[第一次写宿主](../../../start/first-host.md)。
+- 完成参数化动作接入：[提交动作参数](../how-to/submit-parameters.md)。
 - 理解交互为何分为动作与动作内决策：[开发者指南的交互模型](developer-guide.md#35-动作与动作内决策是两层交互)。
-- 定义与行为：[编译入口](../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)、[Session接口](../../../core-the-spire/Core.TheSpire/Engine/Scheduler.cs)、[回答校验](../../../core-the-spire/Core.TheSpire/Engine/Session.Events.cs)、[观察数据](../../../core-the-spire/Core.TheSpire/Engine/Projection.cs)。
+- 定义与行为：[编译入口](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)、[Session接口](../../../../core-the-spire/Core.TheSpire/Engine/Scheduler.cs)、[回答校验](../../../../core-the-spire/Core.TheSpire/Engine/Session.Events.cs)、[观察数据](../../../../core-the-spire/Core.TheSpire/Engine/Projection.cs)。

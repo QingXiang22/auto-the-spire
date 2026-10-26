@@ -1,6 +1,6 @@
 # net-the-spire 协议 v0.2 跨结构不变量
 
-本文维护协议 v0.2 的跨结构要求；机器检查规则见 [invariants.json](invariants.json)，协议语义见[公开协议](../../../design/net-the-spire/protocol.md)。准确字段与范围以现行协议及规则为准。历史审阅结论与执行结果查 Git 和 CI。
+本文维护协议 v0.2 的跨结构要求；机器检查规则见 [invariants.json](invariants.json)，协议语义见[公开协议](../../../areas/net/reference/protocol.md)。准确字段与范围以现行协议及规则为准。历史审阅结论与执行结果查 Git 和 CI。
 
 ## 1. 适用范围
 

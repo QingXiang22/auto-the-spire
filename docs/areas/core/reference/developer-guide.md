@@ -1,16 +1,16 @@
 # core-the-spire 引擎开发者指南
 
-本文面向 Host 开发者及内核维护者，供你按主题查询构建器、扩展和内核细节。
+文档类型：参考（Reference）。本文面向 Host 开发者及内核维护者，供你按主题查询构建器、扩展和内核细节。
 
 根据接入任务选择入口：
 
-- 第一次写宿主：先做[宿主教程](../../start/first-host.md)。
-- 提交带参数的动作：查[参数提交操作指南](how-to-submit-parameters.md)。
-- 查询交互字段与约束：查[API参考](session-api-reference.md)。
-- 理解各部分的关系：读[规则与宿主](rules-and-host.md)。
-- 第一次编写规则：从[第一次写规则](../../start/first-rule.md)开始。
+- 第一次写宿主：先做[宿主教程](../../../start/first-host.md)。
+- 提交带参数的动作：查[参数提交操作指南](../how-to/submit-parameters.md)。
+- 查询交互字段与约束：查[API参考](session-api.md)。
+- 理解各部分的关系：读[规则与宿主](../../../design/core-the-spire/rules-and-host.md)。
+- 第一次编写规则：从[第一次写规则](../../../start/first-rule.md)开始。
 
-版本与加载入口核对：2026-10-15。本文说明活动 `Core.TheSpire/Engine/` 的接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../dsl/core/README.md)；`core/0.3` 统一提供基础声明、规则库配置、同包绑定与具名调用。本文 C# 片段说明宿主与底层接口。目标边界见[模块 spec](spec.md)，后续调整以[架构决定](core-architecture-decisions.md)为准。
+版本与加载入口核对：2026-10-15。本文说明活动 `Core.TheSpire/Engine/` 的接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../../reference/dsl/README.md)；`core/0.3` 统一提供基础声明、规则库配置、同包绑定与具名调用。本文 C# 片段说明宿主与底层接口。目标边界见[模块 spec](../../../design/core-the-spire/spec.md)，后续调整以[架构决定](../../../design/core-the-spire/core-architecture-decisions.md)为准。
 
 ## 0. 规则作者写文件，宿主调用 SDK
 
@@ -18,7 +18,7 @@
 
 配置式 DSL 不局限于静态数值，它也可以用结构化规则块表达顺序、分支和状态变化，由引擎解释执行。一般游戏规则不应因为有行为就转回手写 C#；确需新通用原语、编译扩展或宿主集成时才涉及底层代码。
 
-文本入口是 `EngineDslCompiler.Compile` / `LoadFiles`，C# 入口是 `EnginePackageBuilder`。两者生成同一种规则表示。基础文本语言见[原语参考](../../dsl/core/0.3/language-reference.md)；[core/0.3 规则库配置](../../dsl/core/0.3/authoring-guide.md)先展开模板，再走相同绑定/链接/执行。[core/0.3](../../dsl/core/0.3/authoring-reference.md)还可通过 `BindInto` 将文本绑定到宿主已有的包构建器；STS 内容语言仍属于 base。
+文本入口是 `EngineDslCompiler.Compile` / `LoadFiles`，C# 入口是 `EnginePackageBuilder`。两者生成同一种规则表示。基础文本语言见[原语参考](../../../reference/dsl/0.3/language-reference.md)；[core/0.3 规则库配置](../../../reference/dsl/0.3/authoring-guide.md)先展开模板，再走相同绑定/链接/执行。[core/0.3](../../../reference/dsl/0.3/authoring-reference.md)还可通过 `BindInto` 将文本绑定到宿主已有的包构建器；STS 内容语言仍属于 base。
 
 ## 1. 先理解引擎在执行什么
 
@@ -47,7 +47,7 @@ flowchart TD
     E --> I[Observe: 参与者视图]
 ```
 
-活动包版本与运行语义标识分别见[项目配置](../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。当前职责和兼容要求见[核心约定](../../contracts/core-engine-baseline.md)，升级验收见[行为要求](../environment-completion-and-differential-v1.md#core-author-04)。
+活动包版本与运行语义标识分别见[项目配置](../../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。当前职责和兼容要求见[核心约定](../../../contracts/core-engine-baseline.md)，升级验收见[行为要求](../../../design/environment-completion-and-differential-v1.md#core-author-04)。
 
 当前入口及能力边界：
 
@@ -64,7 +64,7 @@ flowchart TD
 
 ### 2.1 默认作者入口：规则库加参数
 
-默认入口是 [game.spire](../../examples/core-choice-counter/game.spire)，导入 [规则库](../../examples/core-choice-counter/rules/score-race.spire)，只填写 target 和 increments。仓库根运行：
+默认入口是 [game.spire](../../../examples/core-choice-counter/game.spire)，导入 [规则库](../../../examples/core-choice-counter/rules/score-race.spire)，只填写 target 和 increments。仓库根运行：
 
 ```powershell
 dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
@@ -74,7 +74,7 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 
 `LoadFiles` 递归处理相对 imports 并去重。`Compile` 不读取文件，只接受显式包依赖。
 
-需要游戏自定义声明扩展时，按输入选择以下入口。签名来源为 [EngineDslCompiler.cs](../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)：
+需要游戏自定义声明扩展时，按输入选择以下入口。签名来源为 [EngineDslCompiler.cs](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)：
 
 | 入口 | 输入与结果 | 使用条件 |
 | --- | --- | --- |
@@ -83,13 +83,13 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 | `LoadFiles(paths, extensions, dependencies)` | 扩展感知的文件加载，返回 `RuleSet` | `paths` 为 `IEnumerable<string>`；`extensions` 必填，`dependencies` 可省略 |
 | `BindInto(source, package, sourceName, dependencies, extensions)` | 绑定到已有 `EnginePackageBuilder`，返回 `void` | 文本 namespace 与目标包 `PackageId` 相同；完成所有绑定后再调用一次 `Build()` |
 
-`extensions` 中的每项实现 `IEngineDslExtension`。扩展和编译器标识进入规则标识；不要用旧产物标识标记重建结果。模板展开后的参数错误定位到配置源，规则绑定错误定位到库源并附 use 位置。具体约束见[规则库指南](../../dsl/core/0.3/authoring-guide.md)与[同包绑定参考](../../dsl/core/0.3/authoring-reference.md)。
+`extensions` 中的每项实现 `IEngineDslExtension`。扩展和编译器标识进入规则标识；不要用旧产物标识标记重建结果。模板展开后的参数错误定位到配置源，规则绑定错误定位到库源并附 use 位置。具体约束见[规则库指南](../../../reference/dsl/0.3/authoring-guide.md)与[同包绑定参考](../../../reference/dsl/0.3/authoring-reference.md)。
 
 ### 2.2 进阶例子：动作内选择、暂停及事件
 
-游戏规则在 [counter.spire](../../examples/core-choice-counter/counter.spire)，通用宿主在 [Program.cs](../../examples/core-choice-counter/Program.cs)，工程在 [CoreChoiceCounter.csproj](../../examples/core-choice-counter/CoreChoiceCounter.csproj)。宿主没有手写 BuildRules；从文件读取类型、初始实例、动作、事件、选择、投影和终局。无需 base/net 或外部游戏，不加入主 solution。
+游戏规则在 [counter.spire](../../../examples/core-choice-counter/counter.spire)，通用宿主在 [Program.cs](../../../examples/core-choice-counter/Program.cs)，工程在 [CoreChoiceCounter.csproj](../../../examples/core-choice-counter/CoreChoiceCounter.csproj)。宿主没有手写 BuildRules；从文件读取类型、初始实例、动作、事件、选择、投影和终局。无需 base/net 或外部游戏，不加入主 solution。
 
-从仓库根执行，需要 [global.json](../../../global.json) 指定的 .NET SDK `9.0.306`：
+从仓库根执行，需要 [global.json](../../../../global.json) 指定的 .NET SDK `9.0.306`：
 
 ```powershell
 dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj -- docs/examples/core-choice-counter/counter.spire "1,0"
@@ -163,7 +163,7 @@ unit.OwnerFieldName = "Owner";
 
 **当前集合存储按集合定义组织，并非每个作用域自动拥有一个独立副本。** 同一规则中有多个房间、玩家或战斗时，需通过字段、关系和查询作用域筛选区分；不能仅创建新 Scope 就假设集合隔离了。
 
-把牌从手牌移到弃牌堆通常只改变集合成员资格，不销毁牌实例。生命周期结束才使用 `Destroy`/`DestroyScope`。具体清理行为见 [StateStore.cs](../../../core-the-spire/Core.TheSpire/Engine/StateStore.cs)。
+把牌从手牌移到弃牌堆通常只改变集合成员资格，不销毁牌实例。生命周期结束才使用 `Destroy`/`DestroyScope`。具体清理行为见 [StateStore.cs](../../../../core-the-spire/Core.TheSpire/Engine/StateStore.cs)。
 
 ### 3.4 IR 是程序描述，C# 是构建工具
 
@@ -182,7 +182,7 @@ body.Body(body.If(body.Less(body.Field(refExpr, health), body.Const(100L)),
 
 这段里的 `Less` 在执行时读取血量；`body.If` 构造一个条件节点。`Where(query, item => ...)` 的 lambda 构造谓词 IR，也是在规则包构建时调用。
 
-常用入口如下；准确签名以 [PackageBuilder.cs](../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs) 与 [Ir.cs](../../../core-the-spire/Core.TheSpire/Engine/Ir.cs) 为准：
+常用入口如下；准确签名以 [PackageBuilder.cs](../../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs) 与 [Ir.cs](../../../../core-the-spire/Core.TheSpire/Engine/Ir.cs) 为准：
 
 | 类别 | 方法/节点 | 作用 |
 | --- | --- | --- |
@@ -220,11 +220,11 @@ var rules = new RuleSetBuilder()
 var session = new Session(rules, 42, ["player"]);
 ```
 
-多包通过 `Dependencies`、`Overrides`、`Extends` 与限定引用表达关系，交给统一链接器处理。不要在 Host 里另外拼一套名称解析/覆盖规则。跨包的实际例子见 [EngineChecks.cs](../../../core-the-spire/Core.TheSpire.Engine.Tests/EngineChecks.cs)。
+多包通过 `Dependencies`、`Overrides`、`Extends` 与限定引用表达关系，交给统一链接器处理。不要在 Host 里另外拼一套名称解析/覆盖规则。跨包的实际例子见 [EngineChecks.cs](../../../../core-the-spire/Core.TheSpire.Engine.Tests/EngineChecks.cs)。
 
 链接阶段解析名称、分配 ID、检查字段形状和程序约束，并计算 `RuleSet.Identity`。`Session.Identity` 还结合种子指纹、随机算法/profile 和角色配置。保存回放/差异测试验证记录时应同时记录这些配置及动作序列；标识字符串不替代输入记录。
 
-`EnginePackageBuilder.Build()` 只能调用一次，并通过 `EnginePackage.Freeze` 发布构建产物。构建后的声明、IR子集合、包与链接表按[版本基线](../../contracts/core-engine-baseline.md)只读发布。规则产物固定不限制 SessionState 在游戏中的正常变化。
+`EnginePackageBuilder.Build()` 只能调用一次，并通过 `EnginePackage.Freeze` 发布构建产物。构建后的声明、IR子集合、包与链接表按[版本基线](../../../contracts/core-engine-baseline.md)只读发布。规则产物固定不限制 SessionState 在游戏中的正常变化。
 
 ## 4. Host 怎样驱动 Session
 
@@ -273,7 +273,7 @@ Answer 检查当前请求 ID、状态版本、候选与回答约束。重复/过
 
 ### 4.3 初始化顺序与续接
 
-engine/ir@0.3 的 `OnSessionStart` 按包链接顺序及包内登记顺序逐个执行，文本 start 列表同样按声明顺序推进。启动游标保留在同一个执行栈；某入口暂停时，回答后先完成它，再执行剩余入口，不重放前序初始化。待执行同级入口不占嵌套调用深度。也可使用单个 Setup 顺序 Call；旧 0.2 的反序安排须迁移，见 [版本基线](../../contracts/core-engine-baseline.md)。
+engine/ir@0.3 的 `OnSessionStart` 按包链接顺序及包内登记顺序逐个执行，文本 start 列表同样按声明顺序推进。启动游标保留在同一个执行栈；某入口暂停时，回答后先完成它，再执行剩余入口，不重放前序初始化。待执行同级入口不占嵌套调用深度。也可使用单个 Setup 顺序 Call；旧 0.2 的反序安排须迁移，见 [版本基线](../../../contracts/core-engine-baseline.md)。
 
 ## 5. 执行栈、事件与暂停续接
 
@@ -313,7 +313,7 @@ Session 只有一套执行栈。调用帧保存参数/局部槽位、作用域�
 
 `SamplePick` 按 query 的现有序列抽索引，不再隐式排序。需要按实例 ID 等键排序的规则必须显式 Sort，base 既有受控开发场景已这样表达。Decide 也使用其查询候选顺序。该语义变更随 `engine/ir@0.2` 标记，不能复用旧版本资产标识。
 
-随机流诊断与快照入口见 [RandomService.cs](../../../core-the-spire/Core.TheSpire/Engine/RandomService.cs)。正式动作/观察协议没有因此获得存读档回退能力。
+随机流诊断与快照入口见 [RandomService.cs](../../../../core-the-spire/Core.TheSpire/Engine/RandomService.cs)。正式动作/观察协议没有因此获得存读档回退能力。
 
 ### 7.2 数值有明确语义
 
@@ -391,24 +391,24 @@ tools/differential 的 `normal-compare-self-test` 在正常首战中读取已销
 
 | 文件 | 主要职责 |
 | --- | --- |
-| [Schema.cs](../../../core-the-spire/Core.TheSpire/Engine/Schema.cs) | 作者声明、字段形状、链接后定义 |
-| [PackageBuilder.cs](../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs) | 构建器、作者 IR 辅助方法、规则包构建产物 |
-| [Ir.cs](../../../core-the-spire/Core.TheSpire/Engine/Ir.cs) | 表达式、查询、指令、原语签名 |
-| [RuleSet.cs](../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs) | 名称链接、ID、引用解析、IR dump 与标识摘要 |
-| [RuleSetData.cs](../../../core-the-spire/Core.TheSpire/Engine/RuleSetData.cs) | RuleSet 查询接口 |
-| [IrTypeChecker.cs](../../../core-the-spire/Core.TheSpire/Engine/IrTypeChecker.cs) | 类型、纯性、参数域、引用及程序结构检查 |
-| [StateStore.cs](../../../core-the-spire/Core.TheSpire/Engine/StateStore.cs) | 权威状态、成员/引用约束、事务日志、克隆与哈希 |
-| [Scheduler.cs](../../../core-the-spire/Core.TheSpire/Engine/Scheduler.cs) | Session 公共命令、配置、命令边界与输入检查 |
-| [Session.Execution.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Execution.cs)、[Session.Frames.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Frames.cs) | 唯一 Drain、执行游标、调用/事件帧与预算 |
-| [Session.Instructions.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Instructions.cs) | 指令解释与现有原子单位 |
-| [Session.Expressions.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Expressions.cs)、[Session.Queries.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Queries.cs) | 纯求值与查询 |
-| [Session.Events.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Events.cs)、[Session.Resolution.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Resolution.cs) | 事件/决策续接与链接引用访问 |
-| [Session.Debug.cs](../../../core-the-spire/Core.TheSpire/Engine/Session.Debug.cs) | 可选有界调试轨迹 |
-| [RandomService.cs](../../../core-the-spire/Core.TheSpire/Engine/RandomService.cs)、[RandomProfile.cs](../../../core-the-spire/Core.TheSpire/Engine/RandomProfile.cs) | 流管理、可注入版本化随机、消费计数及快照 |
-| [Projection.cs](../../../core-the-spire/Core.TheSpire/Engine/Projection.cs) | 参与者投影、标识隐藏与授权识别 |
-| [DslSource.cs](../../../core-the-spire/Core.TheSpire/Engine/DslSource.cs) | 公共 AST 与 base 现有解析器 |
-| [Compilation](../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs) | core/0.3 ANTLR、语义绑定、游戏扩展及来源定位 |
-| [AuthoringCollections.cs](../../../core-the-spire/Core.TheSpire/Engine/AuthoringCollections.cs) | 作者对象与子集合固定 |
+| [Schema.cs](../../../../core-the-spire/Core.TheSpire/Engine/Schema.cs) | 作者声明、字段形状、链接后定义 |
+| [PackageBuilder.cs](../../../../core-the-spire/Core.TheSpire/Engine/PackageBuilder.cs) | 构建器、作者 IR 辅助方法、规则包构建产物 |
+| [Ir.cs](../../../../core-the-spire/Core.TheSpire/Engine/Ir.cs) | 表达式、查询、指令、原语签名 |
+| [RuleSet.cs](../../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs) | 名称链接、ID、引用解析、IR dump 与标识摘要 |
+| [RuleSetData.cs](../../../../core-the-spire/Core.TheSpire/Engine/RuleSetData.cs) | RuleSet 查询接口 |
+| [IrTypeChecker.cs](../../../../core-the-spire/Core.TheSpire/Engine/IrTypeChecker.cs) | 类型、纯性、参数域、引用及程序结构检查 |
+| [StateStore.cs](../../../../core-the-spire/Core.TheSpire/Engine/StateStore.cs) | 权威状态、成员/引用约束、事务日志、克隆与哈希 |
+| [Scheduler.cs](../../../../core-the-spire/Core.TheSpire/Engine/Scheduler.cs) | Session 公共命令、配置、命令边界与输入检查 |
+| [Session.Execution.cs](../../../../core-the-spire/Core.TheSpire/Engine/Session.Execution.cs)、[Session.Frames.cs](../../../../core-the-spire/Core.TheSpire/Engine/Session.Frames.cs) | 唯一 Drain、执行游标、调用/事件帧与预算 |
+| [Session.Instructions.cs](../../../../core-the-spire/Core.TheSpire/Engine/Session.Instructions.cs) | 指令解释与现有原子单位 |
+| [Session.Expressions.cs](../../../../core-the-spire/Core.TheSpire/Engine/Session.Expressions.cs)、[Session.Queries.cs](../../../../core-the-spire/Core.TheSpire/Engine/Session.Queries.cs) | 纯求值与查询 |
+| [Session.Events.cs](../../../../core-the-spire/Core.TheSpire/Engine/Session.Events.cs)、[Session.Resolution.cs](../../../../core-the-spire/Core.TheSpire/Engine/Session.Resolution.cs) | 事件/决策续接与链接引用访问 |
+| [Session.Debug.cs](../../../../core-the-spire/Core.TheSpire/Engine/Session.Debug.cs) | 可选有界调试轨迹 |
+| [RandomService.cs](../../../../core-the-spire/Core.TheSpire/Engine/RandomService.cs)、[RandomProfile.cs](../../../../core-the-spire/Core.TheSpire/Engine/RandomProfile.cs) | 流管理、可注入版本化随机、消费计数及快照 |
+| [Projection.cs](../../../../core-the-spire/Core.TheSpire/Engine/Projection.cs) | 参与者投影、标识隐藏与授权识别 |
+| [DslSource.cs](../../../../core-the-spire/Core.TheSpire/Engine/DslSource.cs) | 公共 AST 与 base 现有解析器 |
+| [Compilation](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs) | core/0.3 ANTLR、语义绑定、游戏扩展及来源定位 |
+| [AuthoringCollections.cs](../../../../core-the-spire/Core.TheSpire/Engine/AuthoringCollections.cs) | 作者对象与子集合固定 |
 
 新增通用原语需要一起考虑：IR 节点/签名、构建接口、链接与类型检查、解释执行、内容标识/dump，以及能区分错误行为的检查。游戏专用效果先在包内用现有原语组合；确实存在通用表达缺口时再扩内核。新增文本语法最终仍应生成同一套 IR。
 
@@ -428,4 +428,4 @@ dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests
 dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests
 ```
 
-其他示例见 [FixturePackages.cs](../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../dsl/core/README.md)、[运行态设计](runtime-state-model.md)、[架构决定](core-architecture-decisions.md)、[ENV 实现约束](../environment-implementation-constraints.md)和[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。设计文档里的目标语言示例不自动属于当前可执行语法。
+其他示例见 [FixturePackages.cs](../../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../../reference/dsl/README.md)、[运行态设计](../../../design/core-the-spire/runtime-state-model.md)、[架构决定](../../../design/core-the-spire/core-architecture-decisions.md)、[ENV 实现约束](../../../design/environment-implementation-constraints.md)和[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。设计文档里的目标语言示例不自动属于当前可执行语法。

@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | core-the-spire | 通用类型化状态、DSL 编译、唯一执行器、选择续接、随机与观察原语 | [core 规格](core-the-spire/spec.md)、[活动约定](../contracts/core-engine-baseline.md) |
 | mod-the-spire/base-spire | 用 DSL 定义原版玩法、内容、生命周期与 Run | [base 规格](mod-the-spire/spec.md)、[当前架构](mod-the-spire/base-architecture.md) |
-| net-the-spire | 加载相同规则包，透传公开观察及合法候选，维护协议与幂等控制 | [net 规格](net-the-spire/spec.md)、[协议](net-the-spire/protocol.md) |
+| net-the-spire | 加载相同规则包，透传公开观察及合法候选，维护协议与幂等控制 | [net 规格](net-the-spire/spec.md)、[协议](../areas/net/reference/protocol.md) |
 | ai-the-spire | 消费公开协议，采样、训练及评价；不读取隐藏状态 | [AI 规格](ai-the-spire/spec.md)、[策略约定](ai-the-spire/policy-contract.md) |
 | tools | 构建、CI、定向检查、独立参考适配和来源核对 | [工程工具](../../tools/README.md) |
 

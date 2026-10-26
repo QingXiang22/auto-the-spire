@@ -1,6 +1,6 @@
 # 卡牌行为、攻击与实例操作参考
 
-文档类型：参考（Reference）。适用于当前base的单玩家开发scope，版本见[包manifest](../../../../mod-the-spire/base-spire/package.json)。来源顺序、状态归属和限制见[迁移约定](../../../design/mod-the-spire/content-behavior-migration.md)；通用语法见[封闭键分派](../../../dsl/core/0.3/authoring-reference.md#封闭键分派)。这些操作不开放正常 Run scope。
+文档类型：参考（Reference）。适用于当前base的单玩家开发scope，版本见[包manifest](../../../../mod-the-spire/base-spire/package.json)。来源顺序、状态归属和限制见[迁移约定](../../../design/mod-the-spire/content-behavior-migration.md)；通用语法见[封闭键分派](../../../reference/dsl/0.3/authoring-reference.md#封闭键分派)。这些操作不开放正常 Run scope。
 
 ## 定义正文与纯值
 

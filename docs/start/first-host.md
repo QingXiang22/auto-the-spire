@@ -177,9 +177,9 @@ answer: Terminal
 
 这份练习固定使用一个参与者、一个投影、一个无参数动作及两次实体单选。它让我们看清交互过程；接入其他规则时，按相应操作指南处理具体要求。
 
-- 给已有宿主接入带参数的动作：读[提交玩家选定的动作参数](../design/core-the-spire/how-to-submit-parameters.md)。
-- 查状态、参数组合、回答类型和错误语义：读[宿主交互 API 参考](../design/core-the-spire/session-api-reference.md)。
-- 理解规则、会话和玩家观察的关系：读[引擎运行模型](../design/core-the-spire/developer-guide.md#1-先理解引擎在执行什么)。
+- 给已有宿主接入带参数的动作：读[提交玩家选定的动作参数](../areas/core/how-to/submit-parameters.md)。
+- 查状态、参数组合、回答类型和错误语义：读[宿主交互 API 参考](../areas/core/reference/session-api.md)。
+- 理解规则、会话和玩家观察的关系：读[引擎运行模型](../areas/core/reference/developer-guide.md#1-先理解引擎在执行什么)。
 - 想编写自己的规则：做[第一次写规则](first-rule.md)。
 
-本教程使用进程内 C# SDK。跨进程游戏环境的接口由 net 提供，另见[公开协议](../design/net-the-spire/protocol.md)。可运行的[教学宿主](../examples/core-first-host/Program.cs)保留在仓库中，方便对照。
+本教程使用进程内 C# SDK。跨进程游戏环境的接口由 net 提供，另见[公开协议](../areas/net/reference/protocol.md)。可运行的[教学宿主](../examples/core-first-host/Program.cs)保留在仓库中，方便对照。

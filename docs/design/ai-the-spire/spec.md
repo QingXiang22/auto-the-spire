@@ -2,7 +2,7 @@
 
 本规范定义 AI 的公开输入、编码、概率输出、训练和部署要求。算法、资源和收益配置按具体工单确认；新实验须满足[总任务](https://github.com/QingXiang22/auto-the-spire/issues/28)的恢复条件。
 
-技术设计见[架构](architecture.md)，输入见[net 协议](../net-the-spire/protocol.md)，编码、输出与训练分别见[编码约定](encoder-design.md)、[策略约定](policy-contract.md)和[训练设计](training-design.md)。实际实现范围以模块代码与对应检查为准，文档不保存逐次交付状态。
+技术设计见[架构](architecture.md)，输入见[net 协议](../../areas/net/reference/protocol.md)，编码、输出与训练分别见[编码约定](encoder-design.md)、[策略约定](policy-contract.md)和[训练设计](training-design.md)。实际实现范围以模块代码与对应检查为准，文档不保存逐次交付状态。
 
 ## 1. 用户需求与约束
 

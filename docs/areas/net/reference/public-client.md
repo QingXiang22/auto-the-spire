@@ -1,12 +1,12 @@
 # Python公开客户端接口
 
-文档类型：参考（Reference）。适用于正式Host的协议0.2。首次使用见[公开运行教程](how-to-run-public-game.md)。底层载荷以[主协议的版本约定](protocol.md)与[0.2 schema](../../contracts/net/0.2/wire.schema.json)核对。
+文档类型：参考（Reference）。适用于正式Host的协议0.2。首次使用见[公开运行教程](../how-to/run-public-game.md)。底层载荷以[主协议的版本约定](protocol.md)与[0.2 schema](../../../contracts/net/0.2/wire.schema.json)核对。
 
 ## 连接和响应
 
-Host通过`--package`加载纯 DSL 包，`--scope`只接受该包 manifest 声明的受支持配置。当前包仅开放开发 scope，正常地图和完整 Run 尚未恢复；调用示例见[公开运行指南](how-to-run-public-game.md)。不可混用不同构建的catalog、候选或回放。
+Host通过`--package`加载纯 DSL 包，`--scope`只接受该包 manifest 声明的受支持配置。当前包仅开放开发 scope，正常地图和完整 Run 尚未恢复；调用示例见[公开运行指南](../how-to/run-public-game.md)。不可混用不同构建的catalog、候选或回放。
 
-[NetClient](../../../net-the-spire/client/net_client.py)返回响应信封`{request_id, ok, result或error, ...}`。先检查`ok`再读取`result`；`error`按原样保留。
+[NetClient](../../../../net-the-spire/client/net_client.py)返回响应信封`{request_id, ok, result或error, ...}`。先检查`ok`再读取`result`；`error`按原样保留。
 
 | 方法 | 参数 | 成功的`result` |
 | --- | --- | --- |
@@ -24,7 +24,7 @@ NetClient负责按请求ID匹配响应并在超时后查询恢复。`OutcomeUnkn
 
 ## 公开快照访问
 
-[public_snapshot.py](../../../net-the-spire/client/public_snapshot.py)提供共用函数，输入均为公开响应中的字典。它不缓存旧候选、不读取内部状态、不执行游戏规则。
+[public_snapshot.py](../../../../net-the-spire/client/public_snapshot.py)提供共用函数，输入均为公开响应中的字典。它不缓存旧候选、不读取内部状态、不执行游戏规则。
 
 | 函数 | 返回值/含义 |
 | --- | --- |
@@ -52,8 +52,8 @@ NetClient负责按请求ID匹配响应并在超时后查询恢复。`OutcomeUnkn
 | 当前可提交操作、目标或选牌答案 | 当前snapshot的`legal_actions` |
 | 公开字段、集合和引用结构 | `get_catalog`及0.2 schema |
 | 起始标识与实际支持场景 | 本次`describe` |
-| 长期牌组/药水/遗物集合用途 | 包声明的[公开元数据](../../../mod-the-spire/base-spire/public/metadata.json)，通过当前catalog查询 |
-| base到net公开映射 | [投影规则](../../../mod-the-spire/base-spire/public/projection.spire)及[通用派生边界](design.md#7-公开声明与适配边界) |
+| 长期牌组/药水/遗物集合用途 | 包声明的[公开元数据](../../../../mod-the-spire/base-spire/public/metadata.json)，通过当前catalog查询 |
+| base到net公开映射 | [投影规则](../../../../mod-the-spire/base-spire/public/projection.spire)及[通用派生边界](../../../design/net-the-spire/design.md#7-公开声明与适配边界) |
 | 公开动作的真实游戏行为 | 对应base机制模块；客户端不重写玩法 |
 
 `Run.ActCompleted`和地图阶段属于base玩法；终局结论读取`terminal_result.outcome`。单幕完成、步数截止、故障和执行不确定均不等于整局胜利。

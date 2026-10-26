@@ -133,7 +133,7 @@ flowchart LR
 
 正常路径：describe/get_catalog → 核对模型包 → start/attach → observe → encode/predict/select → step → 记录结果 → 下一个决策点/终止。第一阶段只覆盖 encode，第二阶段可用随机合法分布替代模型验证接口，第三阶段接入学习。
 
-结构/概率错误在执行前停止；stale_observation 刷新后重新预测；结果 unknown 查询原请求并暂停；提供方进程丢失按后端和 NoSL 能力处理。无有效快照不得评分，终止无候选不得 softmax。完整失效规则以[协议](../net-the-spire/protocol.md)及[运行约束](../ai-net-operations.md)为准，AI 不另写自动回退策略。
+结构/概率错误在执行前停止；stale_observation 刷新后重新预测；结果 unknown 查询原请求并暂停；提供方进程丢失按后端和 NoSL 能力处理。无有效快照不得评分，终止无候选不得 softmax。完整失效规则以[协议](../../areas/net/reference/protocol.md)及[运行约束](../ai-net-operations.md)为准，AI 不另写自动回退策略。
 
 ## 12. 设计决策记录
 

@@ -15,7 +15,7 @@
 
 游戏玩法在 base DSL 中实现。通用能力不足时附最小复现协调 core 维护，不将完整通用桌游引擎、Lua 后端或任意 mod 能力作为原版内容前置。按可运行阶段交付，新规则与差异测试同批完成；短场景不能替代正常开局到真实胜负。真实客户端取证及指定 mod 分别验收，不扩展当前原版实现范围。
 
-模块、状态与生命周期要求见[实现约束](environment-implementation-constraints.md)，协作流程见[开发约定](../../CONTRIBUTING.md)。正式 Host 固定角色／进阶，每次 start 接游戏字符串 seed，遵循[协议 0.2](net-the-spire/protocol.md#7-env正式环境的02扩展)，旧协议版本明确拒绝，消费者同步迁移。
+模块、状态与生命周期要求见[实现约束](environment-implementation-constraints.md)，协作流程见[开发约定](../../CONTRIBUTING.md)。正式 Host 固定角色／进阶，每次 start 接游戏字符串 seed，遵循[协议 0.2](../areas/net/reference/protocol.md#7-env正式环境的02扩展)，旧协议版本明确拒绝，消费者同步迁移。
 
 ## 2. 实现与来源入口
 
@@ -45,7 +45,7 @@ ENV-03完整Ironclad整局只是中间里程碑，**不自动恢复正式AI实�
 
 base 先用固定能力按机制纵向交付：用正式DSL描述→运行Engine→同批差异测试；确有通用表达缺口再附最小复现交负责人，不自动进入核心开发。复杂地图等计算放在base可追踪算法/受控计算资产，不把可选Lua工程变成全量内容前置。
 
-公共约定变化须说明语法、AST/编译IR、执行语义、兼容/迁移以及受影响Profile。游戏作者入口为[base 开发手册](../areas/base/README.md)，通用语言入口为[core DSL](../dsl/core/README.md)。领域玩法使用纯 DSL 和必要静态 JSON，不按卡牌 ID 增加专用指令，不回退旧 C# 玩法。
+公共约定变化须说明语法、AST/编译IR、执行语义、兼容/迁移以及受影响Profile。游戏作者入口为[base 开发手册](../areas/base/README.md)，通用语言入口为[core DSL](../reference/dsl/README.md)。领域玩法使用纯 DSL 和必要静态 JSON，不按卡牌 ID 增加专用指令，不回退旧 C# 玩法。
 
 ## 5. ENV-00：版本、完整来源范围及差异测试骨架
 

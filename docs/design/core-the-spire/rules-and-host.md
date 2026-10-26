@@ -38,7 +38,7 @@ core 把游戏规则与驱动游戏的程序分开。一份 `.spire` 文件可�
 
 core 提供通用状态和执行工具，不预设卡牌、伤害、回合或原版胜负。base 和其他 mod 使用内容接口描述这些玩法。core DSL 的计分器例子与 base 的卡牌 DSL 不是同一种声明形式。
 
-模板的可表达范围仍受语言与扩展接口约束，不能把一个计分模板的成功运行推广为完整原版内容已支持。具体语法查[基础语言参考](../../dsl/core/0.3/language-reference.md)与[规则库指南](../../dsl/core/0.3/authoring-guide.md)；原版卡牌作者使用[内容 DSL 作者约定](../../areas/base/README.md)。
+模板的可表达范围仍受语言与扩展接口约束，不能把一个计分模板的成功运行推广为完整原版内容已支持。具体语法查[基础语言参考](../../reference/dsl/0.3/language-reference.md)与[规则库指南](../../reference/dsl/0.3/authoring-guide.md)；原版卡牌作者使用[内容 DSL 作者约定](../../areas/base/README.md)。
 
 ## 同一种操作可以连接模拟环境与真实游戏
 
@@ -57,6 +57,6 @@ net 负责协议编码、传输，以及会话、候选句柄、重发和版本�
 ## 进一步阅读
 
 - 做一次规则编写练习：[第一次写规则](../../start/first-rule.md)。
-- 配置已有库：[计分配置操作指南](../../dsl/core/how-to-configure-game.md)。
-- 接口字段与约束：[宿主交互 API 参考](session-api-reference.md)。
+- 配置已有库：[计分配置操作指南](../../areas/core/how-to/configure-game.md)。
+- 接口字段与约束：[宿主交互 API 参考](../../areas/core/reference/session-api.md)。
 - 设计取舍与扩展边界：[架构决定](core-architecture-decisions.md)。

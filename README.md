@@ -31,7 +31,7 @@ dotnet run --project net-the-spire/Net.TheSpire.Tests
 
 - [core-the-spire](core-the-spire/README.md)：通用类型、规则编译、状态、事件、随机与 Session。
 - [base 开发手册](docs/areas/base/README.md)：配置与共享规则教程、全部领域开发方法、准确操作与排障；[agent skill](.agents/skills/base-spire-development/SKILL.md)按任务读取同一资料。
-- [net 协议](docs/design/net-the-spire/protocol.md)：stdio 公开交互；默认 Host 加载纯 DSL 包。
+- [net 协议](docs/areas/net/reference/protocol.md)：stdio 公开交互；默认 Host 加载纯 DSL 包。
 - [工程工具](tools/README.md)：开发验证、迁移验证记录和独立参考入口。
 - [AI](ai-the-spire/README.md)：既有客户端与离线组件，训练仍暂缓。
 

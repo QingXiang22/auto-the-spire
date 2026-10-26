@@ -1,6 +1,6 @@
 # core/0.3：DSL 规则库与作者配置
 
-本文供你查询 core/0.3 的导入、模板、参数和实例配置。基础声明、表达式、查询和命令沿用 [core/0.3 参考](language-reference.md)。
+文档类型：参考（Reference）。本文供你查询 core/0.3 的导入、模板、参数和实例配置。基础声明、表达式、查询和命令沿用 [core/0.3 参考](language-reference.md)。
 
 初次使用时，从[作者入门](../README.md)开始，再对照带注释的[配置入口](../../../examples/core-choice-counter/game.spire)和[规则库](../../../examples/core-choice-counter/rules/score-race.spire)。同包绑定与具名调用见[作者参考](authoring-reference.md)。
 

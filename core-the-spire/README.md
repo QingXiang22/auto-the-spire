@@ -8,11 +8,11 @@ core-the-spire 是一个用 C#/.NET 9 实现的通用规则引擎。你在 `.spi
 | --- | --- | --- |
 | 教程 | 第一次写一份能运行的规则 | [第一次写规则](../docs/start/first-rule.md) |
 | 教程 | 第一次写程序驱动规则 | [第一次写宿主](../docs/start/first-host.md) |
-| 操作指南 | 使用已有规则库，修改计分参数 | [配置目标和增量](../docs/dsl/core/how-to-configure-game.md) |
-| 操作指南 | 在已有宿主中接入带参数的动作 | [提交动作参数](../docs/design/core-the-spire/how-to-submit-parameters.md) |
-| 参考 | 查询 DSL 声明、表达式与模板 | [core/0.3 语言参考](../docs/dsl/core/0.3/language-reference.md)、[core/0.3 规则库指南](../docs/dsl/core/0.3/authoring-guide.md) |
-| 参考 | 查询同包文本绑定、扩展加载与具名调用 | [core/0.3 作者参考](../docs/dsl/core/0.3/authoring-reference.md) |
-| 参考 | 查询交互 API 的输入、结果与错误 | [宿主交互 API](../docs/design/core-the-spire/session-api-reference.md) |
+| 操作指南 | 使用已有规则库，修改计分参数 | [配置目标和增量](../docs/areas/core/how-to/configure-game.md) |
+| 操作指南 | 在已有宿主中接入带参数的动作 | [提交动作参数](../docs/areas/core/how-to/submit-parameters.md) |
+| 参考 | 查询 DSL 声明、表达式与模板 | [core/0.3 语言参考](../docs/reference/dsl/0.3/language-reference.md)、[core/0.3 规则库指南](../docs/reference/dsl/0.3/authoring-guide.md) |
+| 参考 | 查询同包文本绑定、扩展加载与具名调用 | [core/0.3 作者参考](../docs/reference/dsl/0.3/authoring-reference.md) |
+| 参考 | 查询交互 API 的输入、结果与错误 | [宿主交互 API](../docs/areas/core/reference/session-api.md) |
 | 解释 | 理解规则、会话、动作和玩家观察的关系 | [规则与宿主](../docs/design/core-the-spire/rules-and-host.md) |
 | 解释 | 理解内核的设计取舍 | [架构决定](../docs/design/core-the-spire/core-architecture-decisions.md) |
 
@@ -36,7 +36,7 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 
 ## 范围与维护
 
-活动内核位于 `Core.TheSpire/Engine/`，提供通用声明、状态、动作、调度、随机和参与者观察。卡牌、伤害、回合等游戏规则由内容包提供；原版内容作者使用[base开发手册](../docs/areas/base/README.md)及[core/0.3作者参考](../docs/dsl/core/0.3/authoring-reference.md)，不使用旧base/0.0.2前端。历史实现通过 Git 查询。
+活动内核位于 `Core.TheSpire/Engine/`，提供通用声明、状态、动作、调度、随机和参与者观察。卡牌、伤害、回合等游戏规则由内容包提供；原版内容作者使用[base开发手册](../docs/areas/base/README.md)及[core/0.3作者参考](../docs/reference/dsl/0.3/authoring-reference.md)，不使用旧base/0.0.2前端。历史实现通过 Git 查询。
 
 文本编译器只支持 `core/0.3`。包版本、运行语义标识与语言版本分别以[项目配置](Core.TheSpire/Core.TheSpire.csproj)、[RuleSetBuilder.EngineVersion](Core.TheSpire/Engine/RuleSet.cs)和[EngineDslCompiler](Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)为准。语言参考、规则库指南和作者参考统一维护在 `docs/dsl/core/0.3/`。
 

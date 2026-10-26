@@ -4,7 +4,7 @@
 
 ## 1. 调用边界
 
-外部调用为 `predict(snapshot, model_bundle) -> PolicyEvaluation`，只接收[net 当前快照](../net-the-spire/protocol.md)。内部依次调用 validate/tensorize、`encoder.forward(T) -> EncodedObservation`、`scorer.forward(EncodedObservation, CandidateTable) -> logits`、有效候选归一化；不执行环境动作。
+外部调用为 `predict(snapshot, model_bundle) -> PolicyEvaluation`，只接收[net 当前快照](../../areas/net/reference/protocol.md)。内部依次调用 validate/tensorize、`encoder.forward(T) -> EncodedObservation`、`scorer.forward(EncodedObservation, CandidateTable) -> logits`、有效候选归一化；不执行环境动作。
 
 EncodedObservation 包含 global `[B,dg]`、entities `[B,E,de]`、必要的关系/序列表示和 masks；引用映射仅为侧信息。不同模块可使用不同维度，但模型包必须声明 dg/de、输入布局版本和 scorer 所需通道。不允许只保留 global 后丢失候选引用实体；也不允许把实例行号作为学到的位置。端到端训练可共同更新 encoder/scorer，接口解耦不意味着任意权重可拼接。
 

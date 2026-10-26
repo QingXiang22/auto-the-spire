@@ -1,6 +1,6 @@
 # Python 公开客户端
 
-当前公开调用从 [公开接口指南](../../docs/design/net-the-spire/how-to-run-public-game.md)开始，准确方法与快照字段见 [客户端接口参考](../../docs/design/net-the-spire/public-client-reference.md)。客户端只消费 Host 发布的观察与合法候选。
+当前公开调用从 [公开接口指南](../../docs/areas/net/how-to/run-public-game.md)开始，准确方法与快照字段见 [客户端接口参考](../../docs/areas/net/reference/public-client.md)。客户端只消费 Host 发布的观察与合法候选。
 
 ## 当前检查
 

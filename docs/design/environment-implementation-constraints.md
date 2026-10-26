@@ -10,7 +10,7 @@
 | --- | --- |
 | 当前入口 | [base manifest](../../mod-the-spire/base-spire/package.json)、[开发手册](../areas/base/README.md)、[CI 范围](../../tools/ci/README.md) |
 | 适用范围 | 当前ENV-00～06长任务；通用Engine、base正式内容、net公开出口、tools严格差异测试；AI只做确需的约定兼容 |
-| 关联主规范 | [项目spec](spec.md)、[ENV任务包](environment-completion-and-differential-v1.md)、[公开协议](net-the-spire/protocol.md) |
+| 关联主规范 | [项目spec](spec.md)、[ENV任务包](environment-completion-and-differential-v1.md)、[公开协议](../areas/net/reference/protocol.md) |
 | 状态与派单 | 只在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)更新；[开发约定](../../CONTRIBUTING.md)不另定义范围 |
 
 执行 ENV 任务时，用本文件核对架构约束与验证安排。主验收包括完整 Ironclad 中间里程碑、五角色全量环境与严格差异测试；约束条目数量不能代替运行成果。
@@ -52,7 +52,7 @@
 
 ## 3. 同一个正式构建、同一条会话创建路径
 
-Host 和工具加载同一纯 DSL 包，共用通用包会话创建路径，实际入口见[公开运行指南](net-the-spire/how-to-run-public-game.md)。恢复正常 Run 时，配置至少明确 CharacterId、Ascension、UnlockPolicy（固定 all）、Mode（固定 singleplayer）和 SourceBaselineId；GameSeed 是每会话输入。这些是正常 Run 的要求，不代表当前开发 scope 已支持。角色规范 ID 与 CLI 名称使用同一来源映射，Host／tools 不各写一份；SourceBaselineId 只能标识实际支持且验证过的源基线，未知配置必须拒绝。
+Host 和工具加载同一纯 DSL 包，共用通用包会话创建路径，实际入口见[公开运行指南](../areas/net/how-to/run-public-game.md)。恢复正常 Run 时，配置至少明确 CharacterId、Ascension、UnlockPolicy（固定 all）、Mode（固定 singleplayer）和 SourceBaselineId；GameSeed 是每会话输入。这些是正常 Run 的要求，不代表当前开发 scope 已支持。角色规范 ID 与 CLI 名称使用同一来源映射，Host／tools 不各写一份；SourceBaselineId 只能标识实际支持且验证过的源基线，未知配置必须拒绝。
 
 包加载器构建正式 RuleSet，会话创建路径为给定 GameSeed 创建配置完成、尚未 Start 的独立 Session。数值／随机 Profile 和开局前流初始化由包配置／规则确定；Host 和差异测试的 base 侧共用该路径。控制入口只启动一次，禁止创建路径和 ControlSession 各 Start 一次。正常 Run 恢复后使用下列范围标识；当前可用 scope 仍以 manifest 为准：
 
@@ -72,7 +72,7 @@ net通过配置后的Session/通用工厂委托接管控制。现有ControlSessi
 
 ## 4. 固定配置方式，解决字符串seed冲突
 
-恢复正常 Run 时须提供固定角色／进阶的启动配置。以下为原定目标命令，当前仅支持纯 DSL 包加载的 Host 不接受这些选项；现行可执行命令见[公开运行指南](net-the-spire/how-to-run-public-game.md)：
+恢复正常 Run 时须提供固定角色／进阶的启动配置。以下为原定目标命令，当前仅支持纯 DSL 包加载的 Host 不接受这些选项；现行可执行命令见[公开运行指南](../areas/net/how-to/run-public-game.md)：
 
 ```powershell
 dotnet run --project net-the-spire/Net.TheSpire.Host -- --ruleset base-spire-singleplayer-v1 --character Ironclad --ascension 0 --game-seed ENV-IRONCLAD-00
@@ -80,7 +80,7 @@ dotnet run --project net-the-spire/Net.TheSpire.Host -- --ruleset base-spire-sin
 
 规则/Profile固定为正式单人构建，character/ascension在该Host生命周期固定；省略时分别为Ironclad/0。`--game-seed`提供start未带seed时的默认游戏字符串；没有默认seed且start省略seed时，由base按源规则产生并在响应中报告实际seed。批量同配置不同seed通过同一Host多次start实现，不能强制每个seed重启Host。字符/进阶不支持时在建局前拒绝；不能退回Ironclad或0。
 
-该模式使用[当前协议 0.2](net-the-spire/protocol.md#7-env正式环境的02扩展)。start.seed 是非空游戏字符串；旧协议版本、已移除的作者／测试开关、未知或重复 CLI 选项在启动前拒绝。
+该模式使用[当前协议 0.2](../areas/net/reference/protocol.md#7-env正式环境的02扩展)。start.seed 是非空游戏字符串；旧协议版本、已移除的作者／测试开关、未知或重复 CLI 选项在启动前拒绝。
 
 字符串seed的有效性、必要标准化及哈希按固定源码处理，原始请求和实际接受seed均留验证记录。不能私自trim/转大写/改前缀/数值强转，或对参考输入加`old`后声称仍为相同游戏seed；需要版本适配的差异按窄源裁决处理。seed不能作为模型内容索引或隐藏信息特征。
 

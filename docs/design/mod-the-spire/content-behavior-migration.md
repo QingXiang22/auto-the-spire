@@ -52,7 +52,7 @@ EventVisit 独立拥有 DefinitionId、Page、Status、ReturnRoom 与访问序�
 
 构建工具 validate／check 从启动后的 CardLibrary、PowerLibrary 核对可执行 ID、完整来源 catalog 和公开 content_ids；错误文件映射与缺登记分别报错。sync-content 仅从这两个定义库及显式启动实例派生相应公开 ID 列表，不改公开政策、来源条目总数或池顺序。遗物行为执行结果仍由实际执行登记；其他种类的目录派生继续按真实消费者扩展，不引入运行时目录扫描。
 
-Host 的派生 0.2 应答目录增加可选 Boolean Flag，Bool 暂停发布 false／true 两个完整候选；实体单选与取消保持原形状。提交仅回填 Engine 的对应 RequestId／Flag，不增加业务专用命令；目录与后端标识随声明变化，准确合同见[协议](../net-the-spire/protocol.md)。
+Host 的派生 0.2 应答目录增加可选 Boolean Flag，Bool 暂停发布 false／true 两个完整候选；实体单选与取消保持原形状。提交仅回填 Engine 的对应 RequestId／Flag，不增加业务专用命令；目录与后端标识随声明变化，准确合同见[协议](../../areas/net/reference/protocol.md)。
 
 ## 验证与迁移
 

@@ -1,6 +1,6 @@
 # core/0.3 语言参考
 
-本页供规则作者查询 core/0.3 的基础语义。使用 imports/template/use 时，查 [core/0.3 规则库与配置](authoring-guide.md)；底层原语继续以本页为准。
+文档类型：参考（Reference）。本页供规则作者查询 core/0.3 的基础语义。使用 imports/template/use 时，查 [core/0.3 规则库与配置](authoring-guide.md)；底层原语继续以本页为准。
 
 当前编译器只接受 `dsl_version = "core/0.3"`。权威语法是 [CoreSpire.g4](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/CoreSpire.g4)，语义入口是 [EngineDslCompiler](../../../../core-the-spire/Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)。执行语义复用 Engine；先读[作者入门](../README.md)与完整 [counter.spire](../../../examples/core-choice-counter/counter.spire)。
 
@@ -165,7 +165,7 @@ fields/payload/inputs 都是 `{ 名字 = 表达式 }`。compute outputs 是 `{ �
 
 决策 kind 来自 DecisionResponseKind：EntityRef、EntityRefList、Int、Bool、Enum、Participant、Confirm。候选在请求时固定为该次请求的列表，过期请求不可回答。min/max 按种类解释；Enum 决策结果必须为具体非空 Enum 槽，默认范围 0..成员数-1，显式 min/max 只能缩小该闭区间。非法回答保留请求，非法声明范围在发布请求前故障。`Repeat` 有限次迭代并受命令预算约束；`ForEach` 使用入口查询快照。终局立即停止，不自动结清尚未运行的监听器。
 
-初始化按包链接顺序与包内 start 登记顺序初始化，暂停后先完成当前入口再继续剩余入口；亦可登记一个 Setup 并顺序 call。执行要求见[核心约定](../../../contracts/core-engine-baseline.md)。详细暂停、预算及指令级故障语义见 [开发者指南](../../../design/core-the-spire/developer-guide.md)。
+初始化按包链接顺序与包内 start 登记顺序初始化，暂停后先完成当前入口再继续剩余入口；亦可登记一个 Setup 并顺序 call。执行要求见[核心约定](../../../contracts/core-engine-baseline.md)。详细暂停、预算及指令级故障语义见 [开发者指南](../../../areas/core/reference/developer-guide.md)。
 
 ## 6. 加载、扩展和错误
 

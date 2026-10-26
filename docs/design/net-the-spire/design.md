@@ -1,6 +1,6 @@
 # net-the-spire 架构
 
-模拟 Host 加载纯 DSL manifest，从规则声明派生公开目录与 Profile，转发合法动作和原生决策。具体支持的类型与决策见[协议](protocol.md)和[客户端参考](public-client-reference.md)，正常 Run、有序多选及独立比较按[GitHub Issues](https://github.com/QingXiang22/auto-the-spire/issues/28)安排。
+模拟 Host 加载纯 DSL manifest，从规则声明派生公开目录与 Profile，转发合法动作和原生决策。具体支持的类型与决策见[协议](../../areas/net/reference/protocol.md)和[客户端参考](../../areas/net/reference/public-client.md)，正常 Run、有序多选及独立比较按[GitHub Issues](https://github.com/QingXiang22/auto-the-spire/issues/28)安排。
 
 ## 1. 组件与依赖
 
@@ -66,7 +66,7 @@ flowchart LR
 
 首版采用 stdio 子进程使 C# 环境与 Python 消费端独立。优点是无需部署服务，可直接捕获输入/输出做约定检查；代价是完整 JSON 快照复制和编码开销。先测投影、序列化、编码、评分、动作结算各项耗时，再决定是否加批量或二进制绑定，不预设网络框架能解决性能问题。
 
-去重与失效严格依[协议生命周期](protocol.md#5-生命周期与恢复)。进程活跃期间账本缓存至关闭；这需要容量上限并在超限前拒绝。对真实外部动作，无法凭 C# 锁实现跨系统事务；必须按能力验证版本/完成信号，未确认时 uncertain。模拟规则异常可能已经推进部分状态，此时隔离会话，不把失败回滚视为默认能力。
+去重与失效严格依[协议生命周期](../../areas/net/reference/protocol.md#5-生命周期与恢复)。进程活跃期间账本缓存至关闭；这需要容量上限并在超限前拒绝。对真实外部动作，无法凭 C# 锁实现跨系统事务；必须按能力验证版本/完成信号，未确认时 uncertain。模拟规则异常可能已经推进部分状态，此时隔离会话，不把失败回滚视为默认能力。
 
 会话日志记录标识、request_id、观察版本、状态转换、候选数量和各阶段耗时；公开快照与内部调试日志分别存储。内部规则诊断可供规则检查，但不能被训练客户端、轨迹事实或模型特征读取。操作日志不自动形成 AI 的历史输入。
 

@@ -1,6 +1,6 @@
 # 核心接口与兼容要求
 
-本文规定当前通用内核的职责和行为。工程版本见 [Core.TheSpire.csproj](../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)，文本版本与语义见[作者参考](../dsl/core/README.md)。修改语言、执行或投影语义时同步更新标识、消费者与相关检查；历史版本及其检查结果查 Git／PR／CI。
+本文规定当前通用内核的职责和行为。工程版本见 [Core.TheSpire.csproj](../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)，文本版本与语义见[作者参考](../reference/dsl/README.md)。修改语言、执行或投影语义时同步更新标识、消费者与相关检查；历史版本及其检查结果查 Git／PR／CI。
 
 ## 1. 固定的结构与接口职责
 
@@ -41,7 +41,7 @@
 
 ## 4. 确定性、数值与标识
 
-RandomService 管命名流、消耗计数和快照；IRandomProfile 提供版本化算法与映射。整数区间、浮点转换、随机流布局和快照恢复按[随机作者参考](../dsl/core/0.3/authoring-reference.md#随机流与-binary32)执行，禁止用不同随机实现冒用旧标识。
+RandomService 管命名流、消耗计数和快照；IRandomProfile 提供版本化算法与映射。整数区间、浮点转换、随机流布局和快照恢复按[随机作者参考](../reference/dsl/0.3/authoring-reference.md#随机流与-binary32)执行，禁止用不同随机实现冒用旧标识。
 
 core 0.9.5 的开发诊断 `RandomCallDetails.SingleRawWord` 只在一次成功 API 调用确实消耗全局及当前流各一个原始随机字时，保留该次生成器实际返回的 UInt64。零消费、多字消费或跨流额外消费时为 null，不把末字当作完整抽样记录。诊断只记录已有抽样，不追加或重放随机；候选、游标、容量与历史快照约束保持，公开参与者投影不包含此字段。
 

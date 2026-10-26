@@ -4,9 +4,9 @@ net 加载同一规则包，发布公开观察和合法候选，并提供 Host�
 
 | 任务 | 入口 |
 | --- | --- |
-| 在终端手动选择地图、卡牌和房间动作 | [手动试玩](../../design/net-the-spire/how-to-play-base-game.md) |
-| 启动公开 Host 或编写客户端 | [公开运行指南](../../design/net-the-spire/how-to-run-public-game.md) |
-| 查客户端调用和协议字段 | [客户端参考](../../design/net-the-spire/public-client-reference.md)、[协议参考](../../design/net-the-spire/protocol.md) |
+| 确认终端菜单能否用于当前构建 | [手动试玩的当前边界](how-to/play-base-game.md) |
+| 启动公开 Host 或编写客户端 | [公开运行指南](how-to/run-public-game.md) |
+| 查客户端调用和协议字段 | [客户端参考](reference/public-client.md)、[协议参考](reference/protocol.md) |
 | 核对提供方行为、规范化与 schema | [net 规格](../../design/net-the-spire/spec.md)、[协议资产要求](../../design/net-the-spire/contract-artifacts.md)、[不变量](../../contracts/net/0.2/invariants.md) |
 | 理解 Host、公开状态和请求恢复的设计 | [net 架构](../../design/net-the-spire/design.md) |
 
