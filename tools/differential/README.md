@@ -2,15 +2,15 @@
 
 ## 战斗动作边界诊断
 
-运行 `dotnet run --project tools/differential -c Release -- combat-boundary-compare --output .artifacts/differential/combat-boundaries`，从两个固定 seed 分别执行开场及完整`EndTurn`（含下一普通玩家开始）、付费 Strike、两张 Infection、第一张移牌时暂停的两张 Infection，以及 Feed 末杀。`combat-boundary-self-test` 检查比较器拒绝缺通知、错阶段、错牌区、错支付、错招式、错 ending、零执行和重复动作返回。
+运行 `dotnet run --project tools/differential -c Release -- combat-boundary-compare --output .artifacts/differential/combat-boundaries`，从两个固定 seed 分别执行开场及完整`EndTurn`（含下一普通玩家开始）、付费 Strike、两张 Infection、第一张移牌时暂停的两张 Infection，以及 Feed 末杀；另覆盖零费Anger、免费自动Whirlwind、真实OneTwoPunch重复Strike与Corruption技能，共18项。`combat-boundary-self-test` 检查比较器拒绝缺通知、错阶段、错牌区、错支付、错招式、错 ending、零执行和重复动作返回。
 
-这些是人工设置的组件：空永久牌组、真实 FuzzyWurmCrawler、双方生命设为1000，Feed 的敌人设为10HP。只读通知记录实际回合号、能量、生命、格挡、招式、ending 和五个有序牌区；暂停例分别使用 DSL 的行政选择与参考既有异步通知的未完成 Task，观察后各续接一次，不加入游戏效果或动画等待。Feed 停在房间结算前。报告同时保存双方原始事件／监听信息，以及锁定 Hook 的准确源码、行号、摘要、迭代入口、名单固定和资格检查位置，供逐通知核查；这些源码片段和局部观察不证明全部监听已对齐。
+这些是人工设置的组件：空永久牌组、真实 FuzzyWurmCrawler、双方生命设为1000，Feed 的敌人设为10HP。只读通知记录实际回合号、能量、当前通知实付量spent、生命、格挡、招式、ending 和五个有序牌区；暂停例分别使用 DSL 的行政选择与参考既有异步通知的未完成 Task，观察后各续接一次，不加入游戏效果或动画等待。Feed 停在房间结算前。报告同时保存双方原始事件／监听信息，以及锁定 Hook 的准确源码、行号、摘要、迭代入口、名单固定和资格检查位置，供逐通知核查；这些源码片段和局部观察不证明全部监听已对齐。
 
 `first_difference` 保留从开场起的首差；`action_difference` 从已经配置好的动作初态比较，`return_difference` 单独比较真实返回值。这样开场的选招差异不会掩盖后续付款或回合末差异。配置牌区期间的 DSL 通知另保留在 raw 中；初始 HP 抽样与 niche、正常房间、重复定义牌的实例标识和完整事件比较不属于本探针。适配器不补执行额外的开始回合动作。
 
 每例另跑关闭诊断的相同初态：DSL 核对完整 StateHash 和随机状态，参考核对自身精确战斗描述和随机状态；观察与候选查询也不得改变 DSL 状态。缺场景／字段、截断、缺参考和异常返回3；实际差异返回1，所比较边界全部一致才返回0。报告的 complete、independent_verified 与 normal_run_verified 始终为 false，不代替原 suites 或 M01 验收。
 
-手动出牌的源入口使用同步 `CardPileCmd.Add` 移入 Play，它不发异步 `AfterCardChangedPiles`；扣费后才在正支付量时发 `AfterEnergySpent`。普通 `AddAsync` 则在整批移牌后通知。诊断分别记录这些实际站点，不能为了统一事件名给参考添加不存在的回调。
+手动出牌的源入口使用同步 `CardPileCmd.Add` 移入 Play，它不发异步 `AfterCardChangedPiles`；扣费后才在正支付量时发 `AfterEnergySpent`。普通 `AddAsync` 则在整批移牌后通知。零费Anger保留生成克隆时额外 `pile:none:discard` 的实际首差，由 #149 处理；暂停批次由 #147 处理，不过滤这些事件以制造全轨迹通过。诊断分别记录这些实际站点，不能为了统一事件名给参考添加不存在的回调。
 
 [锁定 sts2-sim](../../reference/README.md) 同时作为当前规则依据和独立执行的比较后端。生产随机派生与开局向量使用同一锁定基线，旧source-catalogs仅保留原迁移清单；一致只表示与该模拟器实现一致，不能单独证明客户端保真。
 

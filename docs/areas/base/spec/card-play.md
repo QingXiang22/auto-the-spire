@@ -6,7 +6,7 @@
 
 规则依据为[锁定 sts2-sim](../../../../reference/README.md) 的 `Models/CardModel.cs::PlayAfterObserverStartedAsync`、`SpendResources`、`GetResultLocationForCardPlay`，以及 `Commands/CardPileCmd.cs::Add`／`AddAsync`／`Draw`。同步移牌、异步移牌通知和抽牌通知分别按实际命令处理，不能仅按最终牌区推定通知相同。
 
-本页覆盖当前已加载卡牌的手动出牌、免费自动出牌、重复正文、X 捕获、结果位置和费用清理，以及实际 Power／遗物消费者。共享过程位于 `cards/rules/play.spire`、`piles.spire`、`costs.spire` 与 `autoplay.spire`；内容仍通过 DSL dispatch 和实例监听接入。星星、多人转交、额外回合和暂停的角色内容在出现正式消费者及独立判别前保持未支持，不增加空效果或工具补偿。
+本页覆盖当前已加载卡牌的手动出牌、免费自动出牌、重复正文、X 捕获、结果位置和费用清理，以及实际 Power／遗物消费者。共享过程位于 `cards/rules/play.spire`、`piles.spire`、`costs.spire`、`play-preparation.spire` 与 `autoplay.spire`；内容仍通过 DSL dispatch 和实例监听接入。星星、多人转交、额外回合和暂停的角色内容在出现正式消费者及独立判别前保持未支持，不增加空效果或工具补偿。
 
 ## 行为要求与设计
 
@@ -19,7 +19,7 @@
 | CP05 | 升级与费用修正继续作用于原实例；解析结果位置时先处理默认离场／Power／Exhaust等源优先级，再执行结果位置修正及实际参与者后通知 | Power与Exhaust同时存在、临时强制耗尽、连续预览、持有者失效和非交换修正可区分错误优先级 |
 | CP06 | 结果位置修正及其后通知先于次数修正及其后通知；pure计算只读，副作用只由本次实际参与者的后通知执行一次 | Corruption与OneTwoPunch使用真实实例；已被前一修正达到相同值者不能仅因同定义被消费，重复实例按源顺序处理 |
 | CP07 | 完成动作仍经同一公开Host、真实候选与stdio协议；客户端不执行缺失规则 | 原四条正常路径、重放、过期观察、手牌／能量／回合与实际动作终点保留 |
-| CP08 | 牌在所有重复正文期间留在Play；每次依次执行BeforeCardPlayed、开始记录、正文、附魔／附着、完成记录和AfterCardPlayed，保持源死亡与ending门禁 | 实际末杀、玩家致死、暂停和重复正文保留源次数、记录及后续资格；不只比较最终伤害 |
+| CP08 | 普通结果只在所有重复正文结束后提交，正文仍可自行移牌；每次依次执行BeforeCardPlayed、开始记录、正文、附魔／附着、完成记录和AfterCardPlayed，保持源死亡与ending门禁 | 实际末杀、玩家致死、暂停和重复正文保留源次数、记录及后续资格；不只比较最终伤害 |
 | CP09 | 所有正文结束后，只在牌仍在Play时进入结果位置；普通结果同步移牌不增加异步移牌通知，耗尽走完整耗尽命令 | 正文已移牌不重复移动；耗尽保留原因与即时／延迟消费者；回合末批次另遵循所属规格 |
 | CP10 | 结果移牌及所有者处理后，按源检查原持有者空手，随后清理本次出牌到期费用，再返回 | 空手通知发生于最终牌区之后、临时免费与until-played修正清理之前；嵌套／选择不重复清理或通知 |
 | CP11 | 抽牌按源直接移动Draw→Hand并发抽牌Early／普通通知，不额外发AfterCardChangedPiles；普通异步移动保留其通知 | 两张Infection经完整EndTurn抽回的实际轨迹、满手、重洗、LastDrawn及逐次随机继续核对 |
@@ -34,3 +34,7 @@
 2. 复用Strike、Corruption、OneTwoPunch、真实X和Havoc／Cascade；增加非交换修正、实际参与者、空手时点与选择续接判别。手动、免费自动及有真实消费者的已付费批次分列，不能用设置能量替代真实支付。
 3. 保留两seed原10项动作边界、原四条正常路径和11份suite，以及费用拒绝、实例隔离、升级、满手／重洗和末杀检查。付款／抽牌通知与回合末暂停批次分别保留实际首差，后者按独立工单修复。
 4. 本地先运行能区分本次错误行为的定向检查，最终提交由 PR CI 按文件影响选择公共检查，不重复运行未受影响的整批。组件与正常路径分别报告；缺随机或完整事件维度时 M01 继续严格非零，局部出牌一致不代替完整 Run 验收。
+
+被禁止自动出牌的非出牌回退依据 `MoveToResultPileWithoutPlaying`，不执行成功出牌的结果修正、Power离场或play费用清理。自动抽牌批次依据 `AutoPlayCmd.PlayCardsCore`：先逐张写入一次性耗尽标记，再判断ending；已经预载的剩余牌保持Play，不凭最终位置补做未执行正文。
+
+侧回合历史以当前单玩家普通轮换为边界：Unmovable的语义历史区分EnemyPhase和玩家TurnNumber；Stomp及AttacksPlayedThisTurn对应源PlayerCombatState的回合计数，保持玩家回合重置语义。Anger生成克隆的完整生成通知属于[生成生命周期工单](https://github.com/QingXiang22/auto-the-spire/issues/149)，动作诊断保留其实际额外移牌通知，不能据零支付一致宣称生成轨迹一致。

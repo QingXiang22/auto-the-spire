@@ -434,9 +434,9 @@ def main() -> int:
 
         run("combat-boundary-self-test", ["combat-boundary-self-test"], 0)
         boundaries = run("combat-boundaries", ["combat-boundary-compare", "--output", str(args.output / "combat-boundaries")], (0, 1))
-        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending")
+        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "zero-card", "free-x", "repeat-card", "corruption")
         boundary_ids = [seed + ":" + plan for seed in ("777", "A😀B") for plan in boundary_plans]
-        point_fields = {"phase", "card", "turn", "energy", "hp", "max_hp", "block", "enemy_hp", "move", "ending", "piles"}
+        point_fields = {"phase", "card", "turn", "energy", "hp", "max_hp", "block", "enemy_hp", "move", "ending", "piles", "spent"}
         if (boundaries is None or boundaries["schema"] != "dsl-migration/combat-boundaries@1"
                 or boundaries["executed"] != len(boundary_ids) or boundaries["expected_case_ids"] != boundary_ids
                 or [c["id"] for c in boundaries["cases"]] != boundary_ids
@@ -454,10 +454,19 @@ def main() -> int:
                 raise ValueError("Boundary diagnostics changed gameplay or failed to execute")
             if case["return_difference"] is not None:
                 raise ValueError("Complete combat actions must return the same stable state without adapter continuation")
-            # Other plans retain the measured payment/draw notifications (#146) and paused
-            # effect-card batch differences (#147); their actual traces must remain diverged.
-            if case["id"].endswith(":turn-return") and case["status"] != "passed":
-                raise ValueError("Ordinary full EndTurn must match the reference through the next player start")
+            # #146 requires actual payment/draw/play boundaries to agree; the independently
+            # scoped paused effect-card batch remains #147's measured difference.
+            if not case["id"].endswith((":two-end-effects-paused", ":zero-card")) and case["status"] != "passed":
+                raise ValueError("Ordinary and card-play boundaries must match the locked reference")
+            if case["id"].endswith(":zero-card"):
+                # Anger's generated-clone notification belongs to #149. Preserve the new
+                # full trace and exact extra notification rather than dropping this case.
+                if (case["status"] != "diverged" or case["first_difference"] != {
+                        "index": 7, "field": "phase", "left": "pile:none:discard", "right": "card-after"}):
+                    raise ValueError("Anger generation discrepancy must remain explicit until #149 fixes it")
+                for side in ("left", "right"):
+                    if any(p["phase"] == "energy-spent" or p["spent"] != 0 for p in case[side]["points"]):
+                        raise ValueError("Zero-cost Anger must not emit an energy payment")
             for side in ("left", "right"):
                 trace = case[side]
                 if (not trace["final_state"] or not trace["raw"] or not trace["points"]

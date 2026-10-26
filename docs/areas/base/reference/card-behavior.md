@@ -26,7 +26,26 @@
 
 效果内部的普通／升级常量选择共用pure过程`CardUpgradeValue(card: Ref(Card), baseValue: Int, upgradedValue: Int) → Int`。格挡、抽牌、能量、Power层数、失血、成长与段数模板调用同一过程；内容仍拥有两个输入值及额外的动态计算。目标卡是否需要选敌不影响自身Power效果，统一调用`ApplySelfPowerEffect.WhenPlayed(play,owner,card)`；临时效果通过untilTurnEnd显式选择原有到期操作。
 
-每次执行的 BeforeCardExecution／AfterCardExecution 载荷均为 owner、card、play。正文之后依次经过 ExecuteCardEnchantment 和 ExecuteCardAffliction，存活时才继续完成通知。CardPlayRecord 保存付款、原始 X、自动标记、目标、结果区、ActionNumber、ParentPlay 和 PlayIndex／PlayCount；内部执行历史不公开。新效果收到 play 后继续显式传给子操作。
+每次执行的 BeforeCardExecution／AfterCardExecution 载荷均为 owner、card、play。正文之后依次经过 ExecuteCardEnchantment、ExecuteCardAffliction、完成记录和完成通知，之后按玩家存活决定是否继续下一次重复。CardPlayRecord 保存付款、原始 X、自动标记、目标、结果区、ActionNumber、ParentPlay 和 PlayIndex／PlayCount；内部执行历史不公开。新效果收到 play 后继续显式传给子操作。
+
+## 出牌准备与收尾
+
+共享过程见[出牌准备](../../../../mod-the-spire/base-spire/cards/rules/play-preparation.spire)，顺序要求见[出牌规格](../spec/card-play.md)。同一次出牌先捕获费用及原始X、同步移入Play，再扣资源；仅正实付能量发布 `AfterEnergySpent(owner,card,amount)`。同步入Play、普通结果移牌及抽牌不发布 `CardMoved`，普通异步移动仍使用 `MoveCombatCard`。
+
+| 操作／通知 | 参数及语义 |
+| --- | --- |
+| `CalculateCardPlayResultPile` | pure；owner、card、auto: Bool、paidEnergy／energyValue／rawX: Int、forceExhaust: Bool → String(16)。仅预览，不消费强制耗尽或修正实例 |
+| `CalculateCardPlayCount` | pure；owner、card、target: Binding → Int；从1依实例顺序修正 |
+| `CardPlayResultModifying`／`CardPlayCountModifying` | preparation: Ref(CardPlayPreparation)；内容调用 `SetCardPlayResultPile`／`SetCardPlayCount`，传 preparation、value 和实际 power／relic（恰一项非none） |
+| `AfterModifyingCardPlayResultPile` | preparation、modifier: Ref(CardPlayModifier)；按实际改变结果的记录顺序调用，可读取记录中的模型和定义；模型引用为可选，已移除时为none |
+| `AfterModifyingCardPlayCount` | preparation；重新筛选当前有效模型，只在 `CardPlayCountModifiedBy(preparation,power,relic)` 为真时执行一次副作用 |
+| `CheckForEmptyHand`／`AfterHandEmptied` | owner；活跃且未结束、玩家存活、EffectDepth为0且该玩家手牌为空时通知。出牌在结果移牌后检查，随后才清理play到期费用 |
+
+结果位置修正及其后通知全部完成后才计算次数；pure预览和实际修正调用同一内容公式。`CardPlayPreparation` 及参与者仅属于一次调用，暂停／嵌套沿同一Engine栈续接，完成后销毁。真实消费者为Corruption与OneTwoPunch；同定义的不同实例分别识别，无值变化不记录。
+
+默认成功出牌先处理Power离场，再处理强制／关键字耗尽；只有到达默认耗尽分支才消费一次性标记。被禁止的自动出牌没有正文、支付、出牌准备或play费用清理，其非出牌回退按耗尽标记／关键字决定耗尽或弃牌，不套用成功Power离场规则。抽牌自动批次预先固定全部牌，逐张尝试前写入forceExhaust；战斗已结束时预载的后续牌留在Play，玩家死亡则停止尝试。
+
+`CardPlayRecord.EnemyPhase` 与Turn保存普通单玩家历史的侧与回合。Unmovable按二者查询语义历史；出牌次数计数仍按玩家回合号重置，以对应源PlayerCombatState计数。额外回合、多人及付费预处理自动批次没有当前正式消费者，不由此声明支持。
 
 ## 供内容与mod组合的公共操作
 

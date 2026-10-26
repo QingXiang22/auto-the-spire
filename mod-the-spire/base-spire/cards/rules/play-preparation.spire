@@ -1,0 +1,113 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# One resource/result/count capture per card action, retained over nested calls and decisions.
+entity CardPlayPreparation { fields = {
+  Player = { type = Ref(Player) visibility = Hidden }
+  Card = { type = Ref(Card) visibility = Hidden }
+  Target = { type = Ref(Enemy) optional = true visibility = Hidden }
+  Auto = { type = Bool visibility = Hidden }
+  PaidEnergy = { type = Int visibility = Hidden }
+  EnergyValue = { type = Int visibility = Hidden }
+  RawX = { type = Int visibility = Hidden }
+  ResultPile = { type = String(length = 16) visibility = Hidden }
+  Count = { type = Int default = 1 visibility = Hidden }
+} }
+entity CardPlayModifier { fields = {
+  Preparation = { type = Ref(CardPlayPreparation) visibility = Hidden }
+  Stage = { type = String(length = 16) visibility = Hidden }
+  Power = { type = Ref(Power) optional = true visibility = Hidden }
+  Relic = { type = Ref(Relic) optional = true visibility = Hidden }
+  Definition = { type = String(length = 64) visibility = Hidden }
+} }
+
+event AfterEnergySpent { payload = { owner = Ref(Player) card = Ref(Card) amount = Int } }
+event ModifyCardPlayResultPile { payload = { value = String(length = 16) owner = Ref(Player) card = Ref(Card) auto = Bool paidEnergy = Int energyValue = Int rawX = Int } }
+event ModifyCardPlayCount { payload = { value = Int owner = Ref(Player) card = Ref(Card) target = Binding } }
+event CardPlayResultModifying { payload = { preparation = Ref(CardPlayPreparation) } }
+event CardPlayCountModifying { payload = { preparation = Ref(CardPlayPreparation) } }
+# Result-location callbacks use the recorded list itself; count callbacks re-enumerate eligible models.
+event AfterModifyingCardPlayResultPile { payload = { preparation = Ref(CardPlayPreparation) modifier = Ref(CardPlayModifier) } }
+event AfterModifyingCardPlayCount { payload = { preparation = Ref(CardPlayPreparation) } }
+event AfterHandEmptied { payload = { owner = Ref(Player) } }
+
+procedure DefaultCardPlayResultPile {
+  pure = true parameters = { card = Ref(Card) forceExhaust = Bool } result = String(length = 16)
+  body = {
+    if = { condition = field(card, Card.LeavesPlay) then = { return = { value = "removed" } } }
+    if = { condition = or(forceExhaust, or(field(card, Card.ForceExhaust), pureCall(CardHasKeyword, card, "exhaust"))) then = { return = { value = "exhaust" } } }
+    return = { value = "discard" }
+  }
+}
+procedure CalculateCardPlayResultPile {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) auto = Bool paidEnergy = Int energyValue = Int rawX = Int forceExhaust = Bool } result = String(length = 16)
+  body = { return = { value = foldEvent(ModifyCardPlayResultPile, pureCall(DefaultCardPlayResultPile, card, forceExhaust), owner, card, auto, paidEnergy, energyValue, rawX) } }
+}
+procedure CalculateCardPlayCount {
+  pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int
+  body = { return = { value = foldEvent(ModifyCardPlayCount, 1, owner, card, target) } }
+}
+procedure RecordCardPlayModifier {
+  parameters = { preparation = Ref(CardPlayPreparation) stage = String(length = 16) power = Binding relic = Binding }
+  locals = { record = Binding definition = String(length = 64) }
+  body = {
+    if = { condition = equal(isNone(power), isNone(relic)) then = { fail = { message = "A card play modifier requires exactly one model" } } }
+    if = { condition = isNone(power) then = { let = { into = definition value = field(relic, Relic.DefinitionId) } } else = { let = { into = definition value = field(power, Power.DefinitionId) } } }
+    create = { type = CardPlayModifier scope = entityScope(preparation) into = record fields = { Preparation = preparation Stage = stage Power = power Relic = relic Definition = definition } }
+  }
+}
+procedure SetCardPlayResultPile {
+  parameters = { preparation = Ref(CardPlayPreparation) value = String(length = 16) power = Binding relic = Binding }
+  body = {
+    if = { condition = not(equal(value, field(preparation, CardPlayPreparation.ResultPile))) then = {
+      call = { procedure = RecordCardPlayModifier args = { preparation = preparation stage = "result" power = power relic = relic } }
+      set = { target = preparation field = CardPlayPreparation.ResultPile value = value }
+    } }
+  }
+}
+procedure SetCardPlayCount {
+  parameters = { preparation = Ref(CardPlayPreparation) value = Int power = Binding relic = Binding }
+  body = {
+    if = { condition = not(equal(value, field(preparation, CardPlayPreparation.Count))) then = {
+      call = { procedure = RecordCardPlayModifier args = { preparation = preparation stage = "count" power = power relic = relic } }
+      set = { target = preparation field = CardPlayPreparation.Count value = value }
+    } }
+  }
+}
+procedure CardPlayCountModifiedBy {
+  pure = true parameters = { preparation = Ref(CardPlayPreparation) power = Binding relic = Binding } result = Bool
+  body = { return = { value = exists(where(type(CardPlayModifier), m, and(equal(field(m, CardPlayModifier.Preparation), preparation), and(equal(field(m, CardPlayModifier.Stage), "count"), and(equal(field(m, CardPlayModifier.Power), power), equal(field(m, CardPlayModifier.Relic), relic)))))) } }
+}
+procedure PrepareCardPlay {
+  parameters = { owner = Ref(Player) card = Ref(Card) target = Binding auto = Bool paidEnergy = Int energyValue = Int rawX = Int forceExhaust = Bool }
+  locals = { preparation = Binding } result = Binding
+  body = {
+    create = { type = CardPlayPreparation scope = entityScope(owner) into = preparation fields = {
+      Player = owner Card = card Target = target Auto = auto PaidEnergy = paidEnergy EnergyValue = energyValue RawX = rawX
+      ResultPile = pureCall(DefaultCardPlayResultPile, card, forceExhaust)
+    } }
+    if = { condition = equal(field(preparation, CardPlayPreparation.ResultPile), "exhaust") then = { set = { target = card field = Card.ForceExhaust value = false } } }
+    emit = { event = CardPlayResultModifying payload = { preparation = preparation } }
+    forEach = { query = where(type(CardPlayModifier), m, and(equal(field(m, CardPlayModifier.Preparation), preparation), equal(field(m, CardPlayModifier.Stage), "result"))) item = modifier body = {
+      emit = { event = AfterModifyingCardPlayResultPile payload = { preparation = preparation modifier = modifier } }
+    } }
+    emit = { event = CardPlayCountModifying payload = { preparation = preparation } }
+    emit = { event = AfterModifyingCardPlayCount payload = { preparation = preparation } }
+    return = { value = preparation }
+  }
+}
+procedure ClearCardPlayPreparation {
+  parameters = { preparation = Ref(CardPlayPreparation) }
+  body = {
+    forEach = { query = where(type(CardPlayModifier), m, equal(field(m, CardPlayModifier.Preparation), preparation)) item = modifier body = { destroy = { target = modifier } } }
+    destroy = { target = preparation }
+  }
+}
+procedure CheckForEmptyHand {
+  parameters = { owner = Ref(Player) }
+  body = {
+    if = { condition = and(field(owner, Player.CombatActive), and(greater(field(owner, Player.Hp), 0), and(not(pureCall(CombatIsEnding)), and(equal(field(owner, Player.EffectDepth), 0), equal(count(where(collection(Hand), c, equal(field(c, Card.Owner), field(owner, Player.Owner)))), 0))))) then = {
+      emit = { event = AfterHandEmptied payload = { owner = owner } }
+    } }
+  }
+}
