@@ -1,6 +1,6 @@
 # 药水生成与栏位约定
 
-文档类型：参考（Reference）。ENV-T05-potion-flow-20261011 的机制规格；状态、认领与排期见[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t05)。
+文档类型：参考（Reference）。ENV-T05-potion-flow-20261011 的机制规格；状态、认领与排期见[行为要求](../../../specs/environment.md#env-t05)。
 
 ## 行为与边界
 

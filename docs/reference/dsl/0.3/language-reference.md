@@ -165,7 +165,7 @@ fields/payload/inputs 都是 `{ 名字 = 表达式 }`。compute outputs 是 `{ �
 
 决策 kind 来自 DecisionResponseKind：EntityRef、EntityRefList、Int、Bool、Enum、Participant、Confirm。候选在请求时固定为该次请求的列表，过期请求不可回答。min/max 按种类解释；Enum 决策结果必须为具体非空 Enum 槽，默认范围 0..成员数-1，显式 min/max 只能缩小该闭区间。非法回答保留请求，非法声明范围在发布请求前故障。`Repeat` 有限次迭代并受命令预算约束；`ForEach` 使用入口查询快照。终局立即停止，不自动结清尚未运行的监听器。
 
-初始化按包链接顺序与包内 start 登记顺序初始化，暂停后先完成当前入口再继续剩余入口；亦可登记一个 Setup 并顺序 call。执行要求见[核心约定](../../../contracts/core-engine-baseline.md)。详细暂停、预算及指令级故障语义见 [开发者指南](../../../areas/core/reference/developer-guide.md)。
+初始化按包链接顺序与包内 start 登记顺序初始化，暂停后先完成当前入口再继续剩余入口；亦可登记一个 Setup 并顺序 call。执行要求见[核心约定](../../../specs/core-engine-baseline.md)。详细暂停、预算及指令级故障语义见 [开发者指南](../../../areas/core/reference/developer-guide.md)。
 
 ## 6. 加载、扩展和错误
 
@@ -175,7 +175,7 @@ fields/payload/inputs 都是 `{ 名字 = 表达式 }`。compute outputs 是 `{ �
 
 语法、未知属性、重复名字、未定义引用等报 `DslSourceException`，包含源文件和从 1 开始的行列。最终 IR 类型/纯性检查仍报 `EngineFaultException`，Fault.Context 带最近源码位置。运行调试轨迹也使用这些位置；C# SDK 创建的 IR 未提供来源时位置可为空。
 
-运行标识包含活动 Engine 版本、包内容和 CompilerIdentity（文本入口 `core-dsl/0.3` 及所用扩展版本）。Debug 和文件路径不参与语义标识。版本依据及行为要求见[核心约定](../../../contracts/core-engine-baseline.md)；语义变化后重建消费者，不复用旧回放或模型标识。
+运行标识包含活动 Engine 版本、包内容和 CompilerIdentity（文本入口 `core-dsl/0.3` 及所用扩展版本）。Debug 和文件路径不参与语义标识。版本依据及行为要求见[核心约定](../../../specs/core-engine-baseline.md)；语义变化后重建消费者，不复用旧回放或模型标识。
 
 ## 7. 生成工具和未交付范围
 

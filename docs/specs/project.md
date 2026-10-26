@@ -1,15 +1,15 @@
 # 项目规格
 
-本项目为 AI 提供可复现、可观察、可控且可扩展的《杀戮尖塔 2》环境。目标是按[锁定的 sts2-sim](../../reference/baselines/sts2-sim.json)实现五角色完整单人游戏；Ironclad 和局部开发场景是中间交付。规则依据为该提交的源码与顺序随机执行，本地 `sts2/` 不再作为当前规则裁决依据。锁定模拟器同时提供比较后端；结果一致证明 DSL 与该实现一致，不单独证明真实客户端保真。现有 DSL 与旧固定向量仍须按新基线迁移，不能只更换版本标识。
+文档类型：参考（Reference）。本项目为 AI 提供可复现、可观察、可控且可扩展的《杀戮尖塔 2》环境。目标是按[锁定的 sts2-sim](../../reference/baselines/sts2-sim.json)实现五角色完整单人游戏；Ironclad 和局部开发场景是中间交付。规则依据为该提交的源码与顺序随机执行，本地 `sts2/` 不再作为当前规则裁决依据。锁定模拟器同时提供比较后端；结果一致证明 DSL 与该实现一致，不单独证明真实客户端保真。现有 DSL 与旧固定向量仍须按新基线迁移，不能只更换版本标识。
 
 ## 模块与规则归属
 
 | 模块 | 职责 | 规格 |
 | --- | --- | --- |
-| core-the-spire | 通用类型化状态、DSL 编译、唯一执行器、选择续接、随机与观察原语 | [core 规格](core-the-spire/spec.md)、[活动约定](../contracts/core-engine-baseline.md) |
-| mod-the-spire/base-spire | 用 DSL 定义原版玩法、内容、生命周期与 Run | [base 规格](../areas/base/spec/overview.md)、[当前架构](mod-the-spire/base-architecture.md) |
-| net-the-spire | 加载相同规则包，透传公开观察及合法候选，维护协议与幂等控制 | [net 规格](net-the-spire/spec.md)、[协议](../areas/net/reference/protocol.md) |
-| ai-the-spire | 消费公开协议，采样、训练及评价；不读取隐藏状态 | [AI 规格](ai-the-spire/spec.md)、[策略约定](ai-the-spire/policy-contract.md) |
+| core-the-spire | 通用类型化状态、DSL 编译、唯一执行器、选择续接、随机与观察原语 | [core 规格](core/game-model.md)、[活动约定](core-engine-baseline.md) |
+| mod-the-spire/base-spire | 用 DSL 定义原版玩法、内容、生命周期与 Run | [base 规格](../areas/base/spec/overview.md)、[当前架构](../design/mod-the-spire/base-architecture.md) |
+| net-the-spire | 加载相同规则包，透传公开观察及合法候选，维护协议与幂等控制 | [net 规格](../areas/net/spec/overview.md)、[协议](../areas/net/reference/protocol.md) |
+| ai-the-spire | 消费公开协议，采样、训练及评价；不读取隐藏状态 | [AI 规格](../areas/ai/spec/overview.md)、[策略约定](../areas/ai/spec/policy-contract.md) |
 | tools | 构建、CI、定向检查、独立参考适配和来源核对 | [工程工具](../../tools/README.md) |
 
 普通规则作者使用 core/0.3 文本包；C# 构建器服务引擎扩展与宿主集成，两者编译为相同 IR。游戏内容和可变游戏状态分别由 base DSL 与 Engine 承接。规则包构建后不可变，Session 状态彼此独立。活动生产工程不回退旧 C# 玩法或另建结算器。
@@ -18,7 +18,7 @@
 
 可运行范围以 [base manifest](../../mod-the-spire/base-spire/package.json)及所审提交为准。当前开发 scope 提供部分战斗和内容机制，正常地图／Run、完整来源和独立比较尚待恢复。声明、加载、行为测试、独立比较和公开可用分别确认；实现数和测试数不能代替完整游戏能力。
 
-当前任务和暂停条件见 [GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。环境完整行为要求与最终矩阵集中在 [环境验收规格](environment-completion-and-differential-v1.md)，不在交接报告中维护。
+当前任务和暂停条件见 [GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。环境完整行为要求与最终矩阵集中在 [环境验收规格](environment.md)，不在交接报告中维护。
 
 ## 全项目要求
 

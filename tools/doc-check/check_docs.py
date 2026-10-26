@@ -173,14 +173,13 @@ def _no_dup_keys(pairs):
 
 
 def check_traceability(root: Path, failures: list[str]) -> None:
-    spec = root / "docs/design"
     declared: list[str] = []
-    for name in ("ai-the-spire/spec.md", "net-the-spire/spec.md"):
-        declared += REQ_DEF_RE.findall((spec / name).read_text(encoding="utf-8"))
+    for name in ("docs/areas/ai/spec/overview.md", "docs/areas/net/spec/overview.md"):
+        declared += REQ_DEF_RE.findall((root / name).read_text(encoding="utf-8"))
     declared = sorted(set(declared))
 
     matrix_paths = [
-        root / "docs/design/ai-net-verification.md",
+        root / "docs/specs/ai-net/verification.md",
     ]
     used = set()
     for path in matrix_paths:
@@ -188,9 +187,9 @@ def check_traceability(root: Path, failures: list[str]) -> None:
 
     for req in declared:
         if req not in used:
-            failures.append(f"docs/design: requirement {req} has no verification/plan reference")
+            failures.append(f"requirements: {req} has no verification/plan reference")
     for req in sorted(used - set(declared)):
-        failures.append(f"docs/design: reference to undeclared requirement {req}")
+        failures.append(f"requirements: reference to undeclared requirement {req}")
     print(f"requirements declared: {len(declared)} -> {', '.join(declared)}")
 
 

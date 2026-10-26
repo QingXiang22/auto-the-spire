@@ -2,7 +2,7 @@
 
 文档类型：操作指南（How-to）。适用于卡牌、附着、战斗资源、格挡／伤害／死亡和回合规则。纯 DSL 开发包已有完整单人铁甲战士定义所需的出牌／牌区、显式选敌与手牌选择、X 费、自动出牌、生成、伤害与 Power 修正、永久牌组及战斗副本；准确签名见[铁甲战士共享操作](../reference/ironclad-shared-operations.md)。原版随机机制与已迁移消费者已恢复；完整随机前置消费、获得修正、完整附着种类、正常初态和完整 Run 仍需恢复。以下按任务选择现有操作或恢复方法；不存在可直接调用的旧 `card` 声明或 C# Effect API。
 
-先读[准确操作](../reference/operations.md)确认边界，再到 cards/catalog 定位具体源类。需求与判断意图参考[卡牌原语约定](../reference/card-behavior.md)及[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t06)，这些旧约定中的接口名不自动成为新 DSL 接口。
+先读[准确操作](../reference/operations.md)确认边界，再到 cards/catalog 定位具体源类。需求与判断意图参考[卡牌原语约定](../reference/card-behavior.md)及[行为要求](../../../specs/environment.md#env-t06)，这些旧约定中的接口名不自动成为新 DSL 接口。
 
 有序正文、攻击／结果、独立费用、动态关键词与Sown已有实际入口，查[行为操作参考](../reference/card-behavior.md)。以下“恢复”步骤只用于尚缺的语义，先复用已存在的操作。
 
@@ -39,7 +39,7 @@ Infection保留源费用-1及Unplayable；局部set／add／免费修改不覆�
 
 先分别定义移动、获得、生成、复制、变换、升级和移除的完整行为。移动必须维护原集合、目标容量、标识及事件；复制要规定永久 ID、成长、费用修改、附着、临时标记的保留／清除。不能把 `create Card` 当作任意复制操作。
 
-附魔／负面附着与动态关键词放实例层，定义来源、层数、替换和寿命，消费统一选择／升级／变换接缝。验证两张同定义牌不串状态、离场和跨战寿命、复制／升级后的保留及失败不留下悬空引用。Sown已通过明确附魔阶段及复制通知实现，准确入口见[行为操作参考](../reference/card-behavior.md)。其他历史源行为在[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t06)查其原判断点，不恢复旧 C# 装配。
+附魔／负面附着与动态关键词放实例层，定义来源、层数、替换和寿命，消费统一选择／升级／变换接缝。验证两张同定义牌不串状态、离场和跨战寿命、复制／升级后的保留及失败不留下悬空引用。Sown已通过明确附魔阶段及复制通知实现，准确入口见[行为操作参考](../reference/card-behavior.md)。其他历史源行为在[行为要求](../../../specs/environment.md#env-t06)查其原判断点，不恢复旧 C# 装配。
 
 ## 恢复资源、伤害与死亡
 

@@ -8,7 +8,7 @@
 本脚本驱动**真实宿主进程**（`Net.TheSpire.Host` 的 NDJSON stdio 通道），范围由 `--scope dev-map`
 显式选择（仍走唯一 `BaseSpireRuntimeFactory`，只是换了显式 ruleset/scope 配置，会话仍由本包启动一次）；
 同时对照默认 `--scope dev`：缺省身份逐字不变，新增范围进身份、每局 seed 不进身份。
-每个响应帧都用与 C# 端**同一份** `docs/contracts/net/0.2/wire.schema.json` 校验，并把请求/响应原始帧
+每个响应帧都用与 C# 端**同一份** `docs/specs/net/0.2/wire.schema.json` 校验，并把请求/响应原始帧
 写进 NDJSON 证据日志（`--log`）。C# 侧的同一批检查走进程内 `ControlHost`（`FormalPathChecks.cs` 的
 G-01…G-05），本脚本是真实进程 + 真实字节的独立对照。
 
@@ -47,7 +47,7 @@ from net_client import REPO_ROOT, NetClient, host_command  # noqa: E402
 import jsonschema_min  # noqa: E402
 import wire_canonical  # noqa: E402
 
-SCHEMA_PATH = REPO_ROOT / "docs" / "contracts" / "net" / "0.2" / "wire.schema.json"
+SCHEMA_PATH = REPO_ROOT / "docs" / "specs" / "net" / "0.2" / "wire.schema.json"
 DEV_MAP_PROFILE = "base-spire-singleplayer-dev-map-v1"
 DEV_PROFILE = "base-spire-singleplayer-dev-v1"
 DEFAULT_SCOPE_NAME = "dev"

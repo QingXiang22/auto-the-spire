@@ -35,4 +35,4 @@ dotnet run --project net-the-spire/Net.TheSpire.Tests
 - [工程工具](tools/README.md)：开发验证、迁移验证记录和独立参考入口。
 - [AI](ai-the-spire/README.md)：既有客户端与离线组件，训练仍暂缓。
 
-完整单人环境的要求和验收范围继续见 [ENV 合同](docs/design/environment-completion-and-differential-v1.md)，本次功能回退没有删除这些目标。
+完整单人环境的要求和验收范围继续见 [ENV 合同](docs/specs/environment.md)，本次功能回退没有删除这些目标。

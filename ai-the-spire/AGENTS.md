@@ -8,6 +8,6 @@
 
 ## 模块边界
 
-遵守[AI spec](../docs/design/ai-the-spire/spec.md)、[策略约定](../docs/design/ai-the-spire/policy-contract.md)和[训练设计](../docs/design/ai-the-spire/training-design.md)。AI消费net公开观察/合法候选，不读隐藏状态、内部RNG/debug，不用历史缓存补提供方应发布的当前事实；保持NoSL及完整合法候选概率约定。
+遵守[AI spec](../docs/areas/ai/spec/overview.md)、[策略约定](../docs/areas/ai/spec/policy-contract.md)和[训练设计](../docs/areas/ai/spec/training.md)。AI消费net公开观察/合法候选，不读隐藏状态、内部RNG/debug，不用历史缓存补提供方应发布的当前事实；保持NoSL及完整合法候选概率约定。
 
 不修改base/net/core生产规则以迎合训练。跨模块缺口交对应主责；包版本及摘要、兼容性、数据划分、奖励／评价与运行成本按实际范围报告。任务范围、优先级及模型采用条件在工单维护；日志使用 CI 或本地临时目录。

@@ -7,7 +7,7 @@ namespace NetTheSpire.Tests;
 /// 跨端对照所需资产的**只读**装载器。三类资产、一个来源：
 /// <list type="bullet">
 /// <item><c>tools/contract-check/fixtures/**</c>：R-P01 参考夹具（正反例、golden 向量），跨端对照的输入；</item>
-/// <item><c>docs/contracts/net/0.2/*.schema.json</c>：L1 结构契约，C# 端直接读同一份 schema，不另造形状；</item>
+/// <item><c>docs/specs/net/0.2/*.schema.json</c>：L1 结构契约，C# 端直接读同一份 schema，不另造形状；</item>
 /// <item><c>net-the-spire/Net.TheSpire.Tests/fixtures/cross-end-*.json</c>：Python 参考实现产出的对照清单（期望值）。</item>
 /// </list>
 /// 本装载器不复制、不改写任何参考资产；清单与参考夹具不同源时以参考夹具（Python 侧）为准，
@@ -63,7 +63,7 @@ internal sealed class Fixtures
     {
         var root = FindRepositoryRoot();
         var checkDir = Path.Combine(root, "tools", "contract-check", "fixtures");
-        var contractDir = Path.Combine(root, "docs", "contracts", "net", "0.2");
+        var contractDir = Path.Combine(root, "docs", "specs", "net", "0.2");
         var testsDir = Path.Combine(root, "net-the-spire", "Net.TheSpire.Tests", "fixtures");
 
         var bases = new Dictionary<string, WireValue>(StringComparer.Ordinal);

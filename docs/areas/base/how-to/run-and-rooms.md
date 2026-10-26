@@ -8,7 +8,7 @@
 
 文档类型：操作指南（How-to）。适用于角色／进阶、正常开局、地图、战斗／商店／营火／宝箱／事件、奖励、永久状态、Ancient、跨幕与终局。SetupDevelopmentDraw 创建开发玩家和三张占位牌；可用下述显式入口建立铁甲战士基础初态。完整 Run 仍需按本页方法恢复，不提供旧 SinglePlayer 工厂或房间 C# 接口。
 
-先查[领域参考](../reference/domains.md)和原[完整环境合同](../../../design/environment-completion-and-differential-v1.md)。按共享状态和生命周期的依赖恢复一个完整纵向流程；不从固定 seed 的首错临时复制一个房型实现。
+先查[领域参考](../reference/domains.md)和原[完整环境合同](../../../specs/environment.md)。按共享状态和生命周期的依赖恢复一个完整纵向流程；不从固定 seed 的首错临时复制一个房型实现。
 
 SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选牌／资源命令，准确入口见[行为操作参考](../reference/card-behavior.md)。SapphireSeed与DenseVegetation可由正常事件池自然进入；BattlewornDummy的开发升级档可战后返回同一父事件；第三幕正常可达、其他奖励档和完整正常Run仍未接通。
 

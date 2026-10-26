@@ -9,7 +9,7 @@
 
 ## 差异测试边界
 
-- 遵守[环境范围](../docs/design/environment-completion-and-differential-v1.md)和[实现约束](../docs/design/environment-implementation-constraints.md)。比较工具加载同一生产 base 包，参考实现独立执行并默认只读；参考依赖仅在工具层。
+- 遵守[环境范围](../docs/specs/environment.md)和[实现约束](../docs/specs/environment-constraints.md)。比较工具加载同一生产 base 包，参考实现独立执行并默认只读；参考依赖仅在工具层。
 - 不能把参考答案或工具补偿加入生产玩法，也不能恢复旧 C# base 的生产依赖。
 - 严格测试集中，缺用例、零执行、缺参考、未支持、异常、超时、结果不同或缺比较维度均返回非零。旧 compare 返回零不能代替当前验收。
 - 保留必测用例总数、来源条目范围及排除依据；不能删除 seed、换成较弱用例、额外抽取随机数或注入清场制造通过。

@@ -2,7 +2,7 @@
 
 文档类型：操作指南（How-to）。纯DSL包已有受控开发战斗与指定正常开局。FuzzyWurmCrawler、TwigSlimeM和SlimesWeak四类史莱姆使用共享招式图；seed777正常首战进入真实SlimesWeak，按累计楼层派生编队并按出生顺序抽HP。其他支持范围以实际definition和行为测试为准，不能直接运行旧 `enemies*.spire` 或C#敌人编译器。
 
-从 enemies/catalog 的 source_path 读目标敌人，从 encounters/catalog 与 source 快照确认编队。旧[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t08)保留完整范围，具体动作机制依赖[战斗指南](cards-and-combat.md)。
+从 enemies/catalog 的 source_path 读目标敌人，从 encounters/catalog 与 source 快照确认编队。旧[行为要求](../../../specs/environment.md#env-t08)保留完整范围，具体动作机制依赖[战斗指南](cards-and-combat.md)。
 
 ## 建立敌人状态与意图
 

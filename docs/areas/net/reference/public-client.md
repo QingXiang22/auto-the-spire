@@ -1,6 +1,6 @@
 # Python公开客户端接口
 
-文档类型：参考（Reference）。适用于正式Host的协议0.2。首次使用见[公开运行教程](../how-to/run-public-game.md)。底层载荷以[主协议的版本约定](protocol.md)与[0.2 schema](../../../contracts/net/0.2/wire.schema.json)核对。
+文档类型：参考（Reference）。适用于正式Host的协议0.2。首次使用见[公开运行教程](../how-to/run-public-game.md)。底层载荷以[主协议的版本约定](protocol.md)与[0.2 schema](../../../specs/net/0.2/wire.schema.json)核对。
 
 ## 连接和响应
 

@@ -1,6 +1,6 @@
 # 项目架构总览
 
-文档类型：解释（Explanation）。本页面向需要判断修改归属的贡献者，说明规则、执行、公开接口与工具如何连接。产品要求见[项目规格](../design/spec.md)，准确核心行为见[核心接口要求](../contracts/core-engine-baseline.md)，当前支持范围以包 manifest 和对应提交的 CI 为准。
+文档类型：解释（Explanation）。本页面向需要判断修改归属的贡献者，说明规则、执行、公开接口与工具如何连接。产品要求见[项目规格](../specs/project.md)，准确核心行为见[核心接口要求](../specs/core-engine-baseline.md)，当前支持范围以包 manifest 和对应提交的 CI 为准。
 
 ## 从规则到公开动作
 
@@ -30,4 +30,4 @@ base 声明游戏规则；core 执行声明；net 为外部调用者发布当前
 
 通用内核不按卡牌、遗物或房间 ID 执行玩法分支。规则包构建后不可变，每局状态由 Session 独立管理；游戏实例关系、生命周期、事件顺序和随机流由规则与共享操作明确组织。细节分别查[base 架构](../design/mod-the-spire/base-architecture.md)、[控制流程](../design/mod-the-spire/control-flow-modules.md)及[核心决定](../design/core-the-spire/core-architecture-decisions.md)。
 
-公开投影和候选是外部接口的依据。内部 State、RNG 和诊断信息不自动成为 AI 输入；局部行为检查、独立比较与正常整局分别验收，要求见[完整环境规格](../design/environment-completion-and-differential-v1.md)。
+公开投影和候选是外部接口的依据。内部 State、RNG 和诊断信息不自动成为 AI 输入；局部行为检查、独立比较与正常整局分别验收，要求见[完整环境规格](../specs/environment.md)。

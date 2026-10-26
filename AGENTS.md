@@ -20,7 +20,7 @@
 | `ai-the-spire/` | 消费公开协议进行采样、训练和评价 |
 | `tools/` | 构建、CI、开发辅助和独立参考比较；工具依赖与生产规则隔离 |
 
-- 产品范围见[项目规格](docs/design/spec.md)，核心接口见[当前核心约定](docs/contracts/core-engine-baseline.md)，base 操作见[开发手册](docs/areas/base/README.md)。版本与支持范围以当前实现、manifest 和对应提交的检查结果为准。
+- 产品范围见[项目规格](docs/specs/project.md)，核心接口见[当前核心约定](docs/specs/core-engine-baseline.md)，base 操作见[开发手册](docs/areas/base/README.md)。版本与支持范围以当前实现、manifest 和对应提交的检查结果为准。
 - 游戏规则放在 base DSL；Host 和 Engine 保持通用，不增加按卡牌、遗物或房间 ID 执行游戏效果的分支，不恢复旧 C# 玩法作为生产回退。
 - 规则包构建后不可变，每局状态由 Engine 管理并相互隔离。复用现有领域操作，保留实例关系、事件顺序、随机流和公开可见性要求。
 - 新共享机制先在已有规格写清输入、状态变化、执行顺序、失败方式及可观察结果，再实现并接入真实消费者。通用能力不足时给出最小复现并协调相关模块。

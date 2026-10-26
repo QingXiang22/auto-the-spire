@@ -37,7 +37,7 @@
 
 同类遗物先沿[分组计划](../spec/relic-combat-start.md)核对触发、状态寿命、随机与完整消费者，再认领主清单中一个完整子包。Whetstone／WarPaint／SandCastle复用PickupRandomUpgradeRelic的definition、kind、amount配置，通过RelicObtained实例订阅调用UpgradeRandomPermanentCards。不要把候选临时移出RunDeck，也不要为只取两张而仅消费两次随机；完整源顺序及隔离要求见[随机永久升级约定](../spec/relic-lifecycle.md#拾取随机永久升级dsl-relic-content-04relic-g01)。选牌升级和Egg的创建修正分别沿其他机制包接续。
 
-源池保持完整资格和顺序。当前覆盖检查只承认真实 DSL 行为报告，不接受旧 C# 覆盖数量或将一个模板测试标成所有遗物均通过。[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t09)继续有效。
+源池保持完整资格和顺序。当前覆盖检查只承认真实 DSL 行为报告，不接受旧 C# 覆盖数量或将一个模板测试标成所有遗物均通过。[行为要求](../../../specs/environment.md#env-t09)继续有效。
 
 ## 恢复药水容量、获得和使用
 

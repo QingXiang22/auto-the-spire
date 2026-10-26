@@ -1,6 +1,6 @@
 # core-the-spire 规格
 
-core 是通用桌游规则引擎；STS2 是首个游戏包。产品范围见[项目规格](../spec.md)，具体执行行为见[核心接口与兼容要求](../../contracts/core-engine-baseline.md)。文档只维护当前要求，历史实现及检查数量由 Git 和 CI 保存。
+文档类型：参考（Reference）。core 是通用桌游规则引擎；STS2 是首个游戏包。产品范围见[项目规格](../project.md)，具体执行行为见[核心接口与兼容要求](../core-engine-baseline.md)。文档只维护当前要求，历史实现及检查数量由 Git 和 CI 保存。
 
 ## 目标架构：通用桌游运行时
 
@@ -32,13 +32,13 @@ G=(P,S,I,M,L,T,O,F)
 
 这里的“状态”包含继续运行所需的信息。例如等待别人响应时，原牌的目标、响应窗口、已经完成的部分和接下来应执行的位置都必须被保存。若历史会影响规则，应在状态中保留相应事实；玩家作决定时可使用其观察与行动历史，不能假定当前一张观察快照包含其全部已知信息。这个划分参考 [OpenSpiel 的 Game、State、合法动作、联合动作与随机节点概念](https://openspiel.readthedocs.io/en/latest/concepts.html)，是本项目的建模约定，不要求采用其 API 或数据结构。
 
-实体只持有属性，行为由独立规则程序执行，见 [实体与行为分离原则](core-architecture-decisions.md#内容自有规则与公共操作)。牌区、阶段、伤害、死亡、技能与胜负是游戏包的定义；模型不要求内核拥有这些专用类型。作用于实体的程序可以修改其属性，实体本身不因此拥有方法。
+实体只持有属性，行为由独立规则程序执行，见 [实体与行为分离原则](../../design/core-the-spire/core-architecture-decisions.md#内容自有规则与公共操作)。牌区、阶段、伤害、死亡、技能与胜负是游戏包的定义；模型不要求内核拥有这些专用类型。作用于实体的程序可以修改其属性，实体本身不因此拥有方法。
 
 ### 如何判断内核具有建模能力
 
 能力审查判断模型中的状态、选择、结算和信息规则能否由现有内核原语组合表达。映射路径为 **游戏模型 → 游戏包声明与规则程序 → 通用 IR → Session 执行**；模型中的每类规则都应有可说明的落点。只有抽象模型而没有这条映射，仍不足以说明内核具有相应能力；能够说明映射后，不必再交付该游戏的全部内容来证明 ability。
 
-具体游戏的交付另有内容覆盖、实际加载、行为与差异测试验收。本项目当前承担这项交付的是STS2；其他游戏包不作为当前验收的额外实现任务。这个边界与 [通用核心独立固定条件](core-architecture-decisions.md#通用内核与游戏规则分离)及 [ENV实现约束](../environment-implementation-constraints.md#1-决策边界与执行范围)一致。
+具体游戏的交付另有内容覆盖、实际加载、行为与差异测试验收。本项目当前承担这项交付的是STS2；其他游戏包不作为当前验收的额外实现任务。这个边界与 [通用核心独立固定条件](../../design/core-the-spire/core-architecture-decisions.md#通用内核与游戏规则分离)及 [ENV实现约束](../environment-constraints.md#1-决策边界与执行范围)一致。
 
 设 \(c\) 是内核的完整执行配置，\(\alpha(c)=s\) 是它对应的游戏状态。\(c\) 包括持久状态、程序栈与局部槽、事件/循环游标、待决策请求、随机状态和会话状态；不能仅把 `Session.State` 当作它。支持判定以宿主可交互的边界比较，允许多个内部指令实现一次逻辑转移，但分解不得额外公开信息或改变可作出的选择。
 
@@ -56,8 +56,8 @@ G=(P,S,I,M,L,T,O,F)
 
 语言参考按能力分层维护：[core/0.3](../../reference/dsl/0.3/language-reference.md)、[core/0.3](../../reference/dsl/0.3/authoring-guide.md)及[core/0.3](../../reference/dsl/0.3/authoring-reference.md)。低版本参考仍服务受支持语法，不能仅因版本号较低删除。
 
-开发者从[规则教程](../../start/first-rule.md)、[宿主教程](../../start/first-host.md)和[Session API](../../areas/core/reference/session-api.md)接入；持久状态与执行帧区别见[运行态模型](runtime-state-model.md)。
+开发者从[规则教程](../../start/first-rule.md)、[宿主教程](../../start/first-host.md)和[Session API](../../areas/core/reference/session-api.md)接入；持久状态与执行帧区别见[运行态模型](../../design/core-the-spire/runtime-state-model.md)。
 
 当前执行约定按顺序处理决策，同时选择等能力须由实际消费者提出并单独验证。原版内容覆盖、正常 Run、多人玩法及独立参考比较各有自己的验收条件，不能从通用编译或计分示例成功推断完成。
 
-修改核心能力前提供最小通用程序，说明现有表达缺口、预期行为和受影响消费者。状态、原子性、暂停续接、数值、随机与可见性继续遵守核心约定；重要选择维护在[架构决定](core-architecture-decisions.md)，任务与运行结果使用 Issue／PR／CI。
+修改核心能力前提供最小通用程序，说明现有表达缺口、预期行为和受影响消费者。状态、原子性、暂停续接、数值、随机与可见性继续遵守核心约定；重要选择维护在[架构决定](../../design/core-the-spire/core-architecture-decisions.md)，任务与运行结果使用 Issue／PR／CI。

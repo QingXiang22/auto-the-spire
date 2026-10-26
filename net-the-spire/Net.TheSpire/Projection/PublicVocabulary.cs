@@ -4,7 +4,7 @@ namespace NetTheSpire.Projection;
 
 /// <summary>
 /// 公开映射层的声明词汇。唯一规范出处：<c>docs/areas/net/reference/protocol.md</c>（结构/键）
-/// 与 <c>docs/design/net-the-spire/contract-artifacts.md</c>（排序、身份、覆盖表）。
+/// 与 <c>docs/areas/net/spec/contract-artifacts.md</c>（排序、身份、覆盖表）。
 ///
 /// 这里只声明“引擎的哪个声明映射成哪个公开声明、哪个引擎字段不可发布”，不实现任何游戏规则，
 /// 也不复制目录：目录的 <c>semantic_version</c>/<c>applies_to</c> 等键由 <c>get_catalog</c>（N-03/N-04）物化。

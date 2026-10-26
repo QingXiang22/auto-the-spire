@@ -6,7 +6,7 @@
 
 仓库的 `tools/base-spire-dev/play_game.py` 仍以 `--scenario formal-dev` 启动 Host，并只接受旧 `dev-map`／`dev` scope。当前 Host 仅支持 `text-rules`，明确拒绝这个旧场景；重新构建或更换 DLL 路径不能修复协议与场景不兼容。旧说明中的本机路径和历史已验证构建不适用于当前检出。
 
-不要依赖这份旧菜单判断地图、房间、敌人或整局的支持范围。当前有限正常路径与验证范围查 [CI 说明](../../../../tools/ci/README.md)；完整验收要求查[环境规格](../../../design/environment-completion-and-differential-v1.md)。
+不要依赖这份旧菜单判断地图、房间、敌人或整局的支持范围。当前有限正常路径与验证范围查 [CI 说明](../../../../tools/ci/README.md)；完整验收要求查[环境规格](../../../specs/environment.md)。
 
 ## 使用现有公开接口示例
 

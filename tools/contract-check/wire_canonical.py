@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 """net-the-spire wire v0.2 —— 规范化（canonical bytes）、decimal 规范形式与摘要参考算法。
 
-仅使用 Python 3 标准库。规范描述见 ``docs/design/net-the-spire/contract-artifacts.md``。
+仅使用 Python 3 标准库。规范描述见 ``docs/areas/net/spec/contract-artifacts.md``。
 
-规则出处（docs/design/net-the-spire/contract-artifacts.md）：
+规则出处（docs/areas/net/spec/contract-artifacts.md）：
   * §2 第 19 行 decimal 规范形式与结构整数范围；
   * §2 第 21 行 规范字节（紧凑 JSON、键按 UTF-8 字节序、转义集合）；
   * §2 第 23–31 行 摘要与身份输入白名单；

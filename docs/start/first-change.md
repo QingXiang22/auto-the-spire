@@ -13,7 +13,7 @@ git status --short
 | 本次修改 | 先读哪里 |
 | --- | --- |
 | 已有卡牌数值、Power 或遗物 | [base 修改指南](../areas/base/how-to/edit-content.md)；先用精确 ID 找到规则所属文件 |
-| 编译、通用状态或 Session 调用 | [core 开发入口](../areas/core/README.md)与[核心接口要求](../contracts/core-engine-baseline.md) |
+| 编译、通用状态或 Session 调用 | [core 开发入口](../areas/core/README.md)与[核心接口要求](../specs/core-engine-baseline.md) |
 | 公开字段、Host 或客户端 | [net 开发入口](../areas/net/README.md)与协议参考 |
 | 公开观察编码或概率输出 | [AI 开发入口](../areas/ai/README.md)及对应约定 |
 | 文档或示例 | 当前权威页面与[文档维护规则](../../CONTRIBUTING.md#哪些内容进入正式文档) |

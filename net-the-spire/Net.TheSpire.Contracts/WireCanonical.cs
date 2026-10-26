@@ -6,7 +6,7 @@ namespace NetTheSpire.Contracts;
 
 /// <summary>
 /// 规范字节、decimal 规范形式与摘要。唯一规范出处：
-/// docs/design/net-the-spire/contract-artifacts.md §2 第 19/21/23 行。
+/// docs/areas/net/spec/contract-artifacts.md §2 第 19/21/23 行。
 /// 实现刻意不依赖任何 serializer 的默认行为：键序、转义集合、整数格式都逐项固定。
 /// </summary>
 public static class WireCanonical

@@ -2,7 +2,7 @@
 
 文档类型：参考（Reference）。
 
-范围：`CoreTheSpire.Engine` 的文件加载、会话驱动和参与者观察接口。运行语义为 engine/ir@0.3，版本与迁移约束见[核心兼容性约定](../../../contracts/core-engine-baseline.md)。构建器、扩展、随机 profile 和诊断选项另查[开发者指南](developer-guide.md)。
+范围：`CoreTheSpire.Engine` 的文件加载、会话驱动和参与者观察接口。运行语义为 engine/ir@0.3，版本与迁移约束见[核心兼容性约定](../../../specs/core-engine-baseline.md)。构建器、扩展、随机 profile 和诊断选项另查[开发者指南](developer-guide.md)。
 
 ## 文件加载与会话
 

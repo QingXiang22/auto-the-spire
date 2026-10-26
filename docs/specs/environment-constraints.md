@@ -1,6 +1,6 @@
 # ENV 实现约束
 
-本文规定完整环境的模块边界、状态、随机、公开接口和验证要求。当前生产 base 为纯 DSL／静态 JSON，core 行为按[核心约定](../contracts/core-engine-baseline.md)维护。正常 Run 尚未恢复；支持范围以包 manifest 和 CI 为准，任务状态只见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
+文档类型：参考（Reference）。本文规定完整环境的模块边界、状态、随机、公开接口和验证要求。当前生产 base 为纯 DSL／静态 JSON，core 行为按[核心约定](core-engine-baseline.md)维护。正常 Run 尚未恢复；支持范围以包 manifest 和 CI 为准，任务状态只见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
 规则来源以[锁定 sts2-sim](../../reference/baselines/sts2-sim.json)为准，替代本地 `sts2/`；当前锁定实现声明 v0.111.0。参考 checkout 保持纯上游，只在明确更新基线时切换干净提交，不修改其规则。
 
@@ -10,7 +10,7 @@
 | --- | --- |
 | 当前入口 | [base manifest](../../mod-the-spire/base-spire/package.json)、[开发手册](../areas/base/README.md)、[CI 范围](../../tools/ci/README.md) |
 | 适用范围 | 当前ENV-00～06长任务；通用Engine、base正式内容、net公开出口、tools严格差异测试；AI只做确需的约定兼容 |
-| 关联主规范 | [项目spec](spec.md)、[ENV任务包](environment-completion-and-differential-v1.md)、[公开协议](../areas/net/reference/protocol.md) |
+| 关联主规范 | [项目spec](project.md)、[ENV任务包](environment.md)、[公开协议](../areas/net/reference/protocol.md) |
 | 状态与派单 | 只在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)更新；[开发约定](../../CONTRIBUTING.md)不另定义范围 |
 
 执行 ENV 任务时，用本文件核对架构约束与验证安排。主验收包括完整 Ironclad 中间里程碑、五角色全量环境与严格差异测试；约束条目数量不能代替运行成果。
@@ -40,15 +40,15 @@
 | `tools/differential/` | 双侧适配、语义动作、诊断抽取、严格测试、首个差异/来源/验证记录 | 生产规则后端；把base结果复制成reference；通过修改游戏状态续跑整局 |
 | `ai-the-spire/` | 原有能力回归；0.2共享约定确需的兼容 | 从Engine/内部诊断/参考读取状态；为完整环境新增学习模块或偷偷恢复D3/D4 |
 
-正常 Run 在现有 base DSL 领域模块恢复，目录入口见[base 架构](mod-the-spire/base-architecture.md)。复用当前共享操作，开发场景保持明确范围标识；不复制一套并行玩法，也不为拆分文件重写已验证能力。
+正常 Run 在现有 base DSL 领域模块恢复，目录入口见[base 架构](../design/mod-the-spire/base-architecture.md)。复用当前共享操作，开发场景保持明确范围标识；不复制一套并行玩法，也不为拆分文件重写已验证能力。
 
-依赖方向保持：base DSL 由 core 通用加载器编译；Net.TheSpire→core/contracts；Host 组合通用包加载和 net；tools→core/net或测试客户端，只有工具／工具测试可引用 reference。生产规则不引用旧 C# 玩法或迁移源。core 的 DSL、随机、拆分及调试约束见[架构决定](core-the-spire/core-architecture-decisions.md)。
+依赖方向保持：base DSL 由 core 通用加载器编译；Net.TheSpire→core/contracts；Host 组合通用包加载和 net；tools→core/net或测试客户端，只有工具／工具测试可引用 reference。生产规则不引用旧 C# 玩法或迁移源。core 的 DSL、随机、拆分及调试约束见[架构决定](../design/core-the-spire/core-architecture-decisions.md)。
 
 2026-10-07 公开语义来源决定：规则包声明公开结构，core 按规则输出玩家视图与合法选择，net 保持语义透传；真实游戏适配器对齐同一公开约定。
 
 正式目录/动作从 RuleSet 和所选投影派生，内容作者无需在 net 重复登记。对于无法从声明推导的游戏含义，规则提供方补充一次，由 Host 接入。句柄、编码、去重和版本校验继续复用 net。
 
-当前手写 Profile 的实际缺口与 ENV-T03 实施边界统一见[net架构第7节](net-the-spire/design.md#7-公开声明与适配边界)。接入不以前置新增 core facade 或改造整个 DSL 为条件。
+当前手写 Profile 的实际缺口与 ENV-T03 实施边界统一见[net架构第7节](../design/net-the-spire/design.md#7-公开声明与适配边界)。接入不以前置新增 core facade 或改造整个 DSL 为条件。
 
 ## 3. 同一个正式构建、同一条会话创建路径
 

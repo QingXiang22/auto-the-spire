@@ -5,7 +5,7 @@ Action，net 生产源码不新增逐项注册行；目录/observe 出现对应�
 
 本脚本驱动**真实宿主进程**（`Net.TheSpire.Host` 的 NDJSON stdio 通道），用同一段提供方代码分别加载
 `baseline.spire` 与 `extended.spire`：两者共用同一个 `public-metadata.json`，差别只在规则声明本身。
-每个响应帧都用与 C# 端**同一份** `docs/contracts/net/0.2/wire.schema.json` 校验，并把请求/响应原始帧
+每个响应帧都用与 C# 端**同一份** `docs/specs/net/0.2/wire.schema.json` 校验，并把请求/响应原始帧
 写进 NDJSON 证据日志（`--log`）。这条通道是 C# 检查之外的独立对照：C# 走进程内 `ControlHost`，
 本脚本走真实进程 + 真实字节。
 
@@ -39,7 +39,7 @@ import jsonschema_min  # noqa: E402
 import wire_canonical  # noqa: E402
 
 FIXTURES = REPO_ROOT / "net-the-spire" / "fixtures" / "declaration-extension"
-SCHEMA_PATH = REPO_ROOT / "docs" / "contracts" / "net" / "0.2" / "wire.schema.json"
+SCHEMA_PATH = REPO_ROOT / "docs" / "specs" / "net" / "0.2" / "wire.schema.json"
 SCENARIO_PROFILE = "net-text-rules-declaration-extension-v1"
 GAME_SEED = "DECL-EXT-00"
 GAME_SEED_SPACED = "DECL-EXT-00 "

@@ -10,7 +10,7 @@
 - 理解各部分的关系：读[规则与宿主](../../../design/core-the-spire/rules-and-host.md)。
 - 第一次编写规则：从[第一次写规则](../../../start/first-rule.md)开始。
 
-版本与加载入口核对：2026-10-15。本文说明活动 `Core.TheSpire/Engine/` 的接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../../reference/dsl/README.md)；`core/0.3` 统一提供基础声明、规则库配置、同包绑定与具名调用。本文 C# 片段说明宿主与底层接口。目标边界见[模块 spec](../../../design/core-the-spire/spec.md)，后续调整以[架构决定](../../../design/core-the-spire/core-architecture-decisions.md)为准。
+版本与加载入口核对：2026-10-15。本文说明活动 `Core.TheSpire/Engine/` 的接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../../reference/dsl/README.md)；`core/0.3` 统一提供基础声明、规则库配置、同包绑定与具名调用。本文 C# 片段说明宿主与底层接口。目标边界见[模块 spec](../../../specs/core/game-model.md)，后续调整以[架构决定](../../../design/core-the-spire/core-architecture-decisions.md)为准。
 
 ## 0. 规则作者写文件，宿主调用 SDK
 
@@ -47,7 +47,7 @@ flowchart TD
     E --> I[Observe: 参与者视图]
 ```
 
-活动包版本与运行语义标识分别见[项目配置](../../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。当前职责和兼容要求见[核心约定](../../../contracts/core-engine-baseline.md)，升级验收见[行为要求](../../../design/environment-completion-and-differential-v1.md#core-author-04)。
+活动包版本与运行语义标识分别见[项目配置](../../../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)与 [RuleSetBuilder.EngineVersion](../../../../core-the-spire/Core.TheSpire/Engine/RuleSet.cs)。当前职责和兼容要求见[核心约定](../../../specs/core-engine-baseline.md)，升级验收见[行为要求](../../../specs/environment.md#core-author-04)。
 
 当前入口及能力边界：
 
@@ -224,7 +224,7 @@ var session = new Session(rules, 42, ["player"]);
 
 链接阶段解析名称、分配 ID、检查字段形状和程序约束，并计算 `RuleSet.Identity`。`Session.Identity` 还结合种子指纹、随机算法/profile 和角色配置。保存回放/差异测试验证记录时应同时记录这些配置及动作序列；标识字符串不替代输入记录。
 
-`EnginePackageBuilder.Build()` 只能调用一次，并通过 `EnginePackage.Freeze` 发布构建产物。构建后的声明、IR子集合、包与链接表按[版本基线](../../../contracts/core-engine-baseline.md)只读发布。规则产物固定不限制 SessionState 在游戏中的正常变化。
+`EnginePackageBuilder.Build()` 只能调用一次，并通过 `EnginePackage.Freeze` 发布构建产物。构建后的声明、IR子集合、包与链接表按[版本基线](../../../specs/core-engine-baseline.md)只读发布。规则产物固定不限制 SessionState 在游戏中的正常变化。
 
 ## 4. Host 怎样驱动 Session
 
@@ -273,7 +273,7 @@ Answer 检查当前请求 ID、状态版本、候选与回答约束。重复/过
 
 ### 4.3 初始化顺序与续接
 
-engine/ir@0.3 的 `OnSessionStart` 按包链接顺序及包内登记顺序逐个执行，文本 start 列表同样按声明顺序推进。启动游标保留在同一个执行栈；某入口暂停时，回答后先完成它，再执行剩余入口，不重放前序初始化。待执行同级入口不占嵌套调用深度。也可使用单个 Setup 顺序 Call；旧 0.2 的反序安排须迁移，见 [版本基线](../../../contracts/core-engine-baseline.md)。
+engine/ir@0.3 的 `OnSessionStart` 按包链接顺序及包内登记顺序逐个执行，文本 start 列表同样按声明顺序推进。启动游标保留在同一个执行栈；某入口暂停时，回答后先完成它，再执行剩余入口，不重放前序初始化。待执行同级入口不占嵌套调用深度。也可使用单个 Setup 顺序 Call；旧 0.2 的反序安排须迁移，见 [版本基线](../../../specs/core-engine-baseline.md)。
 
 ## 5. 执行栈、事件与暂停续接
 
@@ -428,4 +428,4 @@ dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests
 dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests
 ```
 
-其他示例见 [FixturePackages.cs](../../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../../reference/dsl/README.md)、[运行态设计](../../../design/core-the-spire/runtime-state-model.md)、[架构决定](../../../design/core-the-spire/core-architecture-decisions.md)、[ENV 实现约束](../../../design/environment-implementation-constraints.md)和[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。设计文档里的目标语言示例不自动属于当前可执行语法。
+其他示例见 [FixturePackages.cs](../../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../../reference/dsl/README.md)、[运行态设计](../../../design/core-the-spire/runtime-state-model.md)、[架构决定](../../../design/core-the-spire/core-architecture-decisions.md)、[ENV 实现约束](../../../specs/environment-constraints.md)和[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。设计文档里的目标语言示例不自动属于当前可执行语法。

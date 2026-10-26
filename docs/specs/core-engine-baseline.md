@@ -1,6 +1,6 @@
 # 核心接口与兼容要求
 
-本文规定当前通用内核的职责和行为。工程版本见 [Core.TheSpire.csproj](../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)，文本版本与语义见[作者参考](../reference/dsl/README.md)。修改语言、执行或投影语义时同步更新标识、消费者与相关检查；历史版本及其检查结果查 Git／PR／CI。
+文档类型：参考（Reference）。本文规定当前通用内核的职责和行为。工程版本见 [Core.TheSpire.csproj](../../core-the-spire/Core.TheSpire/Core.TheSpire.csproj)，文本版本与语义见[作者参考](../reference/dsl/README.md)。修改语言、执行或投影语义时同步更新标识、消费者与相关检查；历史版本及其检查结果查 Git／PR／CI。
 
 ## 1. 固定的结构与接口职责
 

@@ -6,7 +6,7 @@
 
 职责划分（"共享规范由协议侧维护，AI 侧不新增第二套协议"）：
 
-* **共享层**：``docs/contracts/net/0.2/wire.schema.json`` 的 L1 结构与
+* **共享层**：``docs/specs/net/0.2/wire.schema.json`` 的 L1 结构与
   ``tools/contract-check/wire_layers.check_snapshot`` 的 L3 判定始终执行，命中后按
   :data:`SHARED_RULE_CODES` 映射成编码错误码，并把共享规则 ID 放进 ``related_ids``。
   判定逻辑不在这里复制；未登记的共享规则一律落到 ``unsupported_structure`` 兜底，

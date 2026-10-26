@@ -1,6 +1,6 @@
 # 角色战斗公共能力约定
 
-文档类型：参考（Reference）。本页定义共享机制及当前明确边界；排期和认领只维护[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t06)。所有局内资源与实例仍归Engine，领域对象只生成IR。当前不是完整五角色能力声明。
+文档类型：参考（Reference）。本页定义共享机制及当前明确边界；排期和认领只维护[行为要求](../../../specs/environment.md#env-t06)。所有局内资源与实例仍归Engine，领域对象只生成IR。当前不是完整五角色能力声明。
 
 ## 阵营回合与确认死亡
 

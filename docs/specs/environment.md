@@ -1,12 +1,12 @@
 # ENV：完整单人环境与源规则差异测试
 
-| 项目 | 决定 |
+文档类型：参考（Reference）。| 项目 | 决定 |
 | --- | --- |
-| 适用基线 | 纯 DSL base 与当前[核心约定](../contracts/core-engine-baseline.md)；实际支持范围见包 manifest 和 CI |
+| 适用基线 | 纯 DSL base 与当前[核心约定](core-engine-baseline.md)；实际支持范围见包 manifest 和 CI |
 | 当前主线 | **先完整环境与保真验收，再正式AI学习实验**；[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)、[开发约定](../../CONTRIBUTING.md) |
 | 模块职责 | base负责规则/DSL/完整内容，tools负责严格差异测试，net负责完整公开出口；负责人和任务状态只在 Issue 维护 |
 | 规则依据 | [锁定 sts2-sim](../../reference/baselines/sts2-sim.json) 的源码与默认顺序执行；替代本地 `sts2/` 为规则依据，同时作为独立执行的比较后端 |
-| AI 边界 | 环境通过验收前只维护既有工程回归；正式实验要求见[训练设计](ai-the-spire/training-design.md) |
+| AI 边界 | 环境通过验收前只维护既有工程回归；正式实验要求见[训练设计](../areas/ai/spec/training.md) |
 | 完整范围 | 锁定 sts2-sim 中五个标准角色、全部单人可达内容、地图/房间/战斗/奖励到真实胜负；不是仅Ironclad或四张牌 |
 
 ## 1. 验收原则
@@ -15,7 +15,7 @@
 
 游戏玩法在 base DSL 中实现。通用能力不足时附最小复现协调 core 维护，不将完整通用桌游引擎、Lua 后端或任意 mod 能力作为原版内容前置。按可运行阶段交付，新规则与差异测试同批完成；短场景不能替代正常开局到真实胜负。真实客户端取证及指定 mod 分别验收，不扩展当前原版实现范围。
 
-模块、状态与生命周期要求见[实现约束](environment-implementation-constraints.md)，协作流程见[开发约定](../../CONTRIBUTING.md)。正式 Host 固定角色／进阶，每次 start 接游戏字符串 seed，遵循[协议 0.2](../areas/net/reference/protocol.md#7-env正式环境的02扩展)，旧协议版本明确拒绝，消费者同步迁移。
+模块、状态与生命周期要求见[实现约束](environment-constraints.md)，协作流程见[开发约定](../../CONTRIBUTING.md)。正式 Host 固定角色／进阶，每次 start 接游戏字符串 seed，遵循[协议 0.2](../areas/net/reference/protocol.md#7-env正式环境的02扩展)，旧协议版本明确拒绝，消费者同步迁移。
 
 ## 2. 实现与来源入口
 
@@ -148,7 +148,7 @@ enemy/potion/relic/encounter/角色等正式内容走base前端/受控算法，�
 
 正式运行从角色/seed/进阶开局，经原版地图生成、遭遇池、所有房间/古代人、奖励/选牌、商店/营火/宝箱、事件战斗嵌套/返回、幕转换、最终事件与真实胜负结算。控制台能一路展示并按脚本/合法公开规则策略推进；两房间人为场景不抵此交付。
 
-永久状态写回须覆盖 Feed 成长后的 Run.MaxHp、HP/金币/牌组实例与升级/遗物/药水槽/附魔及相应整局计数。修复与验收进度只看[行为要求](environment-completion-and-differential-v1.md#env-t02)，不将旧版“MaxHp 未写回”的发现持续当作当前状态。战斗复制、临时生成牌、卡牌变量及房间/事件局部状态按原版生命周期隔离，事件里的战斗后回到同一事件，最终房间击杀奖励完整结算再终止。
+永久状态写回须覆盖 Feed 成长后的 Run.MaxHp、HP/金币/牌组实例与升级/遗物/药水槽/附魔及相应整局计数。修复与验收进度只看[行为要求](environment.md#env-t02)，不将旧版“MaxHp 未写回”的发现持续当作当前状态。战斗复制、临时生成牌、卡牌变量及房间/事件局部状态按原版生命周期隔离，事件里的战斗后回到同一事件，最终房间击杀奖励完整结算再终止。
 
 用参考普通顺序模式记录可复现整局决策，base按同脚本逐步执行，比较地图/候选池/奖励/商店/房间及永久状态，不只比最终胜负。关卡上限/故障/超时单列，不能作为死亡或胜利。Ironclad正常开局至少有真实死亡及跨全程胜利的可复现脚本；胜利脚本可来自既有参考/原版记录，不需要训练新AI，不以加血/无敌制造正常开局验证记录。难以取得时记录未完成，不能降低验收。
 
@@ -202,7 +202,7 @@ ironclad-run是自动测试suite，固定进阶0的8个seed=`ENV-IRONCLAD-{i:02}
 
 原合同的7个双侧case与5个unsupported原ID保留，完整regression保留17个ID；缺case/零执行/缺参考/unsupported/首个差异/缺维度非零；源/reference派生与随机trace可核对。
 
-随机与事件首差按[实现约束第 8 节](environment-implementation-constraints.md#8-随机数值与事件诊断)报告逐次操作、参数、结果、前后游标、有序候选摘要及共同边界；仅比较流计数不替代调用语义。诊断有界丢失、缺维度和参考不可用继续失败，不能降低原 case 的必需维度。
+随机与事件首差按[实现约束第 8 节](environment-constraints.md#8-随机数值与事件诊断)报告逐次操作、参数、结果、前后游标、有序候选摘要及共同边界；仅比较流计数不替代调用语义。诊断有界丢失、缺维度和参考不可用继续失败，不能降低原 case 的必需维度。
 
 ### CI-01
 

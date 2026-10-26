@@ -627,7 +627,7 @@ def main() -> int:
             "scope_id": "base-spire-singleplayer-dev-v1",
             "evidence": [
                 "mod-the-spire/base-spire/BaseSpire/SinglePlayer/RunConfiguration.cs:4,87,107-115",
-                "docs/design/environment-implementation-constraints.md §3",
+                "docs/specs/environment-constraints.md §3",
             ],
         },
         "unlock_policy_all_semantics": {

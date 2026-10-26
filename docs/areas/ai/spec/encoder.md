@@ -1,12 +1,12 @@
 # ai-the-spire 可扩展编码器设计与首阶段任务
 
-## 1. 架构决策及边界
+文档类型：参考（Reference）。## 1. 架构决策及边界
 
 先实现不含可训练参数的结构化输入层，再按资源预算选择可学习编码器。模型接收当前观察，玩家此前获知且当前仍有效的信息直接属于观察。输入表示保留实体、具名字段、关系和已知顺序，候选动作通过引用关联这些实体；编码器不额外记录公开历史或维护独立游戏知识状态。
 
 编码流程与字典结构可跨 Gym 复用；内容字典和模型权重属于固定 Gym。添加注册项意味着新的字典版本及必要的重新训练，不保证已有模型能理解新增内容。
 
-以下名称都是拟议的数据约定，不是当前 C# 类型或已经实现的 API。[net 公开协议](../../areas/net/reference/protocol.md)负责 wire 数据及公开声明，本文件只规范 AI 字典、规范化和数组。首阶段允许用该协议的公开 fixtures 实现，真实协议适配必须另行验证。
+以下名称都是拟议的数据约定，不是当前 C# 类型或已经实现的 API。[net 公开协议](../../net/reference/protocol.md)负责 wire 数据及公开声明，本文件只规范 AI 字典、规范化和数组。首阶段允许用该协议的公开 fixtures 实现，真实协议适配必须另行验证。
 
 ```mermaid
 flowchart LR
@@ -29,7 +29,7 @@ Manifest 包含 `tensor_layout_version`、`gym_id`、`dictionary_version`、`env
 
 提供方的 PublicCatalog 是公开语义声明的权威；AI 读取它，分配类别索引并附加 offset/scale，不创造动作语义或更改可见性。测试用目录需明确标为 fixture，不从 core 反射生成。net 快照携带 environment_identity，不携带 AI dictionary_version；编码时校验环境标识，再将 AI 本地字典标识放入 TensorizedObservation.metadata。
 
-Python contracts 读取/校验[统一规范资产](../net-the-spire/contract-artifacts.md)，不在 encoding 内另定义镜像 DTO。pile_types 通过唯一 kind_id 保留牌堆语义，互斥作用域是已声明的 entity_ref 字段；terminal_reasons 仅校验结果事实，不把终局 reason 变成决策输入。新增目录声明同步修改 Manifest 与 fixtures；按[相关规格](../spec.md)，首阶段 A-01 依赖 C-01 的 P-01 资产/Python 检查部分，不等待 N-01 的 C# 复核或游戏后端。
+Python contracts 读取/校验[统一规范资产](../../net/spec/contract-artifacts.md)，不在 encoding 内另定义镜像 DTO。pile_types 通过唯一 kind_id 保留牌堆语义，互斥作用域是已声明的 entity_ref 字段；terminal_reasons 仅校验结果事实，不把终局 reason 变成决策输入。新增目录声明同步修改 Manifest 与 fixtures；按[相关规格](../../../specs/project.md)，首阶段 A-01 依赖 C-01 的 P-01 资产/Python 检查部分，不等待 N-01 的 C# 复核或游戏后端。
 
 - 名称使用命名空间，如 `base:headbutt`、`modA:charge`。实体种类与卡牌等内容类型分开注册。
 - 索引 0 保留给补齐。首次构建各字典时按完整名称确定性排序，显式保存映射；恢复训练时读取原映射，不按新注册顺序重建。
@@ -197,7 +197,7 @@ ObservedSequence 的 ordinal 从 0 起且同一序列连续；KnownCardPosition 
 4. **数组化与批处理**：实现第 5 节的数组、引用映射、数值变换、补齐及 mask；每条样例可检查编码前后对应关系。
 5. **验收检查与运行说明**：执行第 9 节场景，输出编码规模与耗时；记录覆盖的公开机制和未支持的输入。首阶段不实现收益函数、神经网络、训练、策略评分或真实动作执行。
 
-接口边界：实现者负责 `ai-the-spire` 与必要的该模块文档；不修改 core、内容 DSL 或 base-spire。[net 协议](../../areas/net/reference/protocol.md)同时待评审，以公开样例消费该约定；不得新增直接读取内核的捷径。完整阶段及依赖见[实施计划](../../roadmap.md)，本节仅细化第一批任务。
+接口边界：实现者负责 `ai-the-spire` 与必要的该模块文档；不修改 core、内容 DSL 或 base-spire。[net 协议](../../net/reference/protocol.md)同时待评审，以公开样例消费该约定；不得新增直接读取内核的捷径。完整阶段及依赖见[实施计划](../../../roadmap.md)，本节仅细化第一批任务。
 
 建议验证方式为在 `ai-the-spire` 目录执行 `python -m unittest discover -s tests -v`。这是后续实现的建议命令，本次未执行，也不是当前已存在的测试项目。
 

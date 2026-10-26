@@ -108,10 +108,10 @@ dotnet run --project tools/differential -- test --suite regression --case random
 
 参考适配沿锁定上游已有的实例结果观察字段附加并释放本次诊断，不新增全局回调、不修改参考源码。洗牌候选从参考自己的实际牌区及 `CardModel.CompareTo` 构造，按实测交换更新诊断副本，再与真实手牌／抽牌堆顺序核对；核对失败便拒绝认证该轨迹。
 
-`locked-native-sequential@1`使用参考原生根和具名流派生，不再覆盖全部run流为旧hash32。原[有序受控初始化](../../docs/design/environment-implementation-constraints.md#env-t04受控初始化与回合case边界2026-10-11)仍将参考初始牌区恢复为用例声明顺序，并在脚本起点以相同的原生Shuffle种子恢复该流游标0；这项消费单列，不能用于正常Run。脚本期间禁止补抽、重键或重设游标。报告保存原始seed、实际原生种子、来源摘要与初始化消费，迁移检查通过当前独立Python神谕核对15条流派生及抽样。玩家流保留原生状态，未迁移敌人的行动差异继续严格失败。
+`locked-native-sequential@1`使用参考原生根和具名流派生，不再覆盖全部run流为旧hash32。原[有序受控初始化](../../docs/specs/environment-constraints.md#env-t04受控初始化与回合case边界2026-10-11)仍将参考初始牌区恢复为用例声明顺序，并在脚本起点以相同的原生Shuffle种子恢复该流游标0；这项消费单列，不能用于正常Run。脚本期间禁止补抽、重键或重设游标。报告保存原始seed、实际原生种子、来源摘要与初始化消费，迁移检查通过当前独立Python神谕核对15条流派生及抽样。玩家流保留原生状态，未迁移敌人的行动差异继续严格失败。
 
 
-[迁移检查](../ci/README.md)执行这两个原用例及严格失败检查，校验原 suite 和生产依赖隔离。`self-test` 另外检查候选错序、相同消费数但参数不同、结果／流位置首差，以及记录缺失／截断／溢出；故障注入不算独立玩法通过。原源与旧适配器见[迁移对照](../base-migration-baseline/README.md)，逐组去向见[CI 迁移数据](../ci/fixtures/legacy-dsl-checks.json)。受控机制比较不替代完整[ENV 验收](../../docs/design/environment-completion-and-differential-v1.md)；参考玩法保持只读。
+[迁移检查](../ci/README.md)执行这两个原用例及严格失败检查，校验原 suite 和生产依赖隔离。`self-test` 另外检查候选错序、相同消费数但参数不同、结果／流位置首差，以及记录缺失／截断／溢出；故障注入不算独立玩法通过。原源与旧适配器见[迁移对照](../base-migration-baseline/README.md)，逐组去向见[CI 迁移数据](../ci/fixtures/legacy-dsl-checks.json)。受控机制比较不替代完整[ENV 验收](../../docs/specs/environment.md)；参考玩法保持只读。
 
 ## 核对正常开局是否可以比较
 

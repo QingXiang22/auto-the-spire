@@ -173,8 +173,8 @@ docs/
 | `docs/roadmap.md` | `meta/roadmap.md` | |
 | `docs/terminology.md` | `meta/glossary.md` | |
 | `docs/AGENTS.md` | 不动 | 协作约束 |
-| `docs/contracts/core-engine-baseline.md` | `specs/core-engine-baseline.md` | 跨模块接口约定 |
-| `docs/contracts/net/0.2/invariants.md` | `specs/net/0.2/invariants.md` | 同批移动三份 JSON 并更新所有读取者，见第 8 节 |
+| `docs/specs/core-engine-baseline.md` | `specs/core-engine-baseline.md` | 跨模块接口约定 |
+| `docs/specs/net/0.2/invariants.md` | `specs/net/0.2/invariants.md` | 同批移动三份 JSON 并更新所有读取者，见第 8 节 |
 
 ### 6.2 design/
 

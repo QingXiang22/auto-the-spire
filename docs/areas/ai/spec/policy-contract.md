@@ -1,10 +1,10 @@
 # ai-the-spire 模型与概率输出约定
 
-本文供模型与执行器实现者查询概率输出、候选对齐和模型包约束。设计表记录 2026-10-01 时点；实际模型交付与验收以[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)为准。
+文档类型：参考（Reference）。本文供模型与执行器实现者查询概率输出、候选对齐和模型包约束。设计表记录 2026-10-01 时点；实际模型交付与验收以[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)为准。
 
 ## 1. 调用边界
 
-外部调用为 `predict(snapshot, model_bundle) -> PolicyEvaluation`，只接收[net 当前快照](../../areas/net/reference/protocol.md)。内部依次调用 validate/tensorize、`encoder.forward(T) -> EncodedObservation`、`scorer.forward(EncodedObservation, CandidateTable) -> logits`、有效候选归一化；不执行环境动作。
+外部调用为 `predict(snapshot, model_bundle) -> PolicyEvaluation`，只接收[net 当前快照](../../net/reference/protocol.md)。内部依次调用 validate/tensorize、`encoder.forward(T) -> EncodedObservation`、`scorer.forward(EncodedObservation, CandidateTable) -> logits`、有效候选归一化；不执行环境动作。
 
 EncodedObservation 包含 global `[B,dg]`、entities `[B,E,de]`、必要的关系/序列表示和 masks；引用映射仅为侧信息。不同模块可使用不同维度，但模型包必须声明 dg/de、输入布局版本和 scorer 所需通道。不允许只保留 global 后丢失候选引用实体；也不允许把实例行号作为学到的位置。端到端训练可共同更新 encoder/scorer，接口解耦不意味着任意权重可拼接。
 
@@ -20,7 +20,7 @@ softmax 在减去有效项最大 logit 后计算，masked 项不参与最大值�
 
 执行器检查版本和句柄后才决定采样或 argmax。采样温度、混入均匀探索或其他改动形成新的实际行为分布 μ；日志必须记录 μ(a|o)，不能把原始 π(a|o) 当实际行为概率。argmax 的实际行为是确定分布；对齐项相等的处理方式在 ExecutorProfile 中固定，不按不透明 ID 字符串择优。为避免列表顺序成为偏好，建议等概率并列采样并记录执行 RNG；评估时使用固定执行配置及 RNG 种子。
 
-执行器按[公开动作语义键](../net-the-spire/contract-artifacts.md#3-公开数组与动作语义键)规范对齐概率后采样。相同候选语义/概率和执行 RNG 下，输入排列或 candidate_id 换名不改变选中的动作语义；规范排序仅控制可复现性，行号和键字节不进入评分特征。V-11 同时检查这个性质与外部概率集合，不能只检查按句柄对齐的概率。
+执行器按[公开动作语义键](../../net/spec/contract-artifacts.md#3-公开数组与动作语义键)规范对齐概率后采样。相同候选语义/概率和执行 RNG 下，输入排列或 candidate_id 换名不改变选中的动作语义；规范排序仅控制可复现性，行号和键字节不进入评分特征。V-11 同时检查这个性质与外部概率集合，不能只检查按句柄对齐的概率。
 
 概率不是动作收益、偏好置信度或通关概率。只有当前选择概率和可选收益属于该输出，真正执行由独立的 `select(evaluation, executor_profile)` 与 net.step 完成。
 
@@ -40,4 +40,4 @@ return_schema 必须声明 reward_profile_id、component_ids/单位/尺度、折
 
 ## 5. 错误与验收
 
-沿用编码器的结构错误，追加 incompatible_model、invalid_logits、invalid_probability、stale_evaluation、unsupported_return_schema。错误包含阶段、输入路径与当前标识，不暴露隐藏数据。输出约定以[共同验收 V-11](../ai-net-verification.md#3-验收场景目录)为主；实例重命名、候选重排、不同 padding 长度、单候选和终止空集合均须覆盖。网络概率比较使用声明的数值容差，引用和候选集合匹配是精确检查。
+沿用编码器的结构错误，追加 incompatible_model、invalid_logits、invalid_probability、stale_evaluation、unsupported_return_schema。错误包含阶段、输入路径与当前标识，不暴露隐藏数据。输出约定以[共同验收 V-11](../../../specs/ai-net/verification.md#3-验收场景目录)为主；实例重命名、候选重排、不同 padding 长度、单候选和终止空集合均须覆盖。网络概率比较使用声明的数值容差，引用和候选集合匹配是精确检查。

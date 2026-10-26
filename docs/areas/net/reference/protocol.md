@@ -2,7 +2,7 @@
 
 文档类型：参考（Reference）。发行前只维护当前协议 0.2；旧版输入明确拒绝，源码、schema 和消费者同步更新。运行与支持范围见[公开运行指南](../how-to/run-public-game.md)和[客户端参考](public-client.md)。
 
-本文定义字段、操作、错误与兼容规则，不保存实现进度。`demo:` 是示例命名空间；AI 索引、数值变换和模型版本不属于后端协议。结构资产、规范化、数组排序和跨结构校验见[规范资产](../../../design/net-the-spire/contract-artifacts.md)。两端实现对照同一资产检查，不能各自定义协议。
+本文定义字段、操作、错误与兼容规则，不保存实现进度。`demo:` 是示例命名空间；AI 索引、数值变换和模型版本不属于后端协议。结构资产、规范化、数组排序和跨结构校验见[规范资产](../spec/contract-artifacts.md)。两端实现对照同一资产检查，不能各自定义协议。
 
 ## 1. 标识、目录与能力
 
@@ -14,7 +14,7 @@
 | backend_profile_id | 后端观察/动作语义配置；语义或字段可用性改变须换标识 |
 | session_id | 一次会话；全部 worker 及进程重启的客户端可见域不复用，含新 worker 实例标识与局内编号；旧请求不能作用于新局 |
 | observation_id | 会话内递增的安全 JSON 整数；稳定快照和动作绑定共用该版本 |
-| candidate_id | 快照内唯一非空字符串，不透明；是**该会话**当前稳定边界的提交引用：不承诺跨快照稳定，也不跨会话通用（同 seed/同观察版本/同动作语义的两局各有自己的句柄）。同一动作的跨会话对齐走[动作语义键](../../../design/net-the-spire/contract-artifacts.md#3-公开数组与动作语义键)，不用 candidate_id |
+| candidate_id | 快照内唯一非空字符串，不透明；是**该会话**当前稳定边界的提交引用：不承诺跨快照稳定，也不跨会话通用（同 seed/同观察版本/同动作语义的两局各有自己的句柄）。同一动作的跨会话对齐走[动作语义键](../spec/contract-artifacts.md#3-公开数组与动作语义键)，不用 candidate_id |
 | instance_id | 会话内公开实体标识，在可公开跟踪的生命周期内稳定，不回收给其他实体 |
 
 `identity = {protocol_version, ruleset_id, catalog_id, backend_profile_id}`。`PublicCatalog = {protocol_version, ruleset_id, catalog_id, declarations}`。declarations 有 entity_kinds/content_types/fields/relation_types/pile_types/sequence_types/group_types/action_types/terminal_reasons 数组，空表为 `[]`。pile_types 是 STS 公开投影结构，不是 core 内置牌区类型。
@@ -41,9 +41,9 @@
 
 `describe` 返回 identity 与 capabilities：backend_kind=simulation/real_game；operations=实际支持操作；scenario_profiles=可启动配置及覆盖说明；seed_control=能否指定开局种子；field_availability=字段 available/unavailable；supported_structures；limits=实体、字段、候选、帧字节等配置上限；execution_guarantees=稳定快照、请求状态与活跃会话去重能力。不得虚假声明任意中途恢复、真实重置或跨崩溃恰好一次执行。
 
-上述结构的精确键与能力分离见[能力约束](../../../design/net-the-spire/contract-artifacts.md#4-能力与状态约束)。seed_action_replay=public_trace 仅承诺固定 identity/场景/seed/动作语义序列后公开事实与候选语义可对齐重放；不保证不同策略消费相同随机数。decision_pause、internal_snapshot_restore 与公开 restore/fork 分开，首版后两项公开能力为 false；没有该能力的后端不能获得对应重放验收结论。
+上述结构的精确键与能力分离见[能力约束](../spec/contract-artifacts.md#4-能力与状态约束)。seed_action_replay=public_trace 仅承诺固定 identity/场景/seed/动作语义序列后公开事实与候选语义可对齐重放；不保证不同策略消费相同随机数。decision_pause、internal_snapshot_restore 与公开 restore/fork 分开，首版后两项公开能力为 false；没有该能力的后端不能获得对应重放验收结论。
 
-`describe` 的成功 result 恰为 `{identity, capabilities}`。所有能力键必填；重放/暂停/恢复键仅在 `execution_guarantees` 内，不能在 capabilities 顶层重复。未实现能力明确 false/none，不能用省略或接受未知键代替。机器资产见 `docs/contracts/net/0.2/wire.schema.json`；当前已有结构校验不等于完整 P-01 或跨端验收通过。
+`describe` 的成功 result 恰为 `{identity, capabilities}`。所有能力键必填；重放/暂停/恢复键仅在 `execution_guarantees` 内，不能在 capabilities 顶层重复。未实现能力明确 false/none，不能用省略或接受未知键代替。机器资产见 `docs/specs/net/0.2/wire.schema.json`；当前已有结构校验不等于完整 P-01 或跨端验收通过。
 
 训练 Gym 绑定 exact identity、场景配置及所需字段能力。不同后端需核对语义和能力才能共享训练配置；名字相同不证明行为等价。暂未获知是 unknown，后端无法提供是 unavailable，不可混用。
 
@@ -68,7 +68,7 @@ Engine声明optional且当前值为None的实体字段按此规则省略，并�
 | category | 目录声明的类别 ID 字符串 |
 | entity_ref | 当前快照 instance_id 字符串 |
 
-number 不接受 NaN/Infinity、指数形式、逗号；编码时去掉前导 `+` 和多余零，负零写 `"0"`；wire 解码拒绝非规范字符串，不默默重写。版本、数量、序位等结构整数使用 JSON 整数，范围为 0 到 2^53−1，超出拒绝配置。模型的浮点精度另由[编码约定](../../../design/ai-the-spire/encoder-design.md)声明。禁止重复 JSON 键。
+number 不接受 NaN/Infinity、指数形式、逗号；编码时去掉前导 `+` 和多余零，负零写 `"0"`；wire 解码拒绝非规范字符串，不默默重写。版本、数量、序位等结构整数使用 JSON 整数，范围为 0 到 2^53−1，超出拒绝配置。模型的浮点精度另由[编码约定](../../ai/spec/encoder.md)声明。禁止重复 JSON 键。
 
 Relation 为 `{type_id, source_ref, target_ref, position?}`，position 语义由目录声明；同类型/来源/目标/位置完全重复的关系拒绝。
 
@@ -93,7 +93,7 @@ LegalAction 为 `{candidate_id, action_type, fields}`。fields 沿用字段结�
 
 同一完整动作语义（action_type 与全部具名字段相同）不得以不同句柄重复发布来扭曲概率总量；两张同名牌的不同实例是不同动作。所有发布动作字段为 known，未知收益或未知目标内容留在观察实体而非执行参数。
 
-所有无序数组及 legal_actions 遵守[规范排序与动作语义键](../../../design/net-the-spire/contract-artifacts.md#3-公开数组与动作语义键)；Sequence.elements 仍保留公开真实顺序。candidate_id 不参与排序。排序不能代替公开 ID 来源审计，也不得把数组序号当作游戏位置。
+所有无序数组及 legal_actions 遵守[规范排序与动作语义键](../spec/contract-artifacts.md#3-公开数组与动作语义键)；Sequence.elements 仍保留公开真实顺序。candidate_id 不参与排序。排序不能代替公开 ID 来源审计，也不得把数组序号当作游戏位置。
 
 正式0.2的`net:action:net.answer_decision`在目录中将`Instance`声明为optional。必选单选（1..1）仅发布带Instance的候选；可选单选（0..1，Engine EntityRefList）额外发布同action_type且fields=[]的取消候选，提交后向Engine回答空实例列表。只能提交当步实际发布的候选，不能自行省略字段制造取消。多于一项的选择仍明确拒绝。快照与step的wire形状不变，C#/Python沿通用optional_fields校验；目录及后端标识随该声明改变。
 
@@ -224,7 +224,7 @@ error 为 `{code, message, path?, session_id?, observation_id?, execution_state,
 
 ## 7. ENV正式环境的0.2扩展
 
-本节规定当前协议的游戏 seed 和会话创建要求；正常 Run 的实现范围见[ENV 约束](../../../design/environment-implementation-constraints.md#4-固定配置方式解决字符串seed冲突)，可用 scope 以包 manifest 为准。
+本节规定当前协议的游戏 seed 和会话创建要求；正常 Run 的实现范围见[ENV 约束](../../../specs/environment-constraints.md#4-固定配置方式解决字符串seed冲突)，可用 scope 以包 manifest 为准。
 
 | 项目 | 当前行为 |
 | --- | --- |
@@ -239,4 +239,4 @@ Host 固定角色／进阶及规则配置进入 ruleset_id；每局 seed 不进�
 
 未知键、重复键、空 seed、类型错误、旧协议版本和非法 scope 均严格拒绝，不自动降级。seed_control=true 只在创建路径实际使用指定 seed 时发布；rng_profile_id 报告实际 Profile。
 
-唯一机器资产位于 `docs/contracts/net/0.2/`。修改协议时同步 C#／Python codec、schema、正反例及请求重发检查；不保留旧版本兼容分支。仍禁止 load／fork 或自由写入内部状态的公开操作。
+唯一机器资产位于 `docs/specs/net/0.2/`。修改协议时同步 C#／Python codec、schema、正反例及请求重发检查；不保留旧版本兼容分支。仍禁止 load／fork 或自由写入内部状态的公开操作。
