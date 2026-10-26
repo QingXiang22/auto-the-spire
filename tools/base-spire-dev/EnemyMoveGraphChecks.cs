@@ -51,6 +51,24 @@ internal static partial class PackageChecks
                 """;
         copy.Include("move-probes.spire", probes);
         var observedPackage = copy.Load();
+        Case("MOVE fixed initial node logs during graph setup but publishes only on first roll", () =>
+        {
+            var s = Start(observedPackage); Submit(s, "TwigSlimeM.Spawn");
+            var enemy = FirstTarget(s); Submit(s, "BeginDevelopmentCombat");
+            var state = MoveState(s, enemy);
+            Equal(1L, IntField(s, state, "EnemyMoveState", "Sequence"), "source constructor logs the fixed initial node");
+            Equal("STICKY_SHOT_MOVE", MoveText(s, s.State.GetField(state, s.RuleSet.TypeByQualifiedId("base-spire:EnemyMoveState").FieldIndex("Current")).AsRef(), "EnemyMoveNode", "Id"), "fixed initial current state exists before roll");
+            Equal("none", MoveText(s, enemy, "Enemy", "MoveId"), "constructor does not publish NextMove");
+            True(!s.State.GetField(state, s.RuleSet.TypeByQualifiedId("base-spire:EnemyMoveState").FieldIndex("Ready")).AsBool(), "fixed initial state is not yet ready");
+            var hash = s.State.StateHash(); var draws = s.Random.TotalDraws;
+            s.Observe(s.Participant(0), "base-spire:PlayerView"); s.LegalActions(s.Participant(0));
+            Equal(hash, s.State.StateHash(), "inspection does not publish a move");
+            Submit(s, "BeginDevelopmentTurn"); Submit(s, "SelectFirst");
+            Equal("STICKY_SHOT_MOVE", MoveText(s, enemy, "Enemy", "MoveId"), "first roll publishes the existing fixed state");
+            Equal(1L, IntField(s, state, "EnemyMoveState", "Sequence"), "first and repeated roll do not duplicate constructor history");
+            Equal(1, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:EnemyMoveHistory").Id).Count(), "one initial history entry");
+            Equal(draws, s.Random.TotalDraws, "fixed initialization and publication do not sample");
+        });
         foreach (var vector in vectors.RootElement.GetProperty("vectors").EnumerateArray())
         {
             var seed = vector.GetProperty("seed").GetString()!;
