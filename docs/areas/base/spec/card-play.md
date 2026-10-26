@@ -37,4 +37,4 @@
 
 被禁止自动出牌的非出牌回退依据 `MoveToResultPileWithoutPlaying`，不执行成功出牌的结果修正、Power离场或play费用清理。自动抽牌批次依据 `AutoPlayCmd.PlayCardsCore`：先逐张写入一次性耗尽标记，再判断ending；已经预载的剩余牌保持Play，不凭最终位置补做未执行正文。
 
-侧回合历史以当前单玩家普通轮换为边界：Unmovable的语义历史区分EnemyPhase和玩家TurnNumber；Stomp及AttacksPlayedThisTurn对应源PlayerCombatState的回合计数，保持玩家回合重置语义。Anger生成克隆的完整生成通知属于[生成生命周期工单](https://github.com/QingXiang22/auto-the-spire/issues/149)，动作诊断保留其实际额外移牌通知，不能据零支付一致宣称生成轨迹一致。
+侧回合历史以当前单玩家普通轮换为边界：Unmovable的语义历史区分EnemyPhase和玩家TurnNumber；Stomp及AttacksPlayedThisTurn对应源PlayerCombatState的回合计数，保持玩家回合重置语义。Anger生成克隆的完整生成通知属于[生成生命周期工单](https://github.com/QingXiang22/auto-the-spire/issues/165)，动作诊断保留其实际额外移牌通知，不能据零支付一致宣称生成轨迹一致。

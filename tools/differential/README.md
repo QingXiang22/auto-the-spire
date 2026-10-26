@@ -10,7 +10,7 @@
 
 每例另跑关闭诊断的相同初态：DSL 核对完整 StateHash 和随机状态，参考核对自身精确战斗描述和随机状态；观察与候选查询也不得改变 DSL 状态。缺场景／字段、截断、缺参考和异常返回3；实际差异返回1，所比较边界全部一致才返回0。报告的 complete、independent_verified 与 normal_run_verified 始终为 false，不代替原 suites 或 M01 验收。
 
-手动出牌的源入口使用同步 `CardPileCmd.Add` 移入 Play，它不发异步 `AfterCardChangedPiles`；扣费后才在正支付量时发 `AfterEnergySpent`。普通 `AddAsync` 则在整批移牌后通知。零费Anger保留生成克隆时额外 `pile:none:discard` 的实际首差，由 #149 处理；暂停批次由 #147 处理，不过滤这些事件以制造全轨迹通过。诊断分别记录这些实际站点，不能为了统一事件名给参考添加不存在的回调。
+手动出牌的源入口使用同步 `CardPileCmd.Add` 移入 Play，它不发异步 `AfterCardChangedPiles`；扣费后才在正支付量时发 `AfterEnergySpent`。普通 `AddAsync` 则在整批移牌后通知。零费Anger保留生成克隆时额外 `pile:none:discard` 的实际首差，由 #165 处理；暂停批次由 #147 处理，不过滤这些事件以制造全轨迹通过。诊断分别记录这些实际站点，不能为了统一事件名给参考添加不存在的回调。
 
 [锁定 sts2-sim](../../reference/README.md) 同时作为当前规则依据和独立执行的比较后端。生产随机派生与开局向量使用同一锁定基线，旧source-catalogs仅保留原迁移清单；一致只表示与该模拟器实现一致，不能单独证明客户端保真。
 

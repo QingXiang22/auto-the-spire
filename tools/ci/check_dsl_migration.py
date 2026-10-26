@@ -459,11 +459,11 @@ def main() -> int:
             if not case["id"].endswith((":two-end-effects-paused", ":zero-card")) and case["status"] != "passed":
                 raise ValueError("Ordinary and card-play boundaries must match the locked reference")
             if case["id"].endswith(":zero-card"):
-                # Anger's generated-clone notification belongs to #149. Preserve the new
+                # Anger's generated-clone notification belongs to #165. Preserve the new
                 # full trace and exact extra notification rather than dropping this case.
                 if (case["status"] != "diverged" or case["first_difference"] != {
                         "index": 7, "field": "phase", "left": "pile:none:discard", "right": "card-after"}):
-                    raise ValueError("Anger generation discrepancy must remain explicit until #149 fixes it")
+                    raise ValueError("Anger generation discrepancy must remain explicit until #165 fixes it")
                 for side in ("left", "right"):
                     if any(p["phase"] == "energy-spent" or p["spent"] != 0 for p in case[side]["points"]):
                         raise ValueError("Zero-cost Anger must not emit an energy payment")
