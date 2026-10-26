@@ -344,19 +344,26 @@ def main() -> int:
 
         starts = run("turn-start", ["turn-start-compare", "--output", str(args.output / "turn-start")], 0)
         start_ids = [seed + ":" + name for seed in ("777", "A😀B")
-                     for name in ("clear", "barricade", "clamp", "barricade-clamp", "enemy-barricade", "zero-member", "spawn-skip")]
+                     for name in ("clear", "barricade", "clamp", "barricade-clamp", "enemy-barricade", "zero-member", "spawn-skip", "horn-cleat")]
         start_stages = ["before:player", "cleared:player", "side:player", "configured", "before:enemy",
                         "cleared:enemy", "cleared:enemy", "side:enemy", "enemy-end", "before:player", "cleared:player", "side:player"]
         if (starts is None or starts["schema"] != "dsl-migration/turn-start@1" or starts["status"] != "passed"
                 or starts["reference"]["commit"] != lock["commit"] or starts["independent_verified"] is not True
                 or starts["normal_run_verified"] is not False or [c["id"] for c in starts["cases"]] != start_ids):
-            raise ValueError("Turn start comparison must retain all 14 controlled cases")
+            raise ValueError("Turn start comparison must retain all 16 controlled cases")
         for case in starts["cases"]:
             if (case["status"] != "passed" or case["left"] != case["right"]
-                    or [r["at"] for r in case["left"]] != start_stages
+                    or [r["at"] for r in case["left"]] != start_stages + (start_stages[4:] if case["id"].endswith(":horn-cleat") else [])
                     or any(set(r) != {"at", "turn", "hp", "block", "enemy_block", "spawned"}
                            or len(r["enemy_block"]) != 2 or len(r["spawned"]) != 2 for r in case["left"])):
                 raise ValueError("Turn start comparison omitted an actor or intermediate stage")
+            if case["id"].endswith(":horn-cleat"):
+                sides = [r for r in case["left"] if r["at"] == "side:player"]
+                cleared = [r for r in case["left"] if r["at"] == "cleared:player"]
+                if ([r["turn"] for r in sides] != [1, 2, 3] or [r["block"] for r in sides] != [10, 14, 0]
+                        or [r["turn"] for r in cleared] != [0, 1, 2]):
+                    raise ValueError("HornCleat must use old turn one, granting only on player turn two")
+
 
         blocks = run("blocks", ["block-compare", "--output", str(args.output / "blocks")], 0)
         block_names = ("plain", "enemy", "dex", "enemy-dex", "negative-dex", "enemy-negative-dex", "frail", "enemy-frail",

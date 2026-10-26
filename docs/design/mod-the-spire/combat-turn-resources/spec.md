@@ -6,7 +6,7 @@
 
 当前规则以锁定的 `reference/sts2-sim/src/Sts2Sim.Core/Combat/CombatEngine.cs`、`Entities/Creatures/Creature.cs`、`Commands/CreatureCmd.cs` 与 `Hooks/Hook.cs` 为依据。本页定义已有回合入口、生命／能量以及双方格挡命令；卡牌、伤害、终局和正常返回分别由所属领域约定，不以本页的组件判别替代正常整局验收。
 
-Lantern在首次玩家侧开始加能量，BloodVial在首次玩家Late回复生命，HappyFlower按实例跨战计数。HornCleat读取AfterBlockCleared处尚未增加的回合号，值为2时获得14无加成格挡；不能把它移动到增加编号之后。玩家首回合以入口旧TurnNumber=0识别并保留格挡，仍发布AfterBlockCleared。
+Lantern在首次玩家侧开始加能量，BloodVial在首次玩家Late回复生命，HappyFlower按实例跨战计数。HornCleat读取AfterBlockCleared处尚未增加的回合号，值为1时在第二回合获得14无加成格挡；不能把它移动到增加编号之后。玩家首回合以入口旧TurnNumber=0识别并保留格挡，仍发布AfterBlockCleared。
 
 ## 行为要求与设计
 
@@ -18,7 +18,7 @@ Lantern在首次玩家侧开始加能量，BloodVial在首次玩家Late回复生
 | TC04 | Heal(owner, amount) 增加 Hp 并按 MaxHp 截断；不处理复活、治疗修正或死亡 | 满血回复不变；超过上限只到 MaxHp |
 | TC05 | GainEnergy(owner, amount) 增加 Energy，可超过 MaxEnergy；回合开始的重置仍按 MaxEnergy | Lantern 在 3 能量上限上得到 4 |
 | TC06 | 四个模板按持有者、DefinitionId、IsMelted 过滤，只调用本批资源操作；HappyFlower 用实例 Counter，跨战斗保留 | 无遗物／已移除／熔化／别的持有者不触发；两件同时持有各自触发一次 |
-| TC07 | 公开轨迹用同一 Host 从合法动作执行开始战斗与两个回合，观察 Hp／Energy／TurnNumber／Block 与合法候选 | 仅Lantern／HornCleat的真实stdio上，第一回合4能量0格挡、第二回合3能量0格挡、第三回合3能量14格挡 |
+| TC07 | 公开轨迹用同一 Host 从合法动作执行开始战斗与两个回合，观察 Hp／Energy／TurnNumber／Block 与合法候选 | 仅Lantern／HornCleat的真实stdio上，第一回合4能量0格挡、第二回合3能量14格挡、第三回合3能量0格挡 |
 | TC08 | 内容文件仅 use 模板参数；源资格、ID、hash、池和 297 项来源条目总数不变；不新增 C# 效果分支 | catalog 只新增四个非空 definition；公开目录新增四个真实 ID |
 
 字段与资源过程放 `combat`，回合过程与事件放 `combat/lifecycle.spire`，四个模板放 `relics/rules`，具体配置各放 `relics/shared` 单文件。公开动作显式命名 `BeginDevelopmentTurn`／`EndDevelopmentTurn`，不得命名为正常回合或回合结束结算。

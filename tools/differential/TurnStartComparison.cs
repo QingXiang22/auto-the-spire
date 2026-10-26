@@ -20,7 +20,7 @@ namespace Differential;
 
 internal static class TurnStartComparison
 {
-    private static readonly string[] Plans = ["clear", "barricade", "clamp", "barricade-clamp", "enemy-barricade", "zero-member", "spawn-skip"];
+    private static readonly string[] Plans = ["clear", "barricade", "clamp", "barricade-clamp", "enemy-barricade", "zero-member", "spawn-skip", "horn-cleat"];
     private sealed record Row(string At, long Turn, long Hp, long Block, long[] EnemyBlock, bool[] Spawned);
     internal static int Run(string repository, string[] args)
     {
@@ -32,13 +32,13 @@ internal static class TurnStartComparison
         foreach (var seed in new[] { "777", "A😀B" }) foreach (var plan in Plans)
         {
             var left = Dsl(package, seed, plan); var right = Native(seed, plan);
-            if (left.Length != 12 || right.Length != 12) throw new InvalidOperationException("Turn start comparison omitted required stages: " + seed + ":" + plan);
+            if (left.Length != (plan == "horn-cleat" ? 20 : 12) || right.Length != left.Length) throw new InvalidOperationException("Turn start comparison omitted required stages: " + seed + ":" + plan);
             var same = NormalPreflight.Json(left) == NormalPreflight.Json(right); passed &= same;
             cases.Add(new { id = seed + ":" + plan, status = same ? "passed" : "diverged", left, right });
         }
         var report = new { schema = "dsl-migration/turn-start@1", reference, package_digest = original.Digest, fixture_digest = package.Digest,
             scope = "controlled-component", status = passed ? "passed" : "diverged", independent_verified = passed, normal_run_verified = false,
-            setup = "Two real TwigSlimeS with players registered first; both sides explicitly normalize HP1000, empty decks, Block40/player and Block15/enemy after turn one. The real Anchor starts both sides with Block10. Native SturdyClamp is compared with an explicitly tool-only DSL clamp listener attached to Anchor; this certifies the shared veto/callback mechanism, not formal SturdyClamp support. Barricade is production content on both sides. Zero-member directly sets one HP to zero without death resolution, preserving source side membership. Spawn-skip directly sets the source private SpawnedThisTurn flag and the DSL flag at enemy AfterSideTurnStart; no summon lifecycle is certified. Before/cleared/side/end/configured rows retain both enemy blocks and flags in source order; native EndPlayerTurn automatically starts the next turn and DSL explicitly End+Begin steps. No birth RNG, public inventory equivalence, extra-turn action, summons or normal Run certification.", cases };
+            setup = "Two real TwigSlimeS with players registered first; both sides explicitly normalize HP1000, empty decks, Block40/player and Block15/enemy after turn one. The real Anchor starts both sides with Block10. Native SturdyClamp is compared with an explicitly tool-only DSL clamp listener attached to Anchor; this certifies the shared veto/callback mechanism, not formal SturdyClamp support. Barricade is production content on both sides. HornCleat is obtained on both sides and runs through turn three: its old TurnNumber1 grants14 on turn two, without repeating on turn three. Zero-member directly sets one HP to zero without death resolution, preserving source side membership. Spawn-skip directly sets the source private SpawnedThisTurn flag and the DSL flag at enemy AfterSideTurnStart; no summon lifecycle is certified. Before/cleared/side/end/configured rows retain both enemy blocks and flags in source order; native EndPlayerTurn automatically starts the next turn and DSL explicitly End+Begin steps. No birth RNG, public inventory equivalence, extra-turn action, summons or normal Run certification.", cases };
         var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
         if (args.Length != 0) { Directory.CreateDirectory(args[1]); File.WriteAllText(Path.Combine(args[1], "result.json"), json); }
         Console.WriteLine(json); return passed ? 0 : 1;
@@ -51,12 +51,13 @@ internal static class TurnStartComparison
         void Set(InstanceId id, string type, string field, Value value) => s.State.RunAtomic(() => s.State.SetField(id, s.RuleSet.TypeByQualifiedId("base-spire:" + type).FieldIndex(field), value));
         void Submit(string name, params Value[] values) { var action = s.RuleSet.Actions.Single(a => a.QualifiedId == "base-spire:" + name); s.Submit(action, s.Participant(0), values); if (s.Status != SessionStatus.Running) throw new InvalidOperationException("DSL start comparison stopped: " + s.Fault); }
         var player = All("Player").Single(); Set(player, "Player", "UsesRunDeck", Value.Of(true)); Set(player, "Player", "MaxHp", Value.Of(1000L)); Set(player, "Player", "Hp", Value.Of(1000L));
-        Submit("StartSetPlan", Value.Of(plan)); Submit("Anchor.Obtain"); Submit("TwigSlimeS.Spawn"); Submit("TwigSlimeS.Spawn");
+        Submit("StartSetPlan", Value.Of(plan)); Submit("Anchor.Obtain"); if (plan == "horn-cleat") Submit("HornCleat.Obtain"); Submit("TwigSlimeS.Spawn"); Submit("TwigSlimeS.Spawn");
         var enemies = All("Enemy"); foreach (var enemy in enemies) { Set(enemy, "Enemy", "MaxHp", Value.Of(1000L)); Set(enemy, "Enemy", "Hp", Value.Of(1000L)); }
         Submit("BeginDevelopmentCombat"); Submit("BeginDevelopmentTurn");
         Set(player, "Player", "Block", Value.Of(40L)); foreach (var e in enemies) Set(e, "Enemy", "Block", Value.Of(15L));
         if (plan == "zero-member") Set(enemies[0], "Enemy", "Hp", Value.Of(0L));
         Submit("StartConfigured"); Submit("EndDevelopmentTurn"); Submit("BeginDevelopmentTurn");
+        if (plan == "horn-cleat") { Submit("EndDevelopmentTurn"); Submit("BeginDevelopmentTurn"); }
         return All("StartRow").Select(row => new Row(Field(row, "StartRow", "At").AsString(), Field(row, "StartRow", "Turn").AsInt(), Field(row, "StartRow", "Hp").AsInt(), Field(row, "StartRow", "Block").AsInt(),
             [Field(row, "StartRow", "B0").AsInt(), Field(row, "StartRow", "B1").AsInt()], [Field(row, "StartRow", "S0").AsBool(), Field(row, "StartRow", "S1").AsBool()])).ToArray();
     }
@@ -78,11 +79,15 @@ internal static class TurnStartComparison
             if (plan == "enemy-barricade") PowerCmd.Apply<BarricadePower>(combat, enemies[0], 1, null, null).GetAwaiter().GetResult();
         };
         probe.Capture = Capture; probe.SideStarted = side => { if (side == CombatSide.Enemy && plan == "spawn-skip") typeof(MonsterModel).GetProperty(nameof(MonsterModel.SpawnedThisTurn))!.SetValue(enemies[0].Monster, true); };
+        // Keep the read-only observer before HornCleat, matching the DSL audit priority.
+        if (plan == "horn-cleat") RelicCmd.Obtain(ModelDb.Relic<HornCleat>(), player).GetAwaiter().GetResult();
         var engine = new CombatEngine(combat); engine.StartCombatAsync().GetAwaiter().GetResult();
         player.Creature.LoseBlockInternal(player.Creature.Block); player.Creature.GainBlockInternal(40);
         foreach (var e in enemies) e.GainBlockInternal(15);
         if (plan == "zero-member") enemies[0].SetCurrentHpInternal(0);
-        Capture("configured"); engine.EndPlayerTurnAsync().GetAwaiter().GetResult(); return rows.ToArray();
+        Capture("configured"); engine.EndPlayerTurnAsync().GetAwaiter().GetResult();
+        if (plan == "horn-cleat") engine.EndPlayerTurnAsync().GetAwaiter().GetResult();
+        return rows.ToArray();
 #else
         throw new NotSupportedException("Independent reference was not built.");
 #endif
