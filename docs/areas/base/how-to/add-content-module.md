@@ -10,7 +10,7 @@
 
 把需要的触发、目标、数值、状态和结束条件写清。SelfFormingClay的遗物负责正未阻挡伤害后施加3层Power；Power负责回合开始的AfterBlockCleared阶段获得无加成格挡并移除。该事件包括首回合和保留格挡时，不能用“实际Block变成0”代替发布条件。
 
-若领域事件缺少必要来源或结果，应先补约定与共享发布点。现有PlayerHpLost只有owner，无法据此区分任意伤害来源。不要在内容里猜出缺失上下文。
+若领域事件缺少必要来源或结果，应先补约定与共享发布点。伤害监听使用携带DamageResult的BeforeDamageReceived／AfterDamageReceived等准确站点，读取显式dealer、card、play、属性与实际损失。不要在内容里猜出缺失上下文。
 
 ## 2. 在所属文件定义行为
 

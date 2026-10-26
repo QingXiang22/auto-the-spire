@@ -33,3 +33,11 @@
 ## 实施与验证
 
 先以已有真实乘法链和源方法建立有区分力的双侧向量，再实现数值、结果及通知；补齐旧规格时保留现有多目标、Vigor多击、Tracker、玩家死亡Power清理和Feed末杀要求。人工构造的大值与正常游戏流程分别报告。只在相关改动后运行定向检查，再由PR CI选择公共检查；原必测ID、来源池和未支持边界不缩减。缺参考、缺用例、缺维度和实际差异保持非零。
+
+## 已核对的表示边界与监听迁移
+
+当前出牌方向的有理数比例为Weak的3/4、Vulnerable的整数百分比（含PaperPhrog／Cruelty）和PenNib的整数倍；敌方方向为Weak的整数百分比、Vulnerable的3/2及Colossus的1/2。当前单实例比例链中的精度均可用10000为缩放基准精确表示。BodySlam合法大格挡值与当前层数上限的中间乘积在Int64范围内。此结论不覆盖任意重复实例、任意mod比例或未迁移内容；这些扩展需重新核对表示和溢出。
+
+四位缩放贯穿修正、格挡分数和HP输入；最终仅在源实际转换处截断。已确认并修复的差异是加性链中提前截零，以及未按LoseHpInternal限制loss而夸大的超杀。当前已核对消费者没有ModifyHpLost覆写，因此HP输入经过其源中性路径；TheBoot、TungstenRod、Intangible等未迁移族的四阶段修正、实际参与者回调、转移及防死仍未支持，不用中性Hook计作内容完成。
+
+Inferno、Rupture、CentennialPuzzle与SelfFormingClay使用同一AfterDamageReceived，Thorns使用BeforeDamageReceived。旧PlayerHpLost／PlayerDamaged／BeforePlayerAttacked入口已移除；来源与属性在数值结算前绑定。AfterDamageHpLost只表示伤害造成的正实际损失，不冒充涵盖治疗的AfterCurrentHpChanged。DamageResolved继续是base内部结果摘要；完整原生事件比较由对应工单维护，不能仅凭本页的局部通知判别声明全部事件一致。

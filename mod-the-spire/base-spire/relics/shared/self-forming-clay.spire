@@ -5,16 +5,18 @@ dsl_version = "core/0.3"
 template SelfFormingClayModule {
   body = {
     procedure Damaged {
-      parameters = { owner = Ref(Player) result = Ref(DamageResult) listener = Ref(Relic) }
+      parameters = { result = Ref(DamageResult) listener = Ref(Relic) }
+      locals = { owner = Binding }
       body = {
+        let = { into = owner value = field(result, DamageResult.Player) }
         if = { condition = and(field(owner, Player.CombatActive), greater(field(result, DamageResult.Unblocked), 0)) then = {
           call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:self-forming-clay" stacks = 3 } }
         } }
       }
     }
     subscription Damaged {
-      event = PlayerDamaged reaction = Damaged
-      instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), owner), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:self-forming-clay"))))
+      event = AfterDamageReceived reaction = Damaged
+      instances = where(collection(Relics), r, and(equal(field(r, Relic.Holder), field(result, DamageResult.Player)), and(not(field(r, Relic.IsMelted)), equal(field(r, Relic.DefinitionId), "base-spire:self-forming-clay"))))
       instance_order = pureCall(RelicHookOrder, listener, false)
     }
     action Obtain {

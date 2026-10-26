@@ -48,7 +48,7 @@ procedure ExecuteAttack {
     repeat = { count = hits body = {
       if = { condition = and(and(active, greater(field(owner, Player.Hp), 0)), or(isNone(field(attack, Attack.Enemy)), pureCall(EnemyIsActive, field(attack, Attack.Enemy)))) then = {
         if = { condition = not(isNone(field(attack, Attack.Enemy))) then = {
-          call = { procedure = ResolvePlayerDamage args = { owner = field(attack, Attack.Defender) attacker = field(attack, Attack.Enemy) card = none play = none attack = attack amount = field(attack, Attack.Amount) powered = field(attack, Attack.Powered) unblockable = false } into = result }
+          call = { procedure = ResolvePlayerDamage args = { owner = field(attack, Attack.Defender) attacker = field(attack, Attack.Enemy) dealerPlayer = none card = none play = none attack = attack amount = field(attack, Attack.Amount) powered = field(attack, Attack.Powered) move = true unblockable = false } into = result }
         } else = {
           let = { into = target value = field(attack, Attack.Target) }
           if = { condition = equal(field(attack, Attack.Mode), "random") then = { call = { procedure = RandomLivingEnemy into = target } } }
