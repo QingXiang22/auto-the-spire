@@ -14,6 +14,6 @@
 | 查询 DSL、操作签名或协议字段 | [参考索引](reference/README.md) |
 | 查询产品、核心接口与完整环境验收要求 | [跨模块规格](specs/README.md) |
 | 构建、运行检查或准备独立参考比较 | [CI 与本地检查](../tools/ci/README.md)、[参考依赖](../reference/README.md)、[差异测试工具](../tools/differential/README.md) |
-| 查当前任务、里程碑与用词 | [任务入口](roadmap.md)、[术语规范](terminology.md) |
+| 查当前任务、里程碑与用词 | [任务入口](meta/roadmap.md)、[术语规范](meta/glossary.md) |
 
 教程用于受控练习，操作指南帮助完成具体任务，参考供准确查询，解释说明关系与原因。规范标明要求的权威位置，不能据此推断功能已经实现。模块 README 保留局部索引；历史变更查 Git／PR，运行结果查 CI，任务状态只在 GitHub Issues 维护。

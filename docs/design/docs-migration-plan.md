@@ -170,8 +170,8 @@ docs/
 | 现路径 | 目标 | 备注 |
 | --- | --- | --- |
 | `docs/README.md` | 原地重写 | 全局入口，不保存历史映射 |
-| `docs/roadmap.md` | `meta/roadmap.md` | |
-| `docs/terminology.md` | `meta/glossary.md` | |
+| `docs/meta/roadmap.md` | `meta/roadmap.md` | |
+| `docs/meta/glossary.md` | `meta/glossary.md` | |
 | `docs/AGENTS.md` | 不动 | 协作约束 |
 | `docs/specs/core-engine-baseline.md` | `specs/core-engine-baseline.md` | 跨模块接口约定 |
 | `docs/specs/net/0.2/invariants.md` | `specs/net/0.2/invariants.md` | 同批移动三份 JSON 并更新所有读取者，见第 8 节 |

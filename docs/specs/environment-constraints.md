@@ -40,15 +40,15 @@
 | `tools/differential/` | 双侧适配、语义动作、诊断抽取、严格测试、首个差异/来源/验证记录 | 生产规则后端；把base结果复制成reference；通过修改游戏状态续跑整局 |
 | `ai-the-spire/` | 原有能力回归；0.2共享约定确需的兼容 | 从Engine/内部诊断/参考读取状态；为完整环境新增学习模块或偷偷恢复D3/D4 |
 
-正常 Run 在现有 base DSL 领域模块恢复，目录入口见[base 架构](../design/mod-the-spire/base-architecture.md)。复用当前共享操作，开发场景保持明确范围标识；不复制一套并行玩法，也不为拆分文件重写已验证能力。
+正常 Run 在现有 base DSL 领域模块恢复，目录入口见[base 架构](../understand/base-architecture.md)。复用当前共享操作，开发场景保持明确范围标识；不复制一套并行玩法，也不为拆分文件重写已验证能力。
 
-依赖方向保持：base DSL 由 core 通用加载器编译；Net.TheSpire→core/contracts；Host 组合通用包加载和 net；tools→core/net或测试客户端，只有工具／工具测试可引用 reference。生产规则不引用旧 C# 玩法或迁移源。core 的 DSL、随机、拆分及调试约束见[架构决定](../design/core-the-spire/core-architecture-decisions.md)。
+依赖方向保持：base DSL 由 core 通用加载器编译；Net.TheSpire→core/contracts；Host 组合通用包加载和 net；tools→core/net或测试客户端，只有工具／工具测试可引用 reference。生产规则不引用旧 C# 玩法或迁移源。core 的 DSL、随机、拆分及调试约束见[架构决定](../understand/decisions/core.md)。
 
 2026-10-07 公开语义来源决定：规则包声明公开结构，core 按规则输出玩家视图与合法选择，net 保持语义透传；真实游戏适配器对齐同一公开约定。
 
 正式目录/动作从 RuleSet 和所选投影派生，内容作者无需在 net 重复登记。对于无法从声明推导的游戏含义，规则提供方补充一次，由 Host 接入。句柄、编码、去重和版本校验继续复用 net。
 
-当前手写 Profile 的实际缺口与 ENV-T03 实施边界统一见[net架构第7节](../design/net-the-spire/design.md#7-公开声明与适配边界)。接入不以前置新增 core facade 或改造整个 DSL 为条件。
+当前手写 Profile 的实际缺口与 ENV-T03 实施边界统一见[net架构第7节](../understand/net-design.md#7-公开声明与适配边界)。接入不以前置新增 core facade 或改造整个 DSL 为条件。
 
 ## 3. 同一个正式构建、同一条会话创建路径
 

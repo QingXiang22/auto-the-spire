@@ -2,7 +2,7 @@
 
 文档类型：参考（Reference）。规则依据为[锁定 sts2-sim](../../../../reference/README.md) 的源码与顺序执行；本地 `sts2/` 不再裁决当前目标。base 仍以纯 DSL 独立实现，现有旧来源内容逐项迁移并绑定实际来源摘要；不以重新标记版本代替行为核对。
 
-mod 承载游戏规则包及其扩展，core 提供通用引擎。base 使用完整 Engine DSL 定义原版玩法，Spire 是面向内容作者的受限写法。产品范围见[项目规格](../../../specs/project.md)，包结构见[base 架构](../../../design/mod-the-spire/base-architecture.md)，准确接口见[开发手册](../README.md)。
+mod 承载游戏规则包及其扩展，core 提供通用引擎。base 使用完整 Engine DSL 定义原版玩法，Spire 是面向内容作者的受限写法。产品范围见[项目规格](../../../specs/project.md)，包结构见[base 架构](../../../understand/base-architecture.md)，准确接口见[开发手册](../README.md)。
 
 ## 规则包职责
 

@@ -1,6 +1,6 @@
 # net-the-spire 开发约定
 
-遵循根 [AGENTS.md](../AGENTS.md)、[开发流程](../CONTRIBUTING.md)和[术语规范](../docs/terminology.md)。本文件补充公开接口边界。
+遵循根 [AGENTS.md](../AGENTS.md)、[开发流程](../CONTRIBUTING.md)和[术语规范](../docs/meta/glossary.md)。本文件补充公开接口边界。
 
 - 负责 Host、协议、schema、编码和客户端及相应文档；依据 [net 规格](../docs/areas/net/spec/overview.md)、[协议](../docs/areas/net/reference/protocol.md)和[实现约束](../docs/specs/environment-constraints.md)。
 - 加载相同规则包，为每局建立独立 Session 并只启动一次；公开观察和完整合法候选来自 Engine 的稳定状态。不在 net 重算玩法、补随机结果或为每项内容重新注册专用处理。

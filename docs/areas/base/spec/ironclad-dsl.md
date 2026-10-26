@@ -1,6 +1,6 @@
 # 铁甲战士完整卡牌与共享接口
 
-文档类型：参考（Reference）。关联 **CORE-AUTHOR-05／DSL-IRONCLAD-ALL-01**；用户于 2026-10-18 明确优先完整铁甲战士。当前状态、认领与下一机制唯一维护在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。沿用[纯 DSL 边界](../../../design/mod-the-spire/base-architecture.md)，旧 C# 卡牌实现仅作迁移验证记录。
+文档类型：参考（Reference）。关联 **CORE-AUTHOR-05／DSL-IRONCLAD-ALL-01**；用户于 2026-10-18 明确优先完整铁甲战士。当前状态、认领与下一机制唯一维护在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。沿用[纯 DSL 边界](../../../understand/base-architecture.md)，旧 C# 卡牌实现仅作迁移验证记录。
 
 ## 范围与来源
 

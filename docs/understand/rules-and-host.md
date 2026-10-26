@@ -2,7 +2,7 @@
 
 文档类型：解释（Explanation）。
 
-core 把游戏规则与驱动游戏的程序分开。一份 `.spire` 文件可以由控制台、界面或 AI 宿主运行；换一个操作来源，不需要把加分、回合或胜负规则重新写进宿主。本文说明这些部分为什么分开，以及它们如何协作。实际接入步骤见[宿主教程](../../start/first-host.md)。
+core 把游戏规则与驱动游戏的程序分开。一份 `.spire` 文件可以由控制台、界面或 AI 宿主运行；换一个操作来源，不需要把加分、回合或胜负规则重新写进宿主。本文说明这些部分为什么分开，以及它们如何协作。实际接入步骤见[宿主教程](../start/first-host.md)。
 
 ## 规则定义可能发生的事，会话保存已经发生的事
 
@@ -38,7 +38,7 @@ core 把游戏规则与驱动游戏的程序分开。一份 `.spire` 文件可�
 
 core 提供通用状态和执行工具，不预设卡牌、伤害、回合或原版胜负。base 和其他 mod 使用内容接口描述这些玩法。core DSL 的计分器例子与 base 的卡牌 DSL 不是同一种声明形式。
 
-模板的可表达范围仍受语言与扩展接口约束，不能把一个计分模板的成功运行推广为完整原版内容已支持。具体语法查[基础语言参考](../../reference/dsl/0.3/language-reference.md)与[规则库指南](../../reference/dsl/0.3/authoring-guide.md)；原版卡牌作者使用[内容 DSL 作者约定](../../areas/base/README.md)。
+模板的可表达范围仍受语言与扩展接口约束，不能把一个计分模板的成功运行推广为完整原版内容已支持。具体语法查[基础语言参考](../reference/dsl/0.3/language-reference.md)与[规则库指南](../reference/dsl/0.3/authoring-guide.md)；原版卡牌作者使用[内容 DSL 作者约定](../areas/base/README.md)。
 
 ## 同一种操作可以连接模拟环境与真实游戏
 
@@ -52,11 +52,11 @@ net 负责协议编码、传输，以及会话、候选句柄、重发和版本�
 
 “原样暴露”指保持公开语义，不意味着发送完整内部状态或直接序列化C#对象。公开引用可以转换成句柄，数值可以转换成规范字符串；这些表示变化应当能对应回原来的值与操作。可见性、合法条件和当前已知位置仍由规则提供方决定。
 
-模拟 Host 已从 DSL 包声明派生公开 Profile；具体字段、决策种类与限制查[net 架构](../net-the-spire/design.md#7-公开声明与适配边界)和协议。通用内核能力与可公开的协议类型仍需分别核对。
+模拟 Host 已从 DSL 包声明派生公开 Profile；具体字段、决策种类与限制查[net 架构](net-design.md#7-公开声明与适配边界)和协议。通用内核能力与可公开的协议类型仍需分别核对。
 
 ## 进一步阅读
 
-- 做一次规则编写练习：[第一次写规则](../../start/first-rule.md)。
-- 配置已有库：[计分配置操作指南](../../areas/core/how-to/configure-game.md)。
-- 接口字段与约束：[宿主交互 API 参考](../../areas/core/reference/session-api.md)。
-- 设计取舍与扩展边界：[架构决定](core-architecture-decisions.md)。
+- 做一次规则编写练习：[第一次写规则](../start/first-rule.md)。
+- 配置已有库：[计分配置操作指南](../areas/core/how-to/configure-game.md)。
+- 接口字段与约束：[宿主交互 API 参考](../areas/core/reference/session-api.md)。
+- 设计取舍与扩展边界：[架构决定](decisions/core.md)。

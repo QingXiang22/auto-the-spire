@@ -1,6 +1,6 @@
 # ai-the-spire（A-01 ~ A-05 交付物）
 
-本模块通过 `net-the-spire` 公开协议（net v0.1）读取观察并选择合法候选，提供确定性编码、低成本模型/PPO，以及默认单战斗的命令行运行与诊断。使用既有工具从下节的 D1 入口开始；是否执行新实验以[路线图](../docs/roadmap.md)为准。
+本模块通过 `net-the-spire` 公开协议（net v0.1）读取观察并选择合法候选，提供确定性编码、低成本模型/PPO，以及默认单战斗的命令行运行与诊断。使用既有工具从下节的 D1 入口开始；是否执行新实验以[路线图](../docs/meta/roadmap.md)为准。
 
 * 编码/模型层不实现规则、不导入 `core-the-spire` / `mod-the-spire` / 活动 client；`delivery` 生产编排通过已有net客户端交互，只读公开快照。
 * 协议结构与判定逻辑来自共享资产 `docs/specs/net/0.2/`（schema/不变量）
@@ -11,7 +11,7 @@
 
 任务包见 [相关规格](../docs/areas/ai/spec/training.md)；
 
-这些入口已验收；当前先按[ENV完整环境任务](../docs/specs/environment.md)完成core/base及源规则差异测试，AI仅做必要约定兼容和回归。未启动D3/D4学习实验退出当前/暂缓，不能将设计命令当作可用功能；状态见[路线图](../docs/roadmap.md)。
+这些入口已验收；当前先按[ENV完整环境任务](../docs/specs/environment.md)完成core/base及源规则差异测试，AI仅做必要约定兼容和回归。未启动D3/D4学习实验退出当前/暂缓，不能将设计命令当作可用功能；状态见[路线图](../docs/meta/roadmap.md)。
 在**仓库根目录**执行（输出路径相对调用者工作目录解析；配置与 Host 相对仓库位置解析）：
 
 ```powershell

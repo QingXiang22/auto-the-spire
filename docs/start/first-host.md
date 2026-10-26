@@ -11,12 +11,12 @@
 运行：
 
 ```powershell
-dotnet new console --framework net9.0 --output scratch/core-api-lesson
-dotnet add scratch/core-api-lesson/core-api-lesson.csproj reference core-the-spire/Core.TheSpire/Core.TheSpire.csproj
-dotnet run --project scratch/core-api-lesson/core-api-lesson.csproj
+dotnet new console --framework net9.0 --output .artifacts/tutorials/core-api-lesson
+dotnet add .artifacts/tutorials/core-api-lesson/core-api-lesson.csproj reference core-the-spire/Core.TheSpire/Core.TheSpire.csproj
+dotnet run --project .artifacts/tutorials/core-api-lesson/core-api-lesson.csproj
 ```
 
-前两条命令创建项目并添加内核引用，最后一条应输出 `Hello, World!`。接下来的代码都写入 `scratch/core-api-lesson/Program.cs`，每次都用相同的运行命令检查。
+前两条命令创建项目并添加内核引用，最后一条应输出 `Hello, World!`。接下来的代码都写入 `.artifacts/tutorials/core-api-lesson/Program.cs`，每次都用相同的运行命令检查。
 
 如果项目目录已经存在，接着使用其中的项目；后面的步骤会替换这个练习项目的 `Program.cs`。不要将这些练习代码写入生产宿主。
 
@@ -48,7 +48,7 @@ void Print(string command)
 再次运行：
 
 ```powershell
-dotnet run --project scratch/core-api-lesson/core-api-lesson.csproj
+dotnet run --project .artifacts/tutorials/core-api-lesson/core-api-lesson.csproj
 ```
 
 应当得到：

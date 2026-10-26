@@ -1,6 +1,6 @@
 """ENV-T03 C 线地图公开 Host 的真实进程证据：`--scenario formal-dev --scope dev-map`（0.2）。
 
-派单依据 `docs/design/net-the-spire/design.md` §7（正式环境的 0.2 扩展）与 A 地图包
+派单依据 `docs/understand/net-design.md` §7（正式环境的 0.2 扩展）与 A 地图包
 （`docs/review/records/2026-10-08/dsh-env-t05-map-room-handoff-2026-10-08.md`）交付的公开事实：
 地图节点/有序集合/父子关系/选点候选全部由**引擎声明的公开语义**自动派生，net 侧只做透传，
 不逐项登记 MapNode/MapNodes/MapChildren/ChooseMapPoint，也不读隐藏状态生成候选。

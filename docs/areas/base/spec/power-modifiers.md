@@ -1,6 +1,6 @@
 # 能力与伤害修正参与者
 
-文档类型：参考（Reference）。关联CORE-AUTHOR-05／**DSL-POWER-MODIFIERS-01**；状态与认领只在[GitHub任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)维护。玩法采用[纯DSL](../../../design/mod-the-spire/base-architecture.md)，规则源见[锁定参考](../../../../reference/README.md)。
+文档类型：参考（Reference）。关联CORE-AUTHOR-05／**DSL-POWER-MODIFIERS-01**；状态与认领只在[GitHub任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)维护。玩法采用[纯DSL](../../../understand/base-architecture.md)，规则源见[锁定参考](../../../../reference/README.md)。
 
 ## 已核实来源与范围
 

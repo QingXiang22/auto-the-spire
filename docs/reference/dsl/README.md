@@ -12,7 +12,7 @@ core DSL 在 `.spire` 文件中描述状态和规则。宿主加载文件并驱�
 | 查同包宿主绑定、扩展加载与具名调用 | 参考 | [core/0.3 作者参考](0.3/authoring-reference.md) |
 | 查导入、模板参数、实例名称和组合约束 | 参考 | [core/0.3 规则库指南](0.3/authoring-guide.md) |
 | 查宿主API字段、参数和错误 | 参考 | [宿主交互API参考](../../areas/core/reference/session-api.md) |
-| 理解规则作者、规则库作者和宿主的关系 | 解释 | [规则、会话与宿主](../../design/core-the-spire/rules-and-host.md) |
+| 理解规则作者、规则库作者和宿主的关系 | 解释 | [规则、会话与宿主](../../understand/rules-and-host.md) |
 
 ## 1. 先运行，再修改配置
 

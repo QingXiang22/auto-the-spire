@@ -28,6 +28,12 @@ base 声明游戏规则；core 执行声明；net 为外部调用者发布当前
 
 ## 维护边界
 
-通用内核不按卡牌、遗物或房间 ID 执行玩法分支。规则包构建后不可变，每局状态由 Session 独立管理；游戏实例关系、生命周期、事件顺序和随机流由规则与共享操作明确组织。细节分别查[base 架构](../design/mod-the-spire/base-architecture.md)、[控制流程](../design/mod-the-spire/control-flow-modules.md)及[核心决定](../design/core-the-spire/core-architecture-decisions.md)。
+通用内核不按卡牌、遗物或房间 ID 执行玩法分支。规则包构建后不可变，每局状态由 Session 独立管理；游戏实例关系、生命周期、事件顺序和随机流由规则与共享操作明确组织。细节分别查[base 架构](base-architecture.md)、[控制流程](base-control-flow.md)及[核心决定](decisions/core.md)。
 
 公开投影和候选是外部接口的依据。内部 State、RNG 和诊断信息不自动成为 AI 输入；局部行为检查、独立比较与正常整局分别验收，要求见[完整环境规格](../specs/environment.md)。
+
+## 文档组织决定
+
+文档以贡献者任务提供入口：`start/` 组织入门，`areas/` 汇集模块操作、参考和领域要求，`reference/` 提供共享查询，`understand/` 解释架构，`specs/` 保存跨模块要求，`meta/` 保存术语与稳定任务入口。这样既可从任务直达内容，也可在模块内找到相关操作与要求。tools 的已有说明与 `docs/examples/` 保持原地，避免复制命令或移动可执行示例。
+
+内容页按教程、操作指南、参考或解释选择主要读者任务；规范表示权威职责，不能当作第五种类型。README 保留必要的局部索引，全局入口允许直达常用页面。旧目录不保留别名或历史映射，路径变更须同时更新消费者、资源与检查配置；历史从 Git／PR 查询。此决定遵循 [CONTRIBUTING](../../CONTRIBUTING.md#哪些内容进入正式文档)，不另建任务状态副本。

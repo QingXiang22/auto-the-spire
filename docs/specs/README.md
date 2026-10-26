@@ -11,4 +11,4 @@
 | AI 与接口的运行、资源和恢复约束 | [运行要求](ai-net/operations.md) |
 | AI／net 需求到验证场景的追踪 | [共同验收](ai-net/verification.md) |
 
-模块内的行为要求从 [base](../areas/base/README.md)、[core](../areas/core/README.md)、[net](../areas/net/README.md)、[AI](../areas/ai/README.md) 的局部索引进入。任务状态、负责人、排期与关闭结论只维护在[任务入口](../roadmap.md)关联的 GitHub Issues。
+模块内的行为要求从 [base](../areas/base/README.md)、[core](../areas/core/README.md)、[net](../areas/net/README.md)、[AI](../areas/ai/README.md) 的局部索引进入。任务状态、负责人、排期与关闭结论只维护在[任务入口](../meta/roadmap.md)关联的 GitHub Issues。

@@ -53,7 +53,7 @@ NetClient负责按请求ID匹配响应并在超时后查询恢复。`OutcomeUnkn
 | 公开字段、集合和引用结构 | `get_catalog`及0.2 schema |
 | 起始标识与实际支持场景 | 本次`describe` |
 | 长期牌组/药水/遗物集合用途 | 包声明的[公开元数据](../../../../mod-the-spire/base-spire/public/metadata.json)，通过当前catalog查询 |
-| base到net公开映射 | [投影规则](../../../../mod-the-spire/base-spire/public/projection.spire)及[通用派生边界](../../../design/net-the-spire/design.md#7-公开声明与适配边界) |
+| base到net公开映射 | [投影规则](../../../../mod-the-spire/base-spire/public/projection.spire)及[通用派生边界](../../../understand/net-design.md#7-公开声明与适配边界) |
 | 公开动作的真实游戏行为 | 对应base机制模块；客户端不重写玩法 |
 
 `Run.ActCompleted`和地图阶段属于base玩法；终局结论读取`terminal_result.outcome`。单幕完成、步数截止、故障和执行不确定均不等于整局胜利。

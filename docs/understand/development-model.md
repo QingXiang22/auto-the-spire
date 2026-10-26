@@ -1,6 +1,6 @@
 # 内容、共享规则与引擎怎样协作
 
-文档类型：解释（Explanation）。本页说明为什么按领域写 DSL，以及怎样避免开发时反复翻大文件。具体操作见[内容扩展](../../../areas/base/how-to/extend-content.md)，准确调用见[共享操作参考](../../../areas/base/reference/operations.md)。
+文档类型：解释（Explanation）。本页说明为什么按领域写 DSL，以及怎样避免开发时反复翻大文件。具体操作见[内容扩展](../areas/base/how-to/extend-content.md)，准确调用见[共享操作参考](../areas/base/reference/operations.md)。
 
 base 的职责是定义游戏模型和规则，Engine 的职责是编译、保存通用状态并执行同一 IR。Host 负责 IO、会话和公开适配。将效果搬到包外 C# 并继续调用，会让内容维护重新依赖编译器分支，因此不属于纯 DSL 内容开发。
 
@@ -24,7 +24,7 @@ flowchart LR
 
 遗物与Power在流程中的职责相似：它们持有实例状态，监听主流程提供的通知和修正阶段。通知回答“发生此事后做什么”，可以产生效果；修正回答“当前计算如何变化”，只返回计算值。伤害、费用等主流程不需要知道具体能力，而是通过同一阶段征询有效实例；力量Power与StrikeDummy遗物都能在伤害加法阶段贡献结果。
 
-订阅定义在组包时建立，持有实例在局内获得或施加时创建。instances把定义绑定到当前有效实例，instance_order表达实际持有顺序，priority表达明确的早晚阶段；不能把模板展开或文件组合顺序当作遗物获得顺序。通知和修正共用实例快照及执行前有效性检查，副作用仍由原Session栈执行，修正受到pure约束。能力特有状态归对应实例或附属实体，不靠不断扩充公共Relic字段让主流程猜效果。具体写法见[监听编写指南](../../../areas/base/how-to/write-effect-listeners.md)，精确语义见[统一约定](../../../areas/base/spec/effect-listeners.md)。
+订阅定义在组包时建立，持有实例在局内获得或施加时创建。instances把定义绑定到当前有效实例，instance_order表达实际持有顺序，priority表达明确的早晚阶段；不能把模板展开或文件组合顺序当作遗物获得顺序。通知和修正共用实例快照及执行前有效性检查，副作用仍由原Session栈执行，修正受到pure约束。能力特有状态归对应实例或附属实体，不靠不断扩充公共Relic字段让主流程猜效果。具体写法见[监听编写指南](../areas/base/how-to/write-effect-listeners.md)，精确语义见[统一约定](../areas/base/spec/effect-listeners.md)。
 
 内容模块拥有自身行为与私有状态，共享操作拥有跨内容的不变量。SelfFormingClay的施加收益归遗物、兑现与移除归Power；两者共用ApplyPlayerPower／RemovePower和回合通知，调用方无需知道它的具体实现。新增内容仍需显式索引、来源与公开登记；该边界减少玩法散落，不消除所有登记成本。
 

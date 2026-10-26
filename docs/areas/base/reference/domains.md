@@ -1,6 +1,6 @@
 # 领域目录与开发范围参考
 
-文档类型：参考（Reference）。下表按游戏职责覆盖 base 的开发范围。落点为长期[目录设计](../../../design/mod-the-spire/base-architecture.md)；实际存在文件以[包 manifest](../../../../mod-the-spire/base-spire/package.json)为准，未迁移目录不建立空效果来占位。
+文档类型：参考（Reference）。下表按游戏职责覆盖 base 的开发范围。落点为长期[目录设计](../../../understand/base-architecture.md)；实际存在文件以[包 manifest](../../../../mod-the-spire/base-spire/package.json)为准，未迁移目录不建立空效果来占位。
 
 | 领域 | 定义／共享规则的落点 | 关键依赖与阅读 |
 | --- | --- | --- |

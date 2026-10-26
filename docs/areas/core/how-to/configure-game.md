@@ -44,6 +44,6 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj 
 
 ## 相关文档
 
-- 规则库和宿主分别负责什么：[规则与宿主的关系](../../../design/core-the-spire/rules-and-host.md)。
+- 规则库和宿主分别负责什么：[规则与宿主的关系](../../../understand/rules-and-host.md)。
 - 导入、模板、嵌套实例和名称绑定：[规则库指南](../../../reference/dsl/0.3/authoring-guide.md)。
 - 想写库里的状态、动作、查询或选择：查[基础语言参考](../../../reference/dsl/0.3/language-reference.md)。

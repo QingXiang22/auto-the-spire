@@ -1,10 +1,10 @@
 # ai-the-spire 协作约定
 
-本文件适用于 `ai-the-spire/` 及其子目录，遵循根 [AGENTS.md](../AGENTS.md)、[开发约定](../CONTRIBUTING.md)和[术语规范](../docs/terminology.md)。
+本文件适用于 `ai-the-spire/` 及其子目录，遵循根 [AGENTS.md](../AGENTS.md)、[开发约定](../CONTRIBUTING.md)和[术语规范](../docs/meta/glossary.md)。
 
 ## 开发流程
 
-遵循 [开发约定](../CONTRIBUTING.md)，近期任务见 [路线图](../docs/roadmap.md)。使用任务分支／独立 worktree，通过 PR 和受影响 CI 交付；使用方法或接口变化时更新正式文档，无需逐批交接、会话登记或本地验证记录链接。
+遵循 [开发约定](../CONTRIBUTING.md)，近期任务见 [路线图](../docs/meta/roadmap.md)。使用任务分支／独立 worktree，通过 PR 和受影响 CI 交付；使用方法或接口变化时更新正式文档，无需逐批交接、会话登记或本地验证记录链接。
 
 ## 模块边界
 

@@ -1,6 +1,6 @@
 # 委派远端开发任务
 
-适用于已授权的 DeepSeek Harness 任务。开发、文档及交付统一遵循 [CONTRIBUTING](../../CONTRIBUTING.md)；远端任务同样提交分支／PR，由 CI 和代码评审确认结果。
+文档类型：操作指南（How-to）。适用于已授权的 DeepSeek Harness 任务。开发、文档及交付统一遵循 [CONTRIBUTING](../../../CONTRIBUTING.md)；远端任务同样提交分支／PR，由 CI 和代码评审确认结果。
 
 ## 派发
 
@@ -9,7 +9,7 @@
 3. 使用已配置的服务地址和登录凭据连接。凭据从 `DSH-USERNAME`／`DSH-PASSWORD` 读取，不写入提示词、仓库或命令输出。
 4. 派发成功后将工单改为 doing，保存任务／会话 ID 供本次查询；`accepted` 只表示已受理。每个执行者同时一个执行单，避免重复派发或其他会话同时修改相同文件。
 
-base 内容作者可显式读取 [项目开发 skill](../../.agents/skills/base-spire-development/SKILL.md)，按其路由阅读现行手册；是否自动发现 skill 以实际环境为准。
+base 内容作者可显式读取 [项目开发 skill](../../../.agents/skills/base-spire-development/SKILL.md)，按其路由阅读现行手册；是否自动发现 skill 以实际环境为准。
 
 ## 复核与接续
 

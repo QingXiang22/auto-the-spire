@@ -31,7 +31,7 @@ result: tutorial:ReachedTarget
 
 每一行 `submit` 都表示宿主提交了一次玩家动作。这份演示宿主自动操作，方便你检查规则；以后可以把操作来源换成按钮、命令行输入或 AI。
 
-接下来亲手写出这份规则。新建文件 `docs/examples/core-choice-counter/my-counter.spire`，按下面的顺序把代码块追加进去。第 3 步先观察零分开局，第 4 步再运行完整游戏。
+接下来亲手写出这份规则。先创建 `.artifacts/tutorials/` 目录；若练习文件已存在，保留原成果并换一个文件名。新建文件 `.artifacts/tutorials/my-counter.spire`，按下面的顺序把代码块追加进去。第 3 步先观察零分开局，第 4 步再运行完整游戏。
 
 ## 2. 给规则取名，定义需要保存的状态
 
@@ -89,7 +89,7 @@ projection PlayerView {
 这份视图让玩家看到计分器的公开字段。保存文件，在仓库根目录运行：
 
 ```powershell
-dotnet run --no-build --project docs/examples/core-first-host/CoreFirstHost.csproj -- docs/examples/core-choice-counter/my-counter.spire --observe-only
+dotnet run --no-build --project docs/examples/core-first-host/CoreFirstHost.csproj -- .artifacts/tutorials/my-counter.spire --observe-only
 ```
 
 应当得到：
@@ -153,7 +153,7 @@ action AddOne {
 保存文件，执行：
 
 ```powershell
-dotnet run --no-build --project docs/examples/core-first-host/CoreFirstHost.csproj -- docs/examples/core-choice-counter/my-counter.spire
+dotnet run --no-build --project docs/examples/core-first-host/CoreFirstHost.csproj -- .artifacts/tutorials/my-counter.spire
 ```
 
 输出应与第 1 步相同。这里的 `--no-build` 复用已经构建好的 C# 宿主；宿主每次运行仍会重新加载并编译 `.spire` 文件，所以规则修改会生效。

@@ -1,6 +1,6 @@
 # 首幕普通战斗奖励
 
-文档类型：参考（Reference）。关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定首幕普通战斗奖励的上下文、生成、领取与关闭；认领和状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。遵守[纯 DSL 边界](../../../design/mod-the-spire/base-architecture.md)。
+文档类型：参考（Reference）。关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定首幕普通战斗奖励的上下文、生成、领取与关闭；认领和状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。遵守[纯 DSL 边界](../../../understand/base-architecture.md)。
 
 ## 来源与边界
 

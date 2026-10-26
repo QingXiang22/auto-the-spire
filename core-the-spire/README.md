@@ -13,8 +13,8 @@ core-the-spire 是一个用 C#/.NET 9 实现的通用规则引擎。你在 `.spi
 | 参考 | 查询 DSL 声明、表达式与模板 | [core/0.3 语言参考](../docs/reference/dsl/0.3/language-reference.md)、[core/0.3 规则库指南](../docs/reference/dsl/0.3/authoring-guide.md) |
 | 参考 | 查询同包文本绑定、扩展加载与具名调用 | [core/0.3 作者参考](../docs/reference/dsl/0.3/authoring-reference.md) |
 | 参考 | 查询交互 API 的输入、结果与错误 | [宿主交互 API](../docs/areas/core/reference/session-api.md) |
-| 解释 | 理解规则、会话、动作和玩家观察的关系 | [规则与宿主](../docs/design/core-the-spire/rules-and-host.md) |
-| 解释 | 理解内核的设计取舍 | [架构决定](../docs/design/core-the-spire/core-architecture-decisions.md) |
+| 解释 | 理解规则、会话、动作和玩家观察的关系 | [规则与宿主](../docs/understand/rules-and-host.md) |
+| 解释 | 理解内核的设计取舍 | [架构决定](../docs/understand/decisions/core.md) |
 
 ## 先跑一个小游戏
 
@@ -40,7 +40,7 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 
 文本编译器只支持 `core/0.3`。包版本、运行语义标识与语言版本分别以[项目配置](Core.TheSpire/Core.TheSpire.csproj)、[RuleSetBuilder.EngineVersion](Core.TheSpire/Engine/RuleSet.cs)和[EngineDslCompiler](Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)为准。语言参考、规则库指南和作者参考统一维护在 `docs/dsl/core/0.3/`。
 
-当前职责和兼容要求见[核心约定](../docs/specs/core-engine-baseline.md)，验收见[行为要求](../docs/specs/environment.md#core-author-04)。其他设计问题按需查[模块 spec](../docs/specs/core/game-model.md)和[架构决定](../docs/design/core-the-spire/core-architecture-decisions.md)。
+当前职责和兼容要求见[核心约定](../docs/specs/core-engine-baseline.md)，验收见[行为要求](../docs/specs/environment.md#core-author-04)。其他设计问题按需查[模块 spec](../docs/specs/core/game-model.md)和[架构决定](../docs/understand/decisions/core.md)。
 
 内核维护者只检查 core 时，从仓库根目录执行：
 

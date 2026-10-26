@@ -1,6 +1,6 @@
 # tools 开发约定
 
-遵循根 [AGENTS.md](../AGENTS.md)、[开发流程](../CONTRIBUTING.md)和[术语规范](../docs/terminology.md)。任务从[统一入口](../docs/roadmap.md)选择执行工单。
+遵循根 [AGENTS.md](../AGENTS.md)、[开发流程](../CONTRIBUTING.md)和[术语规范](../docs/meta/glossary.md)。任务从[统一入口](../docs/meta/roadmap.md)选择执行工单。
 
 ## 工具管理
 

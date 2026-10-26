@@ -1,6 +1,6 @@
 # 总任务入口与产品里程碑
 
-当前产品目标是五角色完整单人环境及其公开接口。实际版本和可运行范围以 [base manifest](../mod-the-spire/base-spire/package.json)、[核心约定](specs/core-engine-baseline.md)及当前提交的 CI 为准。开发场景已支持部分卡牌、Power、遗物和房间机制；正常地图／Run、完整奖励来源及独立参考比较尚待恢复。
+文档类型：参考（Reference）。当前产品目标是五角色完整单人环境及其公开接口。实际版本和可运行范围以 [base manifest](../../mod-the-spire/base-spire/package.json)、[核心约定](../specs/core-engine-baseline.md)及当前提交的 CI 为准。开发场景已支持部分卡牌、Power、遗物和房间机制；正常地图／Run、完整奖励来源及独立参考比较尚待恢复。
 
 当前任务统一从 [GitHub 总任务 #28](https://github.com/QingXiang22/auto-the-spire/issues/28)进入，通过原生 sub-issues 连接子任务和执行工单。优先级、负责人、依赖、进度及暂停条件只在 Issue 维护。本页保留稳定入口和产品阶段定义，不同步任务状态。
 
@@ -10,9 +10,9 @@
 - [可认领执行工单](https://github.com/QingXiang22/auto-the-spire/issues?q=is%3Aissue+is%3Aopen+label%3A%22type%3Awork%22+label%3A%22status%3Aready%22)：按优先级选择，核对依赖后认领。
 - [全部执行工单](https://github.com/QingXiang22/auto-the-spire/issues?q=is%3Aissue+is%3Aopen+label%3A%22type%3Awork%22)：查看执行、评审、阻塞及候选项。
 
-派发流程、标签含义和关闭条件见 [开发约定](../CONTRIBUTING.md#任务拆分与派发)。任务名称及旧 evidence 不能证明功能已经实现，认领时核对当前定义、PR 和实际检查范围。
+派发流程、标签含义和关闭条件见 [开发约定](../../CONTRIBUTING.md#任务拆分与派发)。任务名称及旧 evidence 不能证明功能已经实现，认领时核对当前定义、PR 和实际检查范围。
 
-产品范围见 [项目规格](specs/project.md)，完整行为条件见 [环境验收规格](specs/environment.md)。[遗物机制索引](areas/base/spec/relic-combat-start.md#遗物机制索引)只用于查找共享机制，不代表当前派单顺序。
+产品范围见 [项目规格](../specs/project.md)，完整行为条件见 [环境验收规格](../specs/environment.md)。[遗物机制索引](../areas/base/spec/relic-combat-start.md#遗物机制索引)只用于查找共享机制，不代表当前派单顺序。
 
 ## 里程碑
 

@@ -1,6 +1,6 @@
 # core 架构决定
 
-本文解释通用内核的长期边界。当前 API、语言和兼容性以 [活动约定](../../specs/core-engine-baseline.md)、[语言参考](../../reference/dsl/README.md)和实现为准；版本及验证结果由工程文件与 CI 给出。
+文档类型：解释（Explanation）。本文解释通用内核的长期边界。当前 API、语言和兼容性以 [活动约定](../../specs/core-engine-baseline.md)、[语言参考](../../reference/dsl/README.md)和实现为准；版本及验证结果由工程文件与 CI 给出。
 
 ## 通用内核与游戏规则分离
 

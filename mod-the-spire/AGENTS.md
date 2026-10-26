@@ -1,10 +1,10 @@
 # mod-the-spire 开发约定
 
-遵循根 [AGENTS.md](../AGENTS.md)、[开发流程](../CONTRIBUTING.md)和[术语规范](../docs/terminology.md)。本文件补充内容开发边界。
+遵循根 [AGENTS.md](../AGENTS.md)、[开发流程](../CONTRIBUTING.md)和[术语规范](../docs/meta/glossary.md)。本文件补充内容开发边界。
 
 ## 规则归属
 
-- 活动 base 包只包含 `.spire` 和必要静态 `.json`，通过通用 Engine 加载执行。操作入口见[base 开发手册](../docs/areas/base/README.md)，组织方式见[base 架构](../docs/design/mod-the-spire/base-architecture.md)。旧 C# 编译与玩法代码只作为迁移参考，不作为当前修改入口或生产回退。
+- 活动 base 包只包含 `.spire` 和必要静态 `.json`，通过通用 Engine 加载执行。操作入口见[base 开发手册](../docs/areas/base/README.md)，组织方式见[base 架构](../docs/understand/base-architecture.md)。旧 C# 编译与玩法代码只作为迁移参考，不作为当前修改入口或生产回退。
 - 游戏状态由 Engine 保存；规则包定义和构建代码不保存每局可变状态，不另写玩法调度器或隐藏的 RunState。
 - 解析、加载、行为测试、独立参考比较和公开接口运行分别确认。未支持内容明确失败，不能注册空效果或静默省略。
 

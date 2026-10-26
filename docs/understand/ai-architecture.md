@@ -1,6 +1,6 @@
 # AI 架构与设计边界
 
-本文说明公开观察、编码、候选评分和模型发布的职责。当前实现范围以模块代码与检查为准；训练与真实后端接入按[总任务](https://github.com/QingXiang22/auto-the-spire/issues/28)中的恢复条件安排。具体算法和资源预算仍须在对应工单确定。
+文档类型：解释（Explanation）。本文说明公开观察、编码、候选评分和模型发布的职责。当前实现范围以模块代码与检查为准；训练与真实后端接入按[总任务](https://github.com/QingXiang22/auto-the-spire/issues/28)中的恢复条件安排。具体算法和资源预算仍须在对应工单确定。
 
 ## 1. 目标与核心假设
 
@@ -70,7 +70,7 @@ flowchart LR
 
 ## 5. 训练方案：先有基线，再比较算法
 
-**正式算法尚未批准。** 首个训练与评价流程建议以近期策略 PPO 验证，理由及配置要求见[训练设计](../../areas/ai/spec/training.md)。旧稿的离散 Soft Actor-Critic 保留为后续比较候选；首批不据此要求实现双 Q 或旧经验学习。轨迹存储与算法是否使用重放分开，不需要从一开始搭完整经验库。
+**正式算法尚未批准。** 首个训练与评价流程建议以近期策略 PPO 验证，理由及配置要求见[训练设计](../areas/ai/spec/training.md)。旧稿的离散 Soft Actor-Critic 保留为后续比较候选；首批不据此要求实现双 Q 或旧经验学习。轨迹存储与算法是否使用重放分开，不需要从一开始搭完整经验库。
 
 **对照基线：**随机合法策略、可选的明确规则策略与已训练短任务策略。PPO 先验证表示和端到端流程，不承担长期旧经验重放方案；需要复用旧策略数据时再比较 SAC 等异策略方法。[Retrace](https://arxiv.org/abs/1606.02647)是可参考的工具。算法名称不规定训练框架或部署格式。
 
@@ -92,7 +92,7 @@ flowchart LR
 
 ## 7. 当前最重要的架构决策
 
-1. **首阶段接口**：评审编码约定、实现语言及数值精度建议，再交给实现者处理确定性层。任务和验收见 [encoder-design.md](../../areas/ai/spec/encoder.md)。
+1. **首阶段接口**：评审编码约定、实现语言及数值精度建议，再交给实现者处理确定性层。任务和验收见 [encoder-design.md](../areas/ai/spec/encoder.md)。
 2. **观察充分性**：net 提供的当前观察能否表达玩家已知牌序及机制变量？缺失哪些字段、能力或语义？真实后端不能暴露隐藏状态，AI 编码器不额外维护历史补缺。
 3. **部署成本**：确认实际机器、延迟、内存和参数预算，再比较可学习编码方案。现阶段没有“MLP 已够轻”或“Transformer 必须采用”的验证记录。
 4. **训练目标与算法**：收益向量的分量、时间范围、取舍规则和样本分布需确定后再比较算法；不沿用旧稿示例权重为默认。
@@ -102,7 +102,7 @@ flowchart LR
 
 ## 8. 可实施的模块布局
 
-建议 AI 使用 Python，确定性阶段仅标准库；学习阶段再依据维护者批准的框架增加依赖。`ai-the-spire/ai_the_spire/` 下的 contracts 负责从[统一规范资产](../../areas/net/spec/contract-artifacts.md)生成/校验的纯 wire 类型与 codec；encoding 负责 Manifest/校验/数组/批处理；client 负责传输与请求状态；models 负责可学习 encoder/scorer；policy 负责概率约定；execution 负责选择与 NoSL；data 负责公开轨迹；training/evaluation 负责实验与晋升。tests/fixtures 与 tests 放在模块目录，不放进 core。
+建议 AI 使用 Python，确定性阶段仅标准库；学习阶段再依据维护者批准的框架增加依赖。`ai-the-spire/ai_the_spire/` 下的 contracts 负责从[统一规范资产](../areas/net/spec/contract-artifacts.md)生成/校验的纯 wire 类型与 codec；encoding 负责 Manifest/校验/数组/批处理；client 负责传输与请求状态；models 负责可学习 encoder/scorer；policy 负责概率约定；execution 负责选择与 NoSL；data 负责公开轨迹；training/evaluation 负责实验与晋升。tests/fixtures 与 tests 放在模块目录，不放进 core。
 
 依赖方向为 encoding/policy/client/data → contracts，models/policy → encoding；execution → policy + client；collector → execution + data；training → models + data；evaluation → execution。contracts 不依赖传输、活动会话、core 或 AI 张量；encoding 不依赖 client 的活动会话。部署无需导入优化器和全部数据处理依赖，先只创建当前阶段必要部分。
 
@@ -125,7 +125,7 @@ flowchart LR
 
 固定 PublicCatalog 决定公开含义；GymManifest 决定 AI 索引/变换；ModelConfig 决定可学习结构；Training/Reward/ExecutorProfile 决定优化和使用方法。每层独立版本化但模型包绑定 exact identity。增加字段、内容或后端能力是新的 Gym 配置，不热加载进旧 embedding。具体规则修改由 core/mod 负责，对 net 和 AI 的影响必须在目录/数据标识上反映。
 
-全目录 exact identity 的代价是新增与当前角色无关的内容也可能使旧模型拒绝接入，需要新 Gym 的评估/重训。E3 按固定内容批次安排数据与训练预算，报告这项成本；不会因只匹配声明子集就推定新规则/内容不影响局面分布。场景闭包子目录可以以后另行设计，首版不自动忽略新增声明。评估的种子配对、公共随机数和固定动作重放分开定义，采用[训练设计第5节](../../areas/ai/spec/training.md#5-训练恢复与发布)的口径。
+全目录 exact identity 的代价是新增与当前角色无关的内容也可能使旧模型拒绝接入，需要新 Gym 的评估/重训。E3 按固定内容批次安排数据与训练预算，报告这项成本；不会因只匹配声明子集就推定新规则/内容不影响局面分布。场景闭包子目录可以以后另行设计，首版不自动忽略新增声明。评估的种子配对、公共随机数和固定动作重放分开定义，采用[训练设计第5节](../areas/ai/spec/training.md#5-训练恢复与发布)的口径。
 
 相同模型包可替换执行器的采样方式做评估，但实际行为变化必须记录，收益头的后续策略声明也相应变更。学习 checkpoint 恢复不要求中途游戏回退。部署一局锁定包，新增晋升只作用于新局。
 
@@ -133,7 +133,7 @@ flowchart LR
 
 正常路径：describe/get_catalog → 核对模型包 → start/attach → observe → encode/predict/select → step → 记录结果 → 下一个决策点/终止。第一阶段只覆盖 encode，第二阶段可用随机合法分布替代模型验证接口，第三阶段接入学习。
 
-结构/概率错误在执行前停止；stale_observation 刷新后重新预测；结果 unknown 查询原请求并暂停；提供方进程丢失按后端和 NoSL 能力处理。无有效快照不得评分，终止无候选不得 softmax。完整失效规则以[协议](../../areas/net/reference/protocol.md)及[运行约束](../../specs/ai-net/operations.md)为准，AI 不另写自动回退策略。
+结构/概率错误在执行前停止；stale_observation 刷新后重新预测；结果 unknown 查询原请求并暂停；提供方进程丢失按后端和 NoSL 能力处理。无有效快照不得评分，终止无候选不得 softmax。完整失效规则以[协议](../areas/net/reference/protocol.md)及[运行约束](../specs/ai-net/operations.md)为准，AI 不另写自动回退策略。
 
 ## 12. 设计决策记录
 

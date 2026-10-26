@@ -7,10 +7,10 @@
 - 第一次写宿主：先做[宿主教程](../../../start/first-host.md)。
 - 提交带参数的动作：查[参数提交操作指南](../how-to/submit-parameters.md)。
 - 查询交互字段与约束：查[API参考](session-api.md)。
-- 理解各部分的关系：读[规则与宿主](../../../design/core-the-spire/rules-and-host.md)。
+- 理解各部分的关系：读[规则与宿主](../../../understand/rules-and-host.md)。
 - 第一次编写规则：从[第一次写规则](../../../start/first-rule.md)开始。
 
-版本与加载入口核对：2026-10-15。本文说明活动 `Core.TheSpire/Engine/` 的接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../../reference/dsl/README.md)；`core/0.3` 统一提供基础声明、规则库配置、同包绑定与具名调用。本文 C# 片段说明宿主与底层接口。目标边界见[模块 spec](../../../specs/core/game-model.md)，后续调整以[架构决定](../../../design/core-the-spire/core-architecture-decisions.md)为准。
+版本与加载入口核对：2026-10-15。本文说明活动 `Core.TheSpire/Engine/` 的接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../../reference/dsl/README.md)；`core/0.3` 统一提供基础声明、规则库配置、同包绑定与具名调用。本文 C# 片段说明宿主与底层接口。目标边界见[模块 spec](../../../specs/core/game-model.md)，后续调整以[架构决定](../../../understand/decisions/core.md)为准。
 
 ## 0. 规则作者写文件，宿主调用 SDK
 
@@ -428,4 +428,4 @@ dotnet run --project core-the-spire/Core.TheSpire.Engine.Tests
 dotnet run --project mod-the-spire/base-spire/BaseSpire.Slice.Tests
 ```
 
-其他示例见 [FixturePackages.cs](../../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../../reference/dsl/README.md)、[运行态设计](../../../design/core-the-spire/runtime-state-model.md)、[架构决定](../../../design/core-the-spire/core-architecture-decisions.md)、[ENV 实现约束](../../../specs/environment-constraints.md)和[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。设计文档里的目标语言示例不自动属于当前可执行语法。
+其他示例见 [FixturePackages.cs](../../../../core-the-spire/Core.TheSpire.Engine.Tests/FixturePackages.cs)，包含棋盘与隐藏卡牌区域。继续阅读[作者入口](../../../reference/dsl/README.md)、[运行态设计](../../../understand/runtime-state-model.md)、[架构决定](../../../understand/decisions/core.md)、[ENV 实现约束](../../../specs/environment-constraints.md)和[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。设计文档里的目标语言示例不自动属于当前可执行语法。

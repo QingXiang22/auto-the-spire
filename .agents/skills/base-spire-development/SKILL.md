@@ -13,7 +13,7 @@ description: "开发、迁移或审阅 auto-the-spire 的纯 DSL base 内容与�
 
 规则依据先读[锁定来源说明](../../../reference/README.md)，当前源码在 `reference/sts2-sim/src/Sts2Sim.Core/`；不再用本地 `sts2/` 裁决当前目标。下述定位助手读取旧固定来源数据，只用于核对已有 DSL 的迁移来源；新规则和新内容直接在锁定源码按类／方法局部检索。旧向量通过不等于新版符合性。
 
-读取根／目标目录适用指令和当前任务的认领／范围，再选择下表的一条路线；不要默认加载所有历史记录或整本手册。[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)维护状态，[迁移规格](../../../docs/design/mod-the-spire/base-architecture.md)定义纯包边界。
+读取根／目标目录适用指令和当前任务的认领／范围，再选择下表的一条路线；不要默认加载所有历史记录或整本手册。[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)维护状态，[迁移规格](../../../docs/understand/base-architecture.md)定义纯包边界。
 
 - base 包仅含 `.spire`／必要静态 `.json`；玩法用 DSL，真正共用的操作放领域 rules；catalog definition 可承载完整内容模块，独有规则／私有状态留在所属文件，以模板作用域隔离。简单内容仍可只用 `use`。Host／Engine 不加入按内容 ID 的游戏效果分支。
 - 遗物与Power统一按[监听编写指南](../../../docs/areas/base/how-to/write-effect-listeners.md)接入：主流程发布通知或征询修正，效果规则绑定有效实例；不恢复主流程中的遗物专属字段查询或Power效果直接调用。

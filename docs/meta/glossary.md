@@ -1,6 +1,6 @@
 # 术语与表达规范
 
-供编写项目说明、协作规则、Issue、PR 和进度说明时使用。优先写清具体对象、操作和结果；项目内的简称首次出现时说明含义。
+文档类型：参考（Reference）。供编写项目说明、协作规则、Issue、PR 和进度说明时使用。优先写清具体对象、操作和结果；项目内的简称首次出现时说明含义。
 
 ## 使用规则
 
@@ -32,7 +32,7 @@
 
 | 术语 | 本项目含义 |
 | --- | --- |
-| 总任务／子任务／执行工单 | 分别组织产品目标、能力成果和可分配给一个执行者的具体改动；均使用 GitHub Issue，层级与状态见 [CONTRIBUTING](../CONTRIBUTING.md#任务拆分与派发) |
+| 总任务／子任务／执行工单 | 分别组织产品目标、能力成果和可分配给一个执行者的具体改动；均使用 GitHub Issue，层级与状态见 [CONTRIBUTING](../../CONTRIBUTING.md#任务拆分与派发) |
 | 测试用例（test case） | 给定前置条件和输入，检查可观察结果的一项测试；代码或命令中的 `case` 保持原样 |
 | 测试集（test suite） | 一组有明确范围的测试用例；`suite` 参数及测试集标识保持原样 |
 | 持续集成（CI） | 对指定提交执行的自动检查；结果说明该提交在所选检查范围内的表现 |
@@ -48,7 +48,7 @@
 
 ## 自动检查
 
-使用 Vale 3.24.0 执行[项目措辞规则](../.github/styles/Project/Terms.yml)，运行 `python tools/doc-check/check_terms.py`，安装和完整命令见[文档检查说明](../tools/doc-check/README.md)。此检查已接入 `python tools/ci/check.py docs` 和文档 CI。
+使用 Vale 3.24.0 执行[项目措辞规则](../../.github/styles/Project/Terms.yml)，运行 `python tools/doc-check/check_terms.py`，安装和完整命令见[文档检查说明](../../tools/doc-check/README.md)。此检查已接入 `python tools/ci/check.py docs` 和文档 CI。
 
 规则覆盖所有 Git 纳管的 Markdown，包括旧说明和 `AGENTS.md`。术语解释页保留这些词的定义及改写示例，因此该页只关闭措辞规则；其他文档没有整页例外。Vale 按 Markdown 结构保留代码、命令、公式和 URL 引用；游戏语义及其他需要上下文判断的表达仍由评审确认。
 

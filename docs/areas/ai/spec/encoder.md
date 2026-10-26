@@ -197,7 +197,7 @@ ObservedSequence 的 ordinal 从 0 起且同一序列连续；KnownCardPosition 
 4. **数组化与批处理**：实现第 5 节的数组、引用映射、数值变换、补齐及 mask；每条样例可检查编码前后对应关系。
 5. **验收检查与运行说明**：执行第 9 节场景，输出编码规模与耗时；记录覆盖的公开机制和未支持的输入。首阶段不实现收益函数、神经网络、训练、策略评分或真实动作执行。
 
-接口边界：实现者负责 `ai-the-spire` 与必要的该模块文档；不修改 core、内容 DSL 或 base-spire。[net 协议](../../net/reference/protocol.md)同时待评审，以公开样例消费该约定；不得新增直接读取内核的捷径。完整阶段及依赖见[实施计划](../../../roadmap.md)，本节仅细化第一批任务。
+接口边界：实现者负责 `ai-the-spire` 与必要的该模块文档；不修改 core、内容 DSL 或 base-spire。[net 协议](../../net/reference/protocol.md)同时待评审，以公开样例消费该约定；不得新增直接读取内核的捷径。完整阶段及依赖见[实施计划](../../../meta/roadmap.md)，本节仅细化第一批任务。
 
 建议验证方式为在 `ai-the-spire` 目录执行 `python -m unittest discover -s tests -v`。这是后续实现的建议命令，本次未执行，也不是当前已存在的测试项目。
 

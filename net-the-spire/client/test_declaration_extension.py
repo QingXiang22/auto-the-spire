@@ -1,6 +1,6 @@
 """ENV-T03 声明扩展子包的真实 stdio 证据：`--scenario text-rules`（0.2，同一通用规则提供方）。
 
-派单依据 `docs/design/net-the-spire/design.md` §7.3 第 4 项：扩展例**只在规则包**新增公开字段与合法
+派单依据 `docs/understand/net-design.md` §7.3 第 4 项：扩展例**只在规则包**新增公开字段与合法
 Action，net 生产源码不新增逐项注册行；目录/observe 出现对应内容、step 执行正确；新增内部块不成为外部操作。
 
 本脚本驱动**真实宿主进程**（`Net.TheSpire.Host` 的 NDJSON stdio 通道），用同一段提供方代码分别加载
