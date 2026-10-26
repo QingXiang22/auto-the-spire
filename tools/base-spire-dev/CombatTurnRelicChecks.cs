@@ -254,8 +254,8 @@ internal static partial class PackageChecks
             Set(s, first, "Relic", "IsMelted", Value.Of(true)); IcNextTurn(s); Equal(3L, Energy(s), "melted flower skips its due reward"); Equal(4L, IntField(s, first, "Relic", "Counter"), "melted count frozen");
             IcNextTurn(s); Equal(4L, Energy(s), "second instance independently reaches five");
             Submit(s, "RemoveOwnedRelic", first); Submit(s, "ExtraFlower"); Equal(0L, IntField(s, Members(s, "Relics").Last(), "Relic", "Counter"), "new counter replaces removed progress");
-            var block = Start(package); Submit(block, "Sai.Obtain"); Submit(block, "BeginDevelopmentCombat"); Set(block, Player(block), "Player", "Block", Value.Of(997L));
-            Submit(block, "BeginDevelopmentTurn"); Equal(999L, Block(block), "Sai respects the block cap");
+            var block = Start(package); Submit(block, "Sai.Obtain"); Submit(block, "BeginDevelopmentCombat"); Set(block, Player(block), "Player", "Block", Value.Of(999999997L));
+            Submit(block, "BeginDevelopmentTurn"); Equal(999999999L, Block(block), "Sai respects the source Creature.GainBlockInternal cap");
         });
 
         foreach (var list in witness.Values) list.InsertRange(0, shared);
