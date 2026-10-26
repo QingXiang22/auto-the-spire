@@ -228,3 +228,9 @@ Neow 的 EffectSupported 对照真实 EventOption.IsEnabled：锁定的 AncientE
 入场条件使用原生SlumberingBeetle的真实入场Power及SLEEP_CHECK图；DSL仅加载工具专用条件探针，比较BeforeCombatStart、玩家BeforeSideTurnStart、AfterEnergyReset和敌方末的节点／历史，再验证下一回合。回合前移除原生Slumber与改变探针条件用于判别提前选招。该场景不登记SlumberingBeetle或Slumber为正式支持，不认证其伤害／Power全效果。组件显式执行DSL End+Begin，正常EndTurn自动进入下一可行动回合仍独立验收。新组件不替代原11份suite或正常Run比较。
 
 固定首招的补充判别使用真实TwigSlimeM，比较建图后的初始历史与尚未发布的NextMove、首次Roll，以及普通玩家回合后的额外玩家入口。原生调用真实额外回合StartTurn入口；DSL显式关闭开发回合标志后再次Begin，只认证保存招式／历史及AI四字状态不变，不声明正式额外回合动作或完整生命周期。`--package MANIFEST`可对指定生产包复现差异；migration要求包含原18项和新增两seed的extra-ready，未知／重复参数被拒绝。
+
+## 侧开始、清格挡与行动资格组件
+
+`dotnet run --project tools/differential -c Release -- turn-start-compare --output .artifacts/differential/turn-start`运行两个seed共14项判别。两只真实TwigSlimeS使用空牌组、归一化HP1000与显式格挡初态；逐项比较12个侧开始／清挡／侧结束边界、玩家资源及两个敌人的格挡和出生资格标志。实际Anchor证明首回合保留格挡，Barricade验证双方持有者与Direct首否决顺序。参考SturdyClamp与DSL工具专用钳制监听对照，只认证阻止者回调接缝，不登记SturdyClamp正式支持。
+
+零HP场景明确不执行死亡命令，验证仍在侧列表的成员先清挡、再全体通知而不行动。出生资格场景直接设置双方标志，只证明当轮跳过和换边清标，不宣称召唤／复活。DSL显式End+Begin与参考自动推进到下一普通玩家回合比较；正常EndTurn动作另验。已有28项回合组件同时新增实际Power.AmountOnTurnStart维度，保留全部旧维度、用例和严格失败。

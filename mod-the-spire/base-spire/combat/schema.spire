@@ -80,6 +80,7 @@ entity Enemy {
     MonsterSeed = { type = Int default = 0 visibility = Hidden }
     SlotIndex = { type = Int(min = -1) default = -1 visibility = Hidden }
     SpawnOrder = { type = Int(min = 0) default = 0 visibility = Hidden }
+    SpawnedThisTurn = { type = Bool default = true visibility = Hidden }
     # Development move position inside the enemy's own rotation; the enemy content template owns the meaning.
     MoveIndex = { type = Int(min = 0, max = 9) default = 0 }
     # Saved source node for migrated move graphs; observations never roll another move.
@@ -101,6 +102,7 @@ entity Power {
     HolderPlayer = { type = Ref(Player) optional = true }
     HolderEnemy = { type = Ref(Enemy) optional = true }
     Stacks = { type = Int(min = -999, max = 999) default = 0 }
+    AmountAtTurnStart = { type = Int(min = -999, max = 999) default = 0 visibility = Hidden }
     ApplierPlayer = { type = Ref(Player) optional = true visibility = Hidden }
     ApplierEnemy = { type = Ref(Enemy) optional = true visibility = Hidden }
     SourceCard = { type = Ref(Card) optional = true visibility = Hidden }

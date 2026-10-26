@@ -4,6 +4,7 @@ internal static partial class PackageChecks
 {
     private static Dictionary<string, string[]> RunEnemyTurnChecks(DslPackage package, Action<string, Action> check)
     {
+        RunTurnStartChecks(package, check);
         var witness = new Dictionary<string, List<string>>(StringComparer.Ordinal);
         var shared = new List<string>();
         void Case(string name, Action body) { check(name, body); shared.Add(name); }

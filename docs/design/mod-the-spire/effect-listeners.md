@@ -40,3 +40,5 @@ Power接收修正需要记录实际参与者，以便计算后执行其副作用
 移除Relic的StrikeDamageBonus、RetainEnergy、FirstTurnDrawBonus、RestHealBonus等效果配置字段，由具体监听规则贡献。ArtOfWar等私有状态移入对应附属实体，移除时清理、下战重置，不能污染其他遗物。Power的修正和反应从战斗主过程搬到Power监听模板；层数叠加、临时寿命及独立计数仍在实例生命周期中维护。
 
 最小core检查区分有序折叠／空监听、纯性拒绝／类型不符、嵌套调用和预算；base检查反转获得顺序后按实例执行、执行中移除后续监听者、嵌套自动出牌及决策续接、重复查询不写状态／不消费随机，以及现有遗物、伤害／格挡、费用／能量、抽牌和Power寿命回归。公开stdio仍经相同工厂和规则，不加入Host补偿。
+
+清挡的首个阻止者与格挡实际修正者由战斗域的隐藏上下文记录；计算包装通知只运行所属实例的pure判定／计算并写本次上下文。AfterPreventingBlockClear只交给首个仍有效阻止者，AfterModifyingBlockAmount只交给实际参与者；上下文与临时名单在命令结束清理。双方与来源／数值单位见[回合与格挡约定](combat-turn-resources/spec.md#双方格挡命令)。

@@ -333,7 +333,7 @@ def main() -> int:
                     or any(set(b) != turn_dimensions or len(b["piles"]) != 5
                            or any(len(b[s]) != 4 for s in ("ai_state", "shuffle_state", "target_state"))
                            or any(set(c) != call_dimensions for c in b["calls"])
-                           or any(set(p) != {"definition", "amount", "applier"} for side in ("powers", "enemy_powers") for p in b[side]) for b in case["left"])):
+                           or any(set(p) != {"definition", "amount", "start_amount", "applier"} for side in ("powers", "enemy_powers") for p in b[side]) for b in case["left"])):
                 raise ValueError(f"Turn phase comparison omitted a dimension or boundary: {case['id']}")
             end = case["left"][-1]
             if name == "listener-order" and (len(end["run_order"]) != 8 or len(end["direct_order"]) != 8
@@ -341,6 +341,22 @@ def main() -> int:
                 raise ValueError("Run and Direct must measure their distinct actual source listener paths")
             if name in ("starting-draw", "charon-reshuffle", "draw-before-block", "block-before-draw") and not end["calls"]:
                 raise ValueError("Nonempty shuffle/target random calls must be compared")
+
+        starts = run("turn-start", ["turn-start-compare", "--output", str(args.output / "turn-start")], 0)
+        start_ids = [seed + ":" + name for seed in ("777", "A😀B")
+                     for name in ("clear", "barricade", "clamp", "barricade-clamp", "enemy-barricade", "zero-member", "spawn-skip")]
+        start_stages = ["before:player", "cleared:player", "side:player", "configured", "before:enemy",
+                        "cleared:enemy", "cleared:enemy", "side:enemy", "enemy-end", "before:player", "cleared:player", "side:player"]
+        if (starts is None or starts["schema"] != "dsl-migration/turn-start@1" or starts["status"] != "passed"
+                or starts["reference"]["commit"] != lock["commit"] or starts["independent_verified"] is not True
+                or starts["normal_run_verified"] is not False or [c["id"] for c in starts["cases"]] != start_ids):
+            raise ValueError("Turn start comparison must retain all 14 controlled cases")
+        for case in starts["cases"]:
+            if (case["status"] != "passed" or case["left"] != case["right"]
+                    or [r["at"] for r in case["left"]] != start_stages
+                    or any(set(r) != {"at", "turn", "hp", "block", "enemy_block", "spawned"}
+                           or len(r["enemy_block"]) != 2 or len(r["spawned"]) != 2 for r in case["left"])):
+                raise ValueError("Turn start comparison omitted an actor or intermediate stage")
 
         causes = run("exhaust-causes", ["exhaust-cause-compare", "--output", str(args.output / "exhaust-causes")], 0)
         cause_names = ("ordinary", "deferred", "current-amount", "no-draw-before", "no-draw-after",

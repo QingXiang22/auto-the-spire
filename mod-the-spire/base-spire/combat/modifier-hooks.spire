@@ -64,7 +64,7 @@ event ShouldResetEnergy {
 }
 
 event ShouldClearBlock {
-  payload = { value = Bool owner = Ref(Player) }
+  payload = { value = Bool player = Binding enemy = Binding }
 }
 
 event ShouldGainEnergy {

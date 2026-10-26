@@ -1,0 +1,62 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source side membership is independent of HP. Confirmed death/escape detach a creature.
+procedure EnemyIsOnSide {
+  pure = true parameters = { target = Ref(Enemy) } result = Bool
+  body = {
+    if = { condition = not(exists(where(type(Enemy), e, equal(e, target)))) then = { return = { value = false } } }
+    return = { value = and(not(field(target, Enemy.DeathResolved)), not(field(target, Enemy.Escaped))) }
+  }
+}
+procedure SnapshotPowerTurnStart {
+  parameters = { player = Binding enemy = Binding }
+  body = {
+    forEach = { query = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), player), equal(field(p, Power.HolderEnemy), enemy))) item = power body = {
+      set = { target = power field = Power.AmountAtTurnStart value = field(power, Power.Stacks) }
+    } }
+  }
+}
+procedure NotifyCombatSideSwitch {
+  body = { forEach = { query = where(type(Enemy), e, pureCall(EnemyIsOnSide, e)) item = enemy body = {
+    set = { target = enemy field = Enemy.SpawnedThisTurn value = false }
+  } } }
+}
+
+entity BlockClearCheck { fields = {
+  Player = { type = Ref(Player) optional = true visibility = Hidden }
+  Enemy = { type = Ref(Enemy) optional = true visibility = Hidden }
+  ShouldClear = { type = Bool default = true visibility = Hidden }
+  PreventerPower = { type = Ref(Power) optional = true visibility = Hidden }
+  PreventerRelic = { type = Ref(Relic) optional = true visibility = Hidden }
+} }
+event BlockClearChecking { payload = { check = Ref(BlockClearCheck) } }
+event AfterPreventingBlockClear { payload = { check = Ref(BlockClearCheck) } }
+
+# Calculation wrappers record only the first pure veto; callbacks are a separate phase.
+procedure RecordBlockClearPreventer {
+  parameters = { check = Ref(BlockClearCheck) power = Binding relic = Binding }
+  body = {
+    if = { condition = not(field(check, BlockClearCheck.ShouldClear)) then = { return = {} } }
+    if = { condition = equal(isNone(power), isNone(relic)) then = { fail = { message = "Block clear requires exactly one preventer" } } }
+    set = { target = check field = BlockClearCheck.ShouldClear value = false }
+    set = { target = check field = BlockClearCheck.PreventerPower value = power }
+    set = { target = check field = BlockClearCheck.PreventerRelic value = relic }
+  }
+}
+procedure ClearCombatantBlock {
+  parameters = { player = Binding enemy = Binding }
+  locals = { check = Binding }
+  body = {
+    if = { condition = equal(isNone(player), isNone(enemy)) then = { fail = { message = "Block clear requires exactly one creature" } } }
+    create = { type = BlockClearCheck scope = frameScope() into = check fields = { Player = player Enemy = enemy } }
+    emit = { event = BlockClearChecking payload = { check = check } }
+    if = { condition = field(check, BlockClearCheck.ShouldClear) then = {
+      if = { condition = not(isNone(player)) then = { set = { target = player field = Player.Block value = 0 } }
+        else = { set = { target = enemy field = Enemy.Block value = 0 } } }
+    } else = {
+      emit = { event = AfterPreventingBlockClear payload = { check = check } }
+    } }
+    destroy = { target = check }
+  }
+}
