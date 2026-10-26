@@ -9,7 +9,7 @@ template StabbotContent { body = {
     call = { procedure = ApplyPowerWithSource args = { player = owner enemy = none definition = "base-spire:frail-power" stacks = 1 untilTurnEnd = false applierPlayer = none applierEnemy = target card = none play = none } into = power }
   } }
   dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:stabbot" procedure = Execute }
-  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = {
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = {
     call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:stabbot" hp = 18 } }
   } }
 } }

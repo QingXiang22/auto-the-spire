@@ -74,3 +74,5 @@ python tools/ci/check_relic_coverage.py .artifacts/ci/base/behavior/package-beha
 文档组在 PR CI 执行；本地可运行 `python tools/ci/check.py docs`。忽略文件不能作为正式链接目标。本地原版源码核对、Python 客户端完整轨迹、AI 离线检查、完整正常 Run、完整差异测试／120 对矩阵及性能均不包含在上述行为组中。相关要求仍见[任务入口](../../docs/roadmap.md)、[ENV 范围](../../docs/design/environment-completion-and-differential-v1.md)和[参考版本](../../reference/README.md)。不得从开发检查通过推导这些项目已经验收。
 
 migration组另严格执行`exhaust-cause-compare`的30个耗尽原因组件，检查全部边界、延迟计数、抽牌事件和随机候选；缺例、缺字段、差异或无参考均失败，正常Run认证保持独立。
+
+敌人出生与选招边界的18项独立组件纳入migration，要求工厂／槽位的真实CombatRoom准备、稳定实例编号、HP调用、位置种子与通知之间的节点／历史全部一致。base保留旧轮转与击晕用例，并验证完整移除／新上下文和非法HP范围。工具专用条件探针不扩大生产内容范围；正常动作自动进入下一可行动回合及完整事件／随机轨迹仍按各自边界验收。

@@ -45,7 +45,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | CombatEnded | owner: Ref(Player)、victory: Bool | 结束态已经写入 `CombatOutcome` 并关闭回合门与活跃标记之后发出；开发胜利可生成奖励；正常访问在结束通知、清理及胜利通知后提交并生成奖励 |
 | CombatVictoryEarly／CombatVictory | owner: Ref(Player)、victory: Bool | 胜利时依次通知早期／普通胜利效果；正常访问先清理能力、格挡与战斗牌，再发送这两项通知，之后提交访问及生成奖励 |
 | EnemyTurnStarted | owner: Ref(Player)、target: Ref(Enemy) | 玩家回合结束后，对每个 `Hp > 0` 的敌人各发一次；敌人内容模板按 DefinitionId 订阅并实现自己的招 |
-| AfterEnemySideTurnEnd | owner: Ref(Player) | 敌方阶段结束时发出；遗物库存先执行，再按当前敌方顺序，每个生物先执行其Power（获得顺序）再执行怪物监听；出生标识／槽位分离仍在敌人领域的未支持边界内；这里做计时及 debuff 减层（源在敌方回合末），取代此前挂在玩家回合末的做法 |
+| AfterEnemySideTurnEnd | owner: Ref(Player) | 敌方阶段结束时发出；遗物库存先执行，再按当前敌方顺序，每个生物先执行其Power（获得顺序）再执行怪物监听；出生编号保持不变，SpawnOrder保存槽位整理后的行动顺序；这里做计时及 debuff 减层（源在敌方回合末），取代此前挂在玩家回合末的做法 |
 | AfterShuffle | owner: Ref(Player) | 仅在实际转移并完成 shuffle 后发出 |
 | AfterCardDrawn | owner: Ref(Player)、card: Ref(Card) | 成功移到 Hand 后发出；未抽到牌不发 |
 | [CardPlayed](../../../../mod-the-spire/base-spire/cards/schema.spire) | owner: Ref(Player)、card: Ref(Card) | 旧声明保留，当前正文管线不发布；新增主效果绑定ExecuteCardBody，外部反应使用Before／After通知 |
@@ -128,11 +128,14 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [DamagePlayerPowered](../../../../mod-the-spire/base-spire/combat/enemy-turn.spire) | attacker=Ref(Enemy)、owner=Ref(Player)、amount | 敌方攻击链：防守方 `after-attacked-damage`（Thorns）先以无加成伤害反击攻击者，再按攻击者 Strength→攻击者 Weak ×0.75→防守方 Vulnerable ×1.5（整数向下取整）→格挡→生命，并做失败判定 |
 | EnemyAttack | attacker=Ref(Enemy)、defender=Ref(Player)、amount=Int(0..999)、hits=Int | 一次Attack包含指定命中数；负命中数拒绝，BeforeAttack／AfterAttack各一次，逐击走已有伤害／反应／死亡流程；单击DamagePlayerPowered复用此过程 |
 | RunEnemyTurn | owner=Ref(Player) | 敌方阶段：BeforeEnemySideTurnStart→先清全体参与者格挡→逐个AfterEnemyBlockCleared→AfterEnemySideTurnStart→逐个EnemyTurnStarted→BeforeEnemySideTurnEndVeryEarly／Early／普通→AfterEnemySideTurnEnd；选招位置仍保留已有边界 |
-| [ResetEnemyMoves](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire) | target=Ref(Enemy) | 删除该实例旧历史，按定义图保存初始招式；固定首招不抽样。生成和BeforeCombatStart复用，不重置随机流 |
+| CreateSourceEncounterEnemy／RollEncounterEnemyHp | definition=String(64)、min／max=Int(1..9999) → Binding；后者仅min／max → Int | 按当前敌侧成员的不同MaxHp排除候选，niche候选偏移或原区间回退；固定HP也消费一次，非法范围抽样前失败 |
+| CreateEncounterEnemy | definition=String(64)、hp=Int(1..9999) → Binding | 给定HP的开发／下层创建，保存单调BirthOrder、CombatId与源个体MonsterSeed，不抽HP或选招 |
+| PrepareEnemyBirthContext／SortEncounterEnemies | 无参数 | 前者仅允许非活动战斗且敌侧为空时重置出生计数；后者按SlotIndex与BirthOrder整理SpawnOrder，不修改实例编号及种子 |
+| [ResetEnemyMoves](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire) | target=Ref(Enemy) | 删除该实例旧历史，按定义建空图，不选首招。生成只建实例与内容私有状态；战斗开始在房间／敌人入场效果前统一建图／重置，不重置随机流 |
 | ClearEnemyMoves／RemoveCombatEnemy | target=Ref(Enemy) | 前者只清招式及历史；后者依次移除Power、清招式、发EnemyRemoving供内容清私有状态，再销毁敌人。正常访问关闭复用后者 |
-| Wriggler.Create | slot=String(16)、startStunned=Bool → Binding | 验证四个真实槽名后抽HP，登记模块私有出生状态并初始化图；条件节点不消费AI随机，未知槽位拒绝 |
+| Wriggler.Create | slot=String(16)、startStunned=Bool → Binding | 验证四个真实槽名后抽HP，登记模块私有出生状态，不初始化图或选招；条件节点不消费AI随机，未知槽位拒绝 |
 | PerformEnemyMove | owner=Ref(Player)、target=Ref(Enemy) | 复核双方生命，按保存节点分派ExecuteEnemyMove；完成后标记需要选招，暂停续接不重放正文 |
-| SelectNextEnemyMove | target=Ref(Enemy) | 对存活且未准备实例解析共享后继，保存MoveId／MoveIndex／Intent及实例历史；随机节点按源顺序与binary32权重消费monster_ai，已准备实例不再选招 |
+| SelectNextEnemyMove | target=Ref(Enemy) | 普通玩家BeforePlayerSideTurnStart之后对存活且未准备实例解析初始节点或共享后继，保存MoveId／MoveIndex／Intent及实例历史；随机节点按源顺序与binary32权重消费monster_ai，已准备实例不再选招 |
 | EnemyMoveGraphDefinition／EnemyMoveNodeDefinition／EnemyMoveBranchDefinition | 具体参数见[招式图约定](../../../design/mod-the-spire/enemy-turn/spec.md#共享图的当前操作与失败方式) | 固定、条件和随机招式复用同一状态与执行分派；具体敌人模块保存源节点、后继、意图和正文 |
 
 Assassin、Axe、BowlbugEgg、Brute、Crossbow、Stabbot与Tracker均复用共享图。Axe／BowlbugEgg的复合意图为attack,defend，Stabbot为attack,debuff；Tracker的HOUNDS_MOVE调用一次EnemyAttack(amount=1,hits=8)。怪物施加Power通过ApplyPowerWithSource保留applierEnemy，card／play为空。各模块的Spawn动作名和最小HP保持既有定义，旧轮转模板已移除。

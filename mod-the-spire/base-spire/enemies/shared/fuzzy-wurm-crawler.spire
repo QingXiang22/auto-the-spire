@@ -16,6 +16,6 @@ template FuzzyWurmCrawlerContent { body = {
     }
   }
   dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:fuzzy-wurm-crawler" procedure = Execute }
-  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" hp = 55 } } } }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" hp = 55 } } } }
 } }
 use FuzzyWurmCrawler { template = FuzzyWurmCrawlerContent }

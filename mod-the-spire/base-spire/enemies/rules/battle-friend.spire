@@ -24,13 +24,8 @@ template BattleFriendEnemy {
       instances = where(type(Enemy), e, and(equal(field(e, Enemy.DefinitionId), arg(definition)), pureCall(EnemyIsActive, e)))
       instance_order = pureCall(EnemyHookOrder, listener, false) priority = 0
     }
-    action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) locals = { hp = Int } body = {
-      if = { condition = exists(where(type(Enemy), e, and(not(field(e, Enemy.Escaped)), equal(field(e, Enemy.MaxHp), arg(hp))))) then = {
-        sampleInt = { stream = "base-spire:run:niche" min = arg(hp) max = add(arg(hp), 1) into = hp }
-      } else = {
-        sampleInt = { stream = "base-spire:run:niche" min = 0 max = 1 into = hp }
-        let = { into = hp value = add(arg(hp), hp) }
-      } }
+    action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) locals = { hp = Int } body = {
+      call = { procedure = RollEncounterEnemyHp args = { min = arg(hp) max = arg(hp) } into = hp }
       call = { procedure = SpawnDevelopmentEnemy args = { definition = arg(definition) hp = hp } }
     } }
   }

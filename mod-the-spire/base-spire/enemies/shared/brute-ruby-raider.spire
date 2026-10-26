@@ -13,7 +13,7 @@ template BruteRubyRaiderContent { body = {
     } }
   } }
   dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:brute-ruby-raider" procedure = Execute }
-  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = {
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = {
     call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:brute-ruby-raider" hp = 30 } }
   } }
 } }

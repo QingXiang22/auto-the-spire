@@ -136,7 +136,7 @@ procedure PlayCard {
 # Compatibility entry for existing development scripts; clients may explicitly select any living target.
 procedure PlayAttackCard {
   parameters = { owner = Ref(Player) card = Ref(Card) }
-  body = { call = { procedure = ResolvePaidCard args = { owner = owner card = card target = first(where(type(Enemy), e, pureCall(EnemyIsActive, e))) } } }
+  body = { call = { procedure = ResolvePaidCard args = { owner = owner card = card target = first(sort(where(type(Enemy), e, pureCall(EnemyIsActive, e)), e, field(e, Enemy.SpawnOrder))) } } }
 }
 procedure PlayTargetedCard {
   parameters = { owner = Ref(Player) card = Ref(Card) }
@@ -145,7 +145,7 @@ procedure PlayTargetedCard {
     call = { procedure = EnsureManualCardPlayable args = { owner = owner card = card } }
     if = { condition = not(field(card, Card.Targeted)) then = { fail = { message = "This card does not select an enemy" } } }
     if = { condition = not(exists(where(type(Enemy), e, pureCall(EnemyIsActive, e)))) then = { fail = { message = "No living target" } } }
-    decide = { participant = field(owner, Player.Owner) kind = EntityRef prompt = "Choose the target" into = target min = 1 max = 1 candidates = where(type(Enemy), e, pureCall(EnemyIsActive, e)) }
+    decide = { participant = field(owner, Player.Owner) kind = EntityRef prompt = "Choose the target" into = target min = 1 max = 1 candidates = sort(where(type(Enemy), e, pureCall(EnemyIsActive, e)), e, field(e, Enemy.SpawnOrder)) }
     call = { procedure = ResolvePaidCard args = { owner = owner card = card target = target } }
   }
 }

@@ -18,6 +18,6 @@ template LeafSlimeMContent { body = {
     }
   }
   dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:leaf-slime-m" procedure = Execute }
-  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:leaf-slime-m" hp = 32 } } } }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:leaf-slime-m" hp = 32 } } } }
 } }
 use LeafSlimeM { template = LeafSlimeMContent }
