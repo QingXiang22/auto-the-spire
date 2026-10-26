@@ -4,7 +4,7 @@
 
 使用已有 `ScoreRace` 规则库时，你可以在配置文件中修改目标分数和每次可选的增量。
 
-开始前准备 .NET 9 SDK、本仓库和[规则库文件](../../examples/core-choice-counter/rules/score-race.spire)。如果你还没有写过底层规则，先做[规则教程](first-rule.md)。
+开始前准备 .NET 9 SDK、本仓库和[规则库文件](../../examples/core-choice-counter/rules/score-race.spire)。如果你还没有写过底层规则，先做[规则教程](../../start/first-rule.md)。
 
 ## 1. 配置入口文件
 

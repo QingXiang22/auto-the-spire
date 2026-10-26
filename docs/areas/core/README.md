@@ -4,7 +4,7 @@ core 维护通用 DSL、链接、执行与 Session API。先按要完成的任�
 
 | 任务 | 入口 |
 | --- | --- |
-| 第一次编写规则或宿主 | [规则教程](../../dsl/core/first-rule.md)、[宿主教程](../../design/core-the-spire/first-host.md) |
+| 第一次编写规则或宿主 | [规则教程](../../start/first-rule.md)、[宿主教程](../../start/first-host.md) |
 | 导入规则库和配置实例 | [DSL 作者入口](../../dsl/core/README.md)、[配置指南](../../dsl/core/how-to-configure-game.md) |
 | 提交带参数的动作与回答选择 | [参数提交指南](../../design/core-the-spire/how-to-submit-parameters.md)、[Session API](../../design/core-the-spire/session-api-reference.md) |
 | 查类型、语法、模板与包格式 | [DSL 参考](../../dsl/core/README.md)、[开发者指南](../../design/core-the-spire/developer-guide.md) |

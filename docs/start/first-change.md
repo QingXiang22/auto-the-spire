@@ -20,7 +20,7 @@ git status --short
 
 ## 修改并验证
 
-第一次修改原版数值时，在隔离副本按[第一个遗物教程](../development/base-spire/tutorials/first-relic.md)观察修改前后结果；卡牌修改的准确字段与普通／升级判别见[单个内容指南](../development/base-spire/how-to/edit-content.md)。练习结果不覆盖正式原版预期。
+第一次修改原版数值时，在隔离副本按[第一个遗物教程](first-relic.md)观察修改前后结果；卡牌修改的准确字段与普通／升级判别见[单个内容指南](../development/base-spire/how-to/edit-content.md)。练习结果不覆盖正式原版预期。
 
 只改文档运行 `python tools/ci/check.py docs`；运行时按[CI 说明](../../tools/ci/README.md)选择受影响组。失败先定位具体差异，保留原用例、来源范围和断言，不能删检查使其通过。
 

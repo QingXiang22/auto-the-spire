@@ -4,11 +4,11 @@
 
 根据接入任务选择入口：
 
-- 第一次写宿主：先做[宿主教程](first-host.md)。
+- 第一次写宿主：先做[宿主教程](../../start/first-host.md)。
 - 提交带参数的动作：查[参数提交操作指南](how-to-submit-parameters.md)。
 - 查询交互字段与约束：查[API参考](session-api-reference.md)。
 - 理解各部分的关系：读[规则与宿主](rules-and-host.md)。
-- 第一次编写规则：从[第一次写规则](../../dsl/core/first-rule.md)开始。
+- 第一次编写规则：从[第一次写规则](../../start/first-rule.md)开始。
 
 版本与加载入口核对：2026-10-15。本文说明活动 `Core.TheSpire/Engine/` 的接口与执行行为，主要面向 Host 开发者及内核维护者。普通规则作者应通过配置式 `.spire` 文件使用引擎，入口见[规则作者说明](../../dsl/core/README.md)；`core/0.3` 统一提供基础声明、规则库配置、同包绑定与具名调用。本文 C# 片段说明宿主与底层接口。目标边界见[模块 spec](spec.md)，后续调整以[架构决定](core-architecture-decisions.md)为准。
 

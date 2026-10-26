@@ -56,7 +56,7 @@ G=(P,S,I,M,L,T,O,F)
 
 语言参考按能力分层维护：[core/0.3](../../dsl/core/0.3/language-reference.md)、[core/0.3](../../dsl/core/0.3/authoring-guide.md)及[core/0.3](../../dsl/core/0.3/authoring-reference.md)。低版本参考仍服务受支持语法，不能仅因版本号较低删除。
 
-开发者从[规则教程](../../dsl/core/first-rule.md)、[宿主教程](first-host.md)和[Session API](session-api-reference.md)接入；持久状态与执行帧区别见[运行态模型](runtime-state-model.md)。
+开发者从[规则教程](../../start/first-rule.md)、[宿主教程](../../start/first-host.md)和[Session API](session-api-reference.md)接入；持久状态与执行帧区别见[运行态模型](runtime-state-model.md)。
 
 当前执行约定按顺序处理决策，同时选择等能力须由实际消费者提出并单独验证。原版内容覆盖、正常 Run、多人玩法及独立参考比较各有自己的验收条件，不能从通用编译或计分示例成功推断完成。
 

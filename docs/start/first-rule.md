@@ -8,7 +8,7 @@
 
 ## 1. 先看一次完整运行
 
-仓库已经放好了[完整规则文件](../../examples/core-choice-counter/first-counter.spire)，先运行：
+仓库已经放好了[完整规则文件](../examples/core-choice-counter/first-counter.spire)，先运行：
 
 ```powershell
 dotnet run --project docs/examples/core-first-host/CoreFirstHost.csproj
@@ -181,7 +181,7 @@ condition = greaterOrEqual(field(counter, Counter.Score), 5)
 | 现象 | 检查什么 |
 | --- | --- |
 | 文件找不到 | 是否从仓库根运行，参数是否是实际保存的文件路径 |
-| 解析或编译错误 | 对照[完整文件](../../examples/core-choice-counter/first-counter.spire)，检查花括号、拼写和大小写；错误中的源位置帮助定位 |
+| 解析或编译错误 | 对照[完整文件](../examples/core-choice-counter/first-counter.spire)，检查花括号、拼写和大小写；错误中的源位置帮助定位 |
 | 开局后看不到分数 | 是否登记了 `start = [Setup]`，是否创建了实例，投影是否包含 `Counter` |
 | 分数到三以后无法继续，也没有结果 | 动作可用条件和终局条件是否使用同一个目标分数 |
 
@@ -189,9 +189,9 @@ condition = greaterOrEqual(field(counter, Counter.Score), 5)
 
 你已经写过状态、初始化、合法动作、状态修改、终局和观察。现在可以根据下一件要做的事继续：
 
-- 想把目标分数变成配置，复用同一套规则：读[导入规则库与配置参数](README.md#1-先运行再修改配置)，运行 `game.spire`，再看 [core/0.3 规则库指南](0.3/authoring-guide.md)。
-- 想接自己的界面或 AI：读[第一次写宿主](../../design/core-the-spire/first-host.md)，用 C# 加载这份文件并驱动它。
-- 想在动作中让玩家选加一还是加二：宿主教程的后半部分会运行 [counter.spire](../../examples/core-choice-counter/counter.spire)，观察动作的暂停与续接。
-- 写规则时遇到某个声明或表达式：查 [core/0.3 语言参考](0.3/language-reference.md)。它供查阅，第一次做这篇教程不需要从头读完。
+- 想把目标分数变成配置，复用同一套规则：读[导入规则库与配置参数](../dsl/core/README.md#1-先运行再修改配置)，运行 `game.spire`，再看 [core/0.3 规则库指南](../dsl/core/0.3/authoring-guide.md)。
+- 想接自己的界面或 AI：读[第一次写宿主](first-host.md)，用 C# 加载这份文件并驱动它。
+- 想在动作中让玩家选加一还是加二：宿主教程的后半部分会运行 [counter.spire](../examples/core-choice-counter/counter.spire)，观察动作的暂停与续接。
+- 写规则时遇到某个声明或表达式：查 [core/0.3 语言参考](../dsl/core/0.3/language-reference.md)。它供查阅，第一次做这篇教程不需要从头读完。
 
-这个小游戏使用的是通用 core DSL。原版卡牌内容使用 base 的[内容 DSL 作者约定](../../development/base-spire/README.md)，其卡牌声明和伤害等语义由游戏内容包提供。
+这个小游戏使用的是通用 core DSL。原版卡牌内容使用 base 的[内容 DSL 作者约定](../development/base-spire/README.md)，其卡牌声明和伤害等语义由游戏内容包提供。

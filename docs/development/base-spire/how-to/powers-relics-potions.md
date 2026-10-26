@@ -17,7 +17,7 @@
 
 复用当前 [ObtainRelic／RemoveRelic](../reference/operations.md) 时，遵守入库后发获得事件、出库后发移除事件、随后销毁的顺序。获得过程本身不去重，模板 action 的守卫才限制当前开发范围的重复 definition。需要正常库存资格、唯一性或奖励获得时先补对应约定。
 
-新触发先列 owner／source／target、调用时点、是否需要有效实例、每个实例的计数与清理、允许取消／暂停的位置。监听过滤 Holder 和 IsMelted；独有行为留在内容文件，复用模板才放共享规则；学习路径见[共享触发教程](../tutorials/shared-rule.md)。
+新触发先列 owner／source／target、调用时点、是否需要有效实例、每个实例的计数与清理、允许取消／暂停的位置。监听过滤 Holder 和 IsMelted；独有行为留在内容文件，复用模板才放共享规则；学习路径见[共享触发教程](../../../start/shared-rule.md)。
 
 拾取资源放在RelicObtained订阅中，使显式开发获得、角色初始化和未来奖励消费者都经过同一生命周期；不要仅写在Obtain动作尾部。ObtainMaxHpRelic供Strawberry／Pear／Mango／LeesWaffle及FakeMango／LoomingFruit／NutritiousOyster复用；PickupResourceRelic供OldCoin／SignetRing／GoldenPearl的金币和百分比治疗复用。两模板通过instances绑定本次有效relic，按库存顺序执行并复核资格，早期移除／熔化会取消尚未执行的拾取效果。移除不撤回已经获得的最大生命或金币；同定义新实例只获得自己的奖励，其他持有者不阻止本玩家开发获得。
 

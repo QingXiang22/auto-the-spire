@@ -6,8 +6,8 @@ core-the-spire 是一个用 C#/.NET 9 实现的通用规则引擎。你在 `.spi
 
 | 文档类型 | 你想做什么 | 从这里开始 |
 | --- | --- | --- |
-| 教程 | 第一次写一份能运行的规则 | [第一次写规则](../docs/dsl/core/first-rule.md) |
-| 教程 | 第一次写程序驱动规则 | [第一次写宿主](../docs/design/core-the-spire/first-host.md) |
+| 教程 | 第一次写一份能运行的规则 | [第一次写规则](../docs/start/first-rule.md) |
+| 教程 | 第一次写程序驱动规则 | [第一次写宿主](../docs/start/first-host.md) |
 | 操作指南 | 使用已有规则库，修改计分参数 | [配置目标和增量](../docs/dsl/core/how-to-configure-game.md) |
 | 操作指南 | 在已有宿主中接入带参数的动作 | [提交动作参数](../docs/design/core-the-spire/how-to-submit-parameters.md) |
 | 参考 | 查询 DSL 声明、表达式与模板 | [core/0.3 语言参考](../docs/dsl/core/0.3/language-reference.md)、[core/0.3 规则库指南](../docs/dsl/core/0.3/authoring-guide.md) |

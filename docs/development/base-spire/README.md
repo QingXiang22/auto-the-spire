@@ -12,10 +12,10 @@
 
 需要仓库 `global.json` 指定的 .NET SDK 9.0.306、Python 3.12 和 PowerShell。教程在仓库根目录操作，在 `.artifacts/tutorials/` 创建隔离副本，正式包保持原规则。
 
-1. [配置第一个遗物](tutorials/first-relic.md)：加载真实包，把练习数值从 6 改为 8，通过公开 Host 观察实际结果。
-2. [编写共享触发规则](tutorials/shared-rule.md)：用完整 DSL 创建一个抽牌触发模板，用具体use配置调用它，观察逐抽 2／4／6 和空堆不触发。
+1. [配置第一个遗物](../../start/first-relic.md)：加载真实包，把练习数值从 6 改为 8，通过公开 Host 观察实际结果。
+2. [编写共享触发规则](../../start/shared-rule.md)：用完整 DSL 创建一个抽牌触发模板，用具体use配置调用它，观察逐抽 2／4／6 和空堆不触发。
 
-通用 DSL 尚不熟悉时，先完成[第一份规则](../../dsl/core/first-rule.md)。本手册的命令和示例均以当前纯 DSL 包为准。
+通用 DSL 尚不熟悉时，先完成[第一份规则](../../start/first-rule.md)。本手册的命令和示例均以当前纯 DSL 包为准。
 
 ## 按开发任务查找
 

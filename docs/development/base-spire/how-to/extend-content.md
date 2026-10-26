@@ -16,7 +16,7 @@
 
 卡牌复用[正文模板](../reference/card-behavior.md#定义正文与纯值)：普通攻击、格挡和自身Power分别使用AttackCardBody、BlockCardBody、SelfPowerCardBody，模板同时完成正文与静态伤害绑定。组合牌保留效果的显式调用顺序，基础伤害使用StaticCardDamage；动态公式保留自身pure绑定。不能只增加CardDefinition后等待广播。
 
-独有效果的文件与登记步骤见[新增内容模块](add-content-module.md)，已有内容改动见[修改单个内容](edit-content.md)。可运行的共享模板例子见[共享规则教程](../tutorials/shared-rule.md)。正式原版内容的定义参数应取自匹配版本源，不能直接保留教程数值。
+独有效果的文件与登记步骤见[新增内容模块](add-content-module.md)，已有内容改动见[修改单个内容](edit-content.md)。可运行的共享模板例子见[共享规则教程](../../../start/shared-rule.md)。正式原版内容的定义参数应取自匹配版本源，不能直接保留教程数值。
 
 ## 3. 显式注册与保留源范围
 

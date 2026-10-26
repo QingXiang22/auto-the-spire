@@ -27,8 +27,8 @@ description: "开发、迁移或审阅 auto-the-spire 的纯 DSL base 内容与�
 | --- | --- | --- |
 | 修改已有卡牌数值、Power公式或私有状态 | [修改单个内容](../../../docs/development/base-spire/how-to/edit-content.md) | 所属文件与对应判别；精确Power接口查[Power参考](../../../docs/development/base-spire/reference/powers.md) |
 | 新增拥有独有效果的内容模块 | [新增内容模块](../../../docs/development/base-spire/how-to/add-content-module.md) | 已有完整消费者及显式登记步骤 |
-| 改已有模板参数／新增同类内容 | [内容扩展](../../../docs/development/base-spire/how-to/extend-content.md) | 对应内容文件与模板；首用时看[配置教程](../../../docs/development/base-spire/tutorials/first-relic.md) |
-| 新共享触发／生命周期 | [机制迁移](../../../docs/development/base-spire/how-to/migrate-mechanism.md) | 对应领域 spec 和[操作参考](../../../docs/development/base-spire/reference/operations.md)；语法实践看[共享规则教程](../../../docs/development/base-spire/tutorials/shared-rule.md) |
+| 改已有模板参数／新增同类内容 | [内容扩展](../../../docs/development/base-spire/how-to/extend-content.md) | 对应内容文件与模板；首用时看[配置教程](../../../docs/start/first-relic.md) |
+| 新共享触发／生命周期 | [机制迁移](../../../docs/development/base-spire/how-to/migrate-mechanism.md) | 对应领域 spec 和[操作参考](../../../docs/development/base-spire/reference/operations.md)；语法实践看[共享规则教程](../../../docs/start/shared-rule.md) |
 | 卡牌、附着、费用、伤害、回合 | [卡牌与战斗](../../../docs/development/base-spire/how-to/cards-and-combat.md) | 目标源类／共享约定，不通读全部 Cards |
 | Power、遗物、药水 | [Power 与物品](../../../docs/development/base-spire/how-to/powers-relics-potions.md) | 目标生命周期和一个真实调用方 |
 | 遗物／Power通知、伤害／费用等修正或迁移旧反应 | [编写通知与修正监听](../../../docs/development/base-spire/how-to/write-effect-listeners.md) | [领域约定](../../../docs/design/mod-the-spire/effect-listeners.md)与[通用签名](../../../docs/dsl/core/0.3/authoring-reference.md#实例订阅与只读修正)，再读一个同类消费者 |

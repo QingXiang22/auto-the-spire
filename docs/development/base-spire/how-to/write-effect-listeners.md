@@ -37,7 +37,7 @@ subscription OnDraw {
 
 instances只能读取事件载荷和查询自身的绑定，不能用尚未绑定的listener筛选自己。instance_order在实例绑定后求值，可以读取listener。引擎在通知开始时固定候选和排序键，按priority、instance_order、声明顺序执行；执行前再次检查资格，因此移除或熔化能取消后续响应，新获得实例不会补入已经开始的通知。优先级与排序表达游戏约定，不用文件includes顺序代替实际持有顺序。
 
-完整的复制、登记、获得与公开运行步骤沿[共享触发教程](../tutorials/shared-rule.md)操作。拾取事件已经携带本次relic，直接过滤该载荷即可；移除事件在出库存后发出，清理订阅不能要求它仍在Relics中。
+完整的复制、登记、获得与公开运行步骤沿[共享触发教程](../../../start/shared-rule.md)操作。拾取事件已经携带本次relic，直接过滤该载荷即可；移除事件在出库存后发出，清理订阅不能要求它仍在Relics中。
 
 主动弃牌使用 `CardDiscarded`：`DiscardCombatCard` 先移动牌、完成 `CardMoved`，再发布弃牌通知。ToughBandages 按有效持有实例响应，并复核 CombatActive／EnemyPhase；普通移牌和回合末清手只移动牌，不触发该遗物。
 

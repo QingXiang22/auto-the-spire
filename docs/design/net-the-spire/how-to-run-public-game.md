@@ -13,7 +13,7 @@ python -X utf8 docs/examples/base-dsl/run_relic_lesson.py --manifest mod-the-spi
 
 驱动通过现有 stdio 客户端获取 describe／catalog，以 manifest 的开发 scope 启动会话，提交获得遗物和抽牌的当前合法候选。牌堆重洗后，公开 Player.Block 应为 6，报告中 `passed` 为 true，退出码为 0。这是开发机制调用，完整游戏验收见 [环境规格](../environment-completion-and-differential-v1.md)。
 
-修改内容的练习见 [遗物教程](../../development/base-spire/tutorials/first-relic.md)。需要保存调试输出时使用驱动的 `--report .artifacts/public-example/result.json`，完成后删除。
+修改内容的练习见 [遗物教程](../../start/first-relic.md)。需要保存调试输出时使用驱动的 `--report .artifacts/public-example/result.json`，完成后删除。
 
 ## 客户端调用顺序
 
