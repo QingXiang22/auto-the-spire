@@ -63,8 +63,8 @@
 | 读者需要 | 维护位置 | 更新时机 |
 | --- | --- | --- |
 | 找到项目、安装和运行入口 | 根 README、docs/README | 入口或环境要求变化 |
-| 学会开发、完成具体操作、查询接口 | docs/development、docs/dsl、模块使用指南 | 操作、语法、参数或示例变化 |
-| 理解产品行为、架构与重要约束 | docs/design、docs/contracts | 行为或接口承诺变化 |
+| 学会开发、完成具体操作、查询接口 | docs/start、docs/areas、docs/reference、模块使用指南 | 操作、语法、参数或示例变化 |
+| 理解产品行为、架构与重要约束 | docs/understand、docs/specs、模块规格 | 行为或接口承诺变化 |
 | 理解重要架构选择的理由 | 对应 design 文档的决定章节 | 结构、依赖或兼容性发生重要变化 |
 | 确认当前要做什么 | GitHub Issues；docs/roadmap 提供入口 | 仅在 Issue 更新优先级、依赖、负责人和状态 |
 

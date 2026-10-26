@@ -46,4 +46,18 @@
 | 审阅后续出牌、攻击、牌区、实例能力与 Run 重构 | [内容行为约定](spec/behavior.md)，目标设计不等于现有接口 |
 | 用 agent 做开发，减少重复检索 | [项目 skill](../../../.agents/skills/base-spire-development/SKILL.md) |
 
+## 查领域行为要求
+
+修改共享机制前，核对[base 规格](spec/overview.md)、[内容行为约定](spec/behavior.md)与[监听要求](spec/effect-listeners.md)，再按所属领域查下表。规格描述要求，当前实现与完成状态仍以代码、CI 和关联 Issue 为准。
+
+| 领域 | 规格 |
+| --- | --- |
+| 出牌与卡牌效果 | [出牌核心](spec/card-play.md)、[可组合效果](spec/card-effects.md)、[耗尽与失血](spec/card-exhaust.md)、[铁甲战士](spec/ironclad-dsl.md) |
+| 战斗生命周期 | [伤害与格挡](spec/combat-damage.md)、[回合资源](spec/combat-turn-resources.md)、[战斗结束](spec/combat-end.md) |
+| 角色能力与初态 | [角色公共机制](spec/character-combat.md)、[铁甲初态](spec/ironclad-start.md) |
+| 敌人与 Power | [敌方行动](spec/enemy-turn.md)、[能力与修正](spec/power-modifiers.md) |
+| 遗物 | [机制与行为](spec/relic-combat-start.md)、[内容生命周期](spec/relic-lifecycle.md) |
+| 永久牌组与药水 | [牌组与营火](spec/permanent-deck-smith.md)、[药水栏位](spec/potion-inventory.md) |
+| Run、房间与随机 | [整局操作](spec/run-domain.md)、[随机机制](spec/randomness.md)、[事件访问](spec/event-domain.md)、[奖励](spec/combat-rewards.md) |
+
 本手册由 base 规则维护者随共享机制维护。新增一个机制时，更新准确操作参考、对应领域指南与必要教程；不逐个内容复制共享规则，也不把运行结果数量固化到 skill。交付要求见[开发约定](../../../CONTRIBUTING.md)。

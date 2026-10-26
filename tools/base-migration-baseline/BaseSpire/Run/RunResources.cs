@@ -14,7 +14,7 @@ public sealed record GoldGainHooks(
 
 /// <summary>
 /// Run-owned resource commands compile to Engine IR. They never read a Session or maintain runtime state.
-/// Contract: docs/areas/base/spec/event-domain.md, RUN-GOLD/DAMAGE/HEAL/DEATH.
+/// Contract: docs/design/mod-the-spire/event-domain/spec.md, RUN-GOLD/DAMAGE/HEAL/DEATH.
 /// </summary>
 public sealed class RunResources(FieldSymbol hp, FieldSymbol maxHp, FieldSymbol goldField, TerminalResultSymbol defeat,
     FieldSymbol defeatTurn, GoldGainHooks? goldHooks = null)

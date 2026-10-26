@@ -38,7 +38,7 @@ dotnet run --project docs/examples/core-choice-counter/CoreChoiceCounter.csproj
 
 活动内核位于 `Core.TheSpire/Engine/`，提供通用声明、状态、动作、调度、随机和参与者观察。卡牌、伤害、回合等游戏规则由内容包提供；原版内容作者使用[base开发手册](../docs/areas/base/README.md)及[core/0.3作者参考](../docs/reference/dsl/0.3/authoring-reference.md)，不使用旧base/0.0.2前端。历史实现通过 Git 查询。
 
-文本编译器只支持 `core/0.3`。包版本、运行语义标识与语言版本分别以[项目配置](Core.TheSpire/Core.TheSpire.csproj)、[RuleSetBuilder.EngineVersion](Core.TheSpire/Engine/RuleSet.cs)和[EngineDslCompiler](Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)为准。语言参考、规则库指南和作者参考统一维护在 `docs/dsl/core/0.3/`。
+文本编译器只支持 `core/0.3`。包版本、运行语义标识与语言版本分别以[项目配置](Core.TheSpire/Core.TheSpire.csproj)、[RuleSetBuilder.EngineVersion](Core.TheSpire/Engine/RuleSet.cs)和[EngineDslCompiler](Core.TheSpire/Engine/Compilation/EngineDslCompiler.cs)为准。语言参考、规则库指南和作者参考统一维护在 `docs/reference/dsl/0.3/`。
 
 当前职责和兼容要求见[核心约定](../docs/specs/core-engine-baseline.md)，验收见[行为要求](../docs/specs/environment.md#core-author-04)。其他设计问题按需查[模块 spec](../docs/specs/core/game-model.md)和[架构决定](../docs/understand/decisions/core.md)。
 

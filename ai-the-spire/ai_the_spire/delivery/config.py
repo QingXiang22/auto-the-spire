@@ -1,4 +1,4 @@
-"""D1 冻结工程演示 Profile 的解析与自检（`docs/design/battle-learning-delivery-v1.md` §4）。
+"""D1 工程演示 Profile 的解析与自检；当前要求见 `docs/areas/ai/spec/training.md`。
 
 两条硬约束写在这里，而不是散在命令里：
 
