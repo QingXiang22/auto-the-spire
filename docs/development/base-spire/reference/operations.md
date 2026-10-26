@@ -89,8 +89,12 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 
 | 声明 | 准确参数 | 行为与边界 |
 | --- | --- | --- |
-| [GainUnpoweredBlock](../../../../mod-the-spire/base-spire/combat/block.spire) | owner=Ref(Player)、amount=Int(0..999) | 累加并截到 999，不应用卡牌／Power 的加性或乘性修正；不是通用获得格挡流程 |
-| GainBlock | owner=Ref(Player)、amount=Int(0..999) | 入口依源拒绝ending与死亡玩家；卡牌格挡链先由Dexterity贡献加性修正，再在持有正层Frail时把总量乘 0.75 向下取整，再按 Unmovable 的本回合历史决定是否翻倍，最后截到 999 且不低于 0；遗物／Power 的无加成格挡仍走 GainUnpoweredBlock |
+| [GainUnpoweredBlock](../../../../mod-the-spire/base-spire/combat/block.spire) | owner=Ref(Player)、amount=Int(0..999999999) | 以Unpowered且无Move调用共享格挡命令，绕过当前敏捷／脆弱／不可动摇修正，保留零量与分数量通知；最终格挡上限999999999 |
+| GainBlock | owner=Ref(Player)、amount=Int(0..999999999) | 捕获当前card／play并以powered Move调用共享命令；先加法再乘法，最终取整。源旗标、持有者和独立实例决定修正，不在Frail后提前取整 |
+| GainEnemyBlock／GainEnemyUnpoweredBlock | target=Ref(Enemy)、amount=Int(0..999999999) | 怪物招式与无加成格挡使用同一GainCombatBlock；Frail／Dexterity可作用于怪物招式，Plating走无加成入口 |
+| GainCombatBlock | player、enemy=Binding（恰一非空）、amount=Int、unpowered、move=Bool、card、play=Binding → Int | 返回修正后的百万分之一格挡单位；BeforeBlockGained→加法→乘法→非负截断→实际修正者回调→提交→AfterBlockGained。接受后不因Before导致ending撤销提交；通知仍遵守阶段门禁 |
+| CalculateBlockAmount | 同GainCombatBlock参数，pure → Int | 返回相同中间单位；不创建上下文、不写状态、不消费随机。支持的精度与[格挡约定](../../../design/mod-the-spire/combat-turn-resources/spec.md#双方格挡命令)一致 |
+| ClearCombatantBlock | player、enemy=Binding（恰一非空） | Direct顺序记录首个阻止者，清零或仅向该仍有效实例发AfterPreventingBlockClear；通知后的AfterBlockCleared由侧开始流程发布 |
 | [ApplyPlayerPower](../../../../mod-the-spire/base-spire/powers/rules/lifecycle.spire) | owner=Ref(Player)、definition=String(64)、stacks=Int(-999..999) | 先查定义，未知即失败；同持有者同定义合并，否则创建。定义决定负值／Single策略；零层移除，事件交给所属模块处理 |
 | ApplyEnemyPower | target=Ref(Enemy)、definition、stacks | 对敌人执行同一合并语义；已确认死亡或逃离的持有者不再接受Power |
 | [Heal](../../../../mod-the-spire/base-spire/combat/resources.spire) | owner=Ref(Player)、amount=Int(0..999) | Hp 增加并按 MaxHp 截断；不处理复活、治疗修正或死亡，也不改变 MaxHp |

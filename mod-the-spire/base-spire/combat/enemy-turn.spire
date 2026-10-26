@@ -58,13 +58,3 @@ procedure RunEnemyTurn {
     call = { procedure = NotifyCombatSideSwitch }
   }
 }
-
-# Enemy block (CreatureCmd.GainBlock on a monster). The source applies monster block modifiers; none of those
-# participants are migrated, so this is the plain additive amount with the same 999 cap as the player chain.
-procedure GainEnemyBlock {
-  parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999) }
-  body = {
-    if = { condition = or(pureCall(CombatIsEnding), not(pureCall(EnemyIsActive, target))) then = { return = {} } }
-    set = { target = target field = Enemy.Block value = minimum(999, add(field(target, Enemy.Block), amount)) }
-  }
-}

@@ -234,3 +234,11 @@ Neow 的 EffectSupported 对照真实 EventOption.IsEnabled：锁定的 AncientE
 `dotnet run --project tools/differential -c Release -- turn-start-compare --output .artifacts/differential/turn-start`运行两个seed共14项判别。两只真实TwigSlimeS使用空牌组、归一化HP1000与显式格挡初态；逐项比较12个侧开始／清挡／侧结束边界、玩家资源及两个敌人的格挡和出生资格标志。实际Anchor证明首回合保留格挡，Barricade验证双方持有者与Direct首否决顺序。参考SturdyClamp与DSL工具专用钳制监听对照，只认证阻止者回调接缝，不登记SturdyClamp正式支持。
 
 零HP场景明确不执行死亡命令，验证仍在侧列表的成员先清挡、再全体通知而不行动。出生资格场景直接设置双方标志，只证明当轮跳过和换边清标，不宣称召唤／复活。DSL显式End+Begin与参考自动推进到下一普通玩家回合比较；正常EndTurn动作另验。已有28项回合组件同时新增实际Power.AmountOnTurnStart维度，保留全部旧维度、用例和严格失败。
+
+## 双方格挡命令组件
+
+`dotnet run --project tools/differential -c Release -- block-compare --output .artifacts/differential/blocks`运行两个seed共80项受控判别。真实Dexterity／Frail／Unmovable／Juggernaut／Plating分别验证双方、来源所有者、负加值、无加成、非Move、分数、零量及999999999上限；BowlbugEgg执行真实招式，Plating执行初始与两个本侧末得挡。Before／After逐条比较精确修正量、已提交格挡、card／play／旗标和实际修正者实例标识，原生实例标识来自同输入的只读Hook.ModifyBlock输出。专用修正Power另验证双阶段只回调一次、乘零仍参与、无修正不回调；这不登记为正式内容。
+
+真实Defend与EvilEye比较每个play的Move得挡历史；源EvilEye的两次调用不合并。Entrench真实源卡只与工具专用DSL正文比较Unpowered|Move，不登记正式支持。分数未增加整数格挡、已到上限和Unpowered|Move仍按源记录正的Move历史。暂停使用真实原生未完成Task及DSL决策，各续接一次；嵌套Before保留独立上下文，临时记录在完成后清理。只读预览另验状态hash、版本和随机不变。
+
+初态为玩家先登记、两敌人、空牌组和归一化HP1000；给定格挡与Power是明确组件输入。出生HP随机、完整公开库存和正常Run不由本组件认证；ending场景只比较已进入格挡命令的余效，不替代完整胜负／奖励结算验收。原80项、14项侧开始、28项回合及原11份suite继续由migration严格保留。

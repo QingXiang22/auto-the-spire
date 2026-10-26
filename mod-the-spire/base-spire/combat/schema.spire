@@ -13,7 +13,7 @@ entity Player {
     TurnNumber = { type = Int(min = 0, max = 999) default = 0 }
     # Development turn gate. Vanilla tracks PlayerTurnPhase instead; that lifecycle is not migrated.
     TurnOpen = { type = Bool default = false }
-    Block = { type = Int(min = 0, max = 999) default = 0 }
+    Block = { type = Int(min = 0, max = 999999999) default = 0 }
     # Published result of the effect-draw permission query; not an independent switch.
     DrawBlocked = { type = Bool default = false }
     CombatActive = { type = Bool default = false }
@@ -70,7 +70,7 @@ entity Enemy {
     DefinitionId = { type = String(length = 64) }
     Hp = { type = Int(min = 0, max = 999999) default = 0 }
     MaxHp = { type = Int(min = 0, max = 999999) default = 0 }
-    Block = { type = Int(min = 0, max = 999) default = 0 }
+    Block = { type = Int(min = 0, max = 999999999) default = 0 }
     # Ordinary confirmed death detaches the source creature before Power removal callbacks.
     # Keep the instance for damage/play references; non-death escape has its own flag.
     DeathResolved = { type = Bool default = false visibility = Hidden }

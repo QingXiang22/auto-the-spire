@@ -14,6 +14,7 @@ try
     if (args.FirstOrDefault() == "whistle-compare") return WhistleComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "enemy-rotation-compare") return EnemyRotationComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "power-amount-compare") return PowerAmountComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "block-compare") return BlockComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "turn-start-compare") return TurnStartComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "turn-phase-compare") return TurnPhaseComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "exhaust-cause-compare") return ExhaustCauseComparison.Run(Repository.Find(), args.Skip(1).ToArray());

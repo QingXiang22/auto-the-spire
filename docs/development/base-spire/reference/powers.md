@@ -1,6 +1,6 @@
 # Power定义与生命周期参考
 
-文档类型：参考（Reference）。适用于Core.TheSpire 0.9.4与base 0.7.0-dsl.73的纯DSL内容模型。编写步骤见[新增内容模块](../how-to/add-content-module.md)，现有内容修改见[修改单个内容](../how-to/edit-content.md)。以下接口均来自正式DSL，不是完整原版PowerModel API。
+文档类型：参考（Reference）。适用于Core.TheSpire 0.9.4与base 0.7.0-dsl.76的纯DSL内容模型。编写步骤见[新增内容模块](../how-to/add-content-module.md)，现有内容修改见[修改单个内容](../how-to/edit-content.md)。以下接口均来自正式DSL，不是完整原版PowerModel API。
 
 ## 定义与共有状态
 
@@ -16,7 +16,7 @@
 
 根启动过程SetupPowerDefinitions发布RegisterPowerDefinitions并建立隐藏PowerLibrary。自身监听、寿命与私有状态由所属模块定义。定义中没有通用hook回调参数；使用普通DSL过程和实例订阅。
 
-[Power实体](../../../../mod-the-spire/base-spire/combat/schema.spire)保留DefinitionId、隐藏Definition引用、Owner、可选HolderPlayer／HolderEnemy、Stacks（-999..999）、SkipTick和ExpiresAtTurnEnd，并有隐藏ApplierPlayer／ApplierEnemy、SourceCard／SourcePlay。每个实例恰好一个持有者，至多一个施加者；Kind及专属Counter／SelfDamage槽已移除。共享合并不覆盖首次创建的来源引用。
+[Power实体](../../../../mod-the-spire/base-spire/combat/schema.spire)保留DefinitionId、隐藏Definition引用、Owner、可选HolderPlayer／HolderEnemy、Stacks（-999..999）、SkipTick和ExpiresAtTurnEnd，并有隐藏ApplierPlayer／ApplierEnemy、SourceCard／SourcePlay。每个实例恰好一个持有者，至多一个施加者；Kind及专属Counter／SelfDamage槽已移除。共享合并不覆盖首次创建的来源引用。AmountAtTurnStart为隐藏快照，侧开始通知前复制当前量；迟加Power保持初值0直到下一次本侧开始。
 
 ExpiresAtTurnEnd是一次施加的临时寿命事实，保留临时FlameBarrier与永久Thorns的区别。其他专属寿命由模块订阅通知处理。
 

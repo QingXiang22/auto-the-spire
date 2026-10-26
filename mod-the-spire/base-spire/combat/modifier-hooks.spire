@@ -32,11 +32,11 @@ event ModifyIncomingAttackMultiplier {
 }
 
 event ModifyBlockAdditive {
-  payload = { value = Int owner = Ref(Player) }
+  payload = { value = Int player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding }
 }
 
 event ModifyBlockMultiplier {
-  payload = { value = Int owner = Ref(Player) }
+  payload = { value = Int player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding }
 }
 
 event ModifyCardCost {

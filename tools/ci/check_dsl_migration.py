@@ -358,6 +358,41 @@ def main() -> int:
                            or len(r["enemy_block"]) != 2 or len(r["spawned"]) != 2 for r in case["left"])):
                 raise ValueError("Turn start comparison omitted an actor or intermediate stage")
 
+        blocks = run("blocks", ["block-compare", "--output", str(args.output / "blocks")], 0)
+        block_names = ("plain", "enemy", "dex", "enemy-dex", "negative-dex", "enemy-negative-dex", "frail", "enemy-frail",
+                       "dex-frail", "unpowered", "enemy-unpowered", "no-move", "frail-unmovable", "unmovable-frail",
+                       "enemy-unmovable", "enemy-owner-unmovable", "zero", "zero-frail", "cap", "enemy-cap", "large-scaled",
+                       "fraction-juggernaut", "remove-before", "nested-before", "paused-before", "ending-before",
+                       "probe-both", "probe-zero", "probe-neutral", "defend-history", "entrench-history", "same-play-history",
+                       "bowl-move", "enemy-plating", "card-source-player", "card-source-enemy", "fraction-history", "cap-history",
+                       "rejected-dead", "rejected-ending")
+        block_ids = [seed + ":" + name for seed in ("777", "A😀B") for name in block_names]
+        block_dimensions = {"preview", "query_read_only", "returned", "rows", "player_hp", "block", "enemy_hp", "enemy_block",
+                            "powers", "play_block_gains", "callbacks", "target_draws", "target_state"}
+        block_row_dimensions = {"at", "amount", "player_block", "enemy_block", "card", "has_play", "enemy", "unpowered", "move", "modifiers"}
+        if (blocks is None or blocks["schema"] != "dsl-migration/block@1" or blocks["status"] != "passed"
+                or blocks["reference"]["commit"] != lock["commit"] or blocks["independent_verified"] is not True
+                or blocks["normal_run_verified"] is not False or [c["id"] for c in blocks["cases"]] != block_ids):
+            raise ValueError("Block comparison must retain all 80 controlled cases")
+        for case in blocks["cases"]:
+            name = case["id"].rsplit(":", 1)[1]
+            value = case["left"]
+            row_count = (0 if name.startswith("rejected-") else 1 if name == "ending-before" else 6 if name == "enemy-plating"
+                         else 4 if name in ("nested-before", "defend-history", "entrench-history", "same-play-history", "fraction-history", "cap-history") else 2)
+            stages = (["before"] if name == "ending-before" else ["before", "before", "after", "after"] if name == "nested-before"
+                      else ["before", "after"] * (row_count // 2))
+            if (case["status"] != "passed" or value != case["right"] or set(value) != block_dimensions
+                    or value["query_read_only"] is not True or len(value["enemy_hp"]) != 2 or len(value["enemy_block"]) != 2
+                    or len(value["target_state"]) != 4 or len(value["rows"]) != row_count or [r["at"] for r in value["rows"]] != stages
+                    or any(set(r) != block_row_dimensions for r in value["rows"])
+                    or any(set(p) != {"definition", "amount", "start_amount", "enemy"} for p in value["powers"])):
+                raise ValueError("Block comparison omitted a modifier, actor, source or command boundary")
+            expected_plays = 1 if name == "same-play-history" else 2 if name in ("defend-history", "entrench-history", "fraction-history", "cap-history") else 0
+            if (len(value["play_block_gains"]) != expected_plays
+                    or value["callbacks"] != (1 if name in ("probe-both", "probe-zero") else 0)
+                    or len(value["returned"]) != (0 if expected_plays or name in ("bowl-move", "enemy-plating") else 1)):
+                raise ValueError("Block comparison omitted per-play history, actual modifier callbacks or return values")
+
         causes = run("exhaust-causes", ["exhaust-cause-compare", "--output", str(args.output / "exhaust-causes")], 0)
         cause_names = ("ordinary", "deferred", "current-amount", "no-draw-before", "no-draw-after",
                        "full-hand", "reshuffle", "nested", "remove-replace", "generated",
