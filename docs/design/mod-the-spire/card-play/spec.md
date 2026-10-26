@@ -1,32 +1,36 @@
-# 卡牌出牌核心（费用、牌区与起始 Strike／Defend）
+# 卡牌出牌、资源支付与执行记录
 
-关联 CORE-AUTHOR-05／**DSL-CARD-PLAY-01**；实施与认领见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本包接在伤害之后，按[纯 DSL 规格](../base-architecture.md)和[机制迁移指南](../../../development/base-spire/how-to/migrate-mechanism.md)编写；状态只在 GitHub Issues 维护。
+关联 CORE-AUTHOR-05／**DSL-CARD-PLAY-01**；实施与认领见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。玩法由[纯 DSL 包](../base-architecture.md)和同一 Engine 执行，公开操作见[卡牌与战斗指南](../../../development/base-spire/how-to/cards-and-combat.md)与[操作参考](../../../development/base-spire/reference/operations.md)。本页定义行为要求；具体完成范围与验证结果在工单、PR 和 CI 维护。
 
 ## 已核实来源与范围
 
-从 `sts2/src/Core/Models/Cards/StrikeIronclad.cs` 与 `DefendIronclad.cs` 核对两张 Ironclad 起始牌：Strike 为 cost 1、`DamageVar(6m, ValueProp.Move)`、`CardType.Attack`、`TargetType.AnyEnemy`、`OnUpgrade` 加 3；Defend 为 cost 1、`BlockVar(5m, ValueProp.Move)`、`CardType.Skill`、`TargetType.Self`、`OnUpgrade` 加 3。两者都在 `IroncladCardPool`。
+规则依据为[锁定 sts2-sim](../../../../reference/README.md) 的 `Models/CardModel.cs::PlayAfterObserverStartedAsync`、`SpendResources`、`GetResultLocationForCardPlay`，以及 `Commands/CardPileCmd.cs::Add`／`AddAsync`／`Draw`。同步移牌、异步移牌通知和抽牌通知分别按实际命令处理，不能仅按最终牌区推定通知相同。
 
-本包实现开发态出牌链：`Card.DefinitionId`／`Cost`／`Upgraded`、`InPlay` 牌区、`CardPlayed` 与 `CardPlayedOnTarget` 事件、共享出牌过程（校验战斗与手牌、按费用扣能量、Hand→InPlay、派发监听、InPlay→DiscardPile）以及值升级过程。内容用两个模板加正式参数迁移 Strike 与 Defend。
-
-不迁移：原版目标选择（公开决策选敌）、X 费、费用修改、消耗／虚无／保留／固有、出牌次数限制、卡牌类型与稀有度字段、Power 牌、卡牌获得途径（奖励／商店／事件／开局牌组）。开发 scope 的单体攻击解析“第一个可命中开发目标”，不是玩家选择；开发授予动作直接把卡放进手牌。
+本页覆盖当前已加载卡牌的手动出牌、免费自动出牌、重复正文、X 捕获、结果位置和费用清理，以及实际 Power／遗物消费者。共享过程位于 `cards/rules/play.spire`、`piles.spire`、`costs.spire` 与 `autoplay.spire`；内容仍通过 DSL dispatch 和实例监听接入。星星、多人转交、额外回合和暂停的角色内容在出现正式消费者及独立判别前保持未支持，不增加空效果或工具补偿。
 
 ## 行为要求与设计
 
 | ID | 约定 | 判别 |
 | --- | --- | --- |
-| CP01 | 出牌只在战斗活跃且有合法手牌时允许；先校验费用，再扣能量、把卡移出手牌进入 InPlay，监听完成后进入 DiscardPile | 能量不足时公开候选消失，过程直接调用也在改状态前失败；拒绝后手牌与弃牌堆不变 |
-| CP02 | 卡牌效果监听在卡仍位于 InPlay 时运行，最后才移入弃牌堆 | 监听内查询 InPlay 能看到该卡；出牌结束后 InPlay 为空、弃牌堆新增一张 |
-| CP03 | 攻击牌通过 `CardPlayedOnTarget` 携带解析出的敌人；无目标时不提供攻击候选 | 没有可命中目标时 `PlayAttackFromHand` 不是合法候选 |
-| CP04 | 出牌只影响本次打出的卡，其它手牌与状态不变 | 两张手牌打出一张后，另一张仍在手且标识不变 |
-| CP05 | 值升级只改实例的 `Upgraded` 标记，模板据它选择数值；定义级变化不迁移 | 升级后的 Strike 打 9、Defend 得 8；升级后该实例离开升级候选 |
-| CP06 | 内容文件仅 use 模板参数，源资格与定义、578 来源条目总数不变，不新增 C# 效果分支 | cards catalog 只新增两个非空 definition，且资格从 unreviewed 更新为审阅结论 |
-| CP07 | 公开轨迹通过真实 stdio 授予卡牌、开始战斗与回合、提交攻击候选 | 能量 3→2、目标 40→34、回合号与格挡字段保持 |
+| CP01 | 手动入口先确认活跃且手动回合开放、牌归属与手牌位置、可出牌资格、目标及可支付费用；非法提交在状态或随机变化前拒绝 | 候选与直接调用守卫一致；目标选择期间不扣费，过期目标／答案不能继续支付 |
+| CP02 | 获取本次能量费用与原始X后，先同步移入InPlay，再支付资源；同步移牌不发AfterCardChangedPiles。正实付能量才发AfterEnergySpent | 通知读到牌已在Play且资源已扣；零费用与免费自动不产生普通正支付通知，暂停续接不重付 |
+| CP03 | 目标使用实际公开决策或明确的开发首目标操作；正文通过现有dispatch，携带同一牌、目标、资源及执行记录 | 双目标选择、目标失效、自动随机目标及攻击候选分别核对；不把开发首目标解释为正常选敌 |
+| CP04 | 每次出牌的输入、父执行、目标与结果位置独立保存；重复正文共用一次支付，每次正文有独立Started／Finished记录 | 嵌套Havoc／Cascade与重复X区分父子、原始X、实付能量和效果X；两张牌与不同会话互不覆盖 |
+| CP05 | 升级与费用修正继续作用于原实例；解析结果位置时先处理默认离场／Power／Exhaust等源优先级，再执行结果位置修正及实际参与者后通知 | Power与Exhaust同时存在、临时强制耗尽、连续预览、持有者失效和非交换修正可区分错误优先级 |
+| CP06 | 结果位置修正及其后通知先于次数修正及其后通知；pure计算只读，副作用只由本次实际参与者的后通知执行一次 | Corruption与OneTwoPunch使用真实实例；已被前一修正达到相同值者不能仅因同定义被消费，重复实例按源顺序处理 |
+| CP07 | 完成动作仍经同一公开Host、真实候选与stdio协议；客户端不执行缺失规则 | 原四条正常路径、重放、过期观察、手牌／能量／回合与实际动作终点保留 |
+| CP08 | 牌在所有重复正文期间留在Play；每次依次执行BeforeCardPlayed、开始记录、正文、附魔／附着、完成记录和AfterCardPlayed，保持源死亡与ending门禁 | 实际末杀、玩家致死、暂停和重复正文保留源次数、记录及后续资格；不只比较最终伤害 |
+| CP09 | 所有正文结束后，只在牌仍在Play时进入结果位置；普通结果同步移牌不增加异步移牌通知，耗尽走完整耗尽命令 | 正文已移牌不重复移动；耗尽保留原因与即时／延迟消费者；回合末批次另遵循所属规格 |
+| CP10 | 结果移牌及所有者处理后，按源检查原持有者空手，随后清理本次出牌到期费用，再返回 | 空手通知发生于最终牌区之后、临时免费与until-played修正清理之前；嵌套／选择不重复清理或通知 |
+| CP11 | 抽牌按源直接移动Draw→Hand并发抽牌Early／普通通知，不额外发AfterCardChangedPiles；普通异步移动保留其通知 | 两张Infection经完整EndTurn抽回的实际轨迹、满手、重洗、LastDrawn及逐次随机继续核对 |
 
-不迁移的边界必须在验证与文档中与“已支持”分开：正常牌组、抽牌到起始手牌、原版目标选择与公开决策应答均未交付。
+出牌准备在本次调用帧或隐藏实例中保存owner、card、target、auto、实付能量、原始X、结果位置、次数和各修正的实际参与者；不使用跨调用的包可变字段。嵌套保存并恢复父CurrentCard／CurrentPlay，暂停保留同一准备上下文与执行游标，完成后清理临时参与者。资格和pure预览不创建准备实例、不改Power层数、不抽随机数。
+
+出牌记录按锁定语义历史的实际侧与回合区分；玩家编号相同不代表玩家侧与敌方侧是同一回合。先用真实消费者或明确受控自动路径确认所需键，再表达支持范围，不由普通玩家侧判别推定额外回合已经支持。
 
 ## 实施与验证顺序
 
-1. 先补牌面状态与 InPlay 牌区，再实现共享出牌过程与事件，最后接两个内容模板。
-2. 在包外追加出牌顺序、费用拒绝、牌区隔离、升级数值与目录条目总数检查；为两张卡各自生成执行结果。
-3. 通过真实 stdio 验证公开轨迹，更新共享操作参考与领域资料。
-4. 最后运行 solution 构建、包行为／覆盖、受影响 net 与迁移边界、文档检查；不改 Engine 语义，不运行独立参考或完整游戏矩阵。
+1. 先核对同步／异步移动、支付、结果位置及次数的准确源站点和当前真实消费者，再调整共享操作与通知；Host和参考保持通用及只读。
+2. 复用Strike、Corruption、OneTwoPunch、真实X和Havoc／Cascade；增加非交换修正、实际参与者、空手时点与选择续接判别。手动、免费自动及有真实消费者的已付费批次分列，不能用设置能量替代真实支付。
+3. 保留两seed原10项动作边界、原四条正常路径和11份suite，以及费用拒绝、实例隔离、升级、满手／重洗和末杀检查。付款／抽牌通知与回合末暂停批次分别保留实际首差，后者按独立工单修复。
+4. 按影响执行base、net、migration、docs，通用核心改动另加core。组件与正常路径分别报告；缺随机或完整事件维度时M01继续严格非零，局部出牌一致不代替完整Run验收。
