@@ -48,7 +48,7 @@ FlexPotion、SetupStrike与Mangle的初次力量变化由临时Power的BeforePow
 | ModifyPowerAmount | power: Ref(Power)、delta: Int；无返回 | 委托ModifyPowerAmountWithSource，来源参数为none |
 | ModifyPowerAmountWithSource | power、delta，加applierPlayer／applierEnemy／card／play: Binding；无返回 | 通过相同ending／持有者检查，再执行Before、Given／Received、提交、修正者After与PowerAmountChanged；最后将0或不允许的负数通过RemovePower移除。字段范围仍为-999..999 |
 | RemovePower | power: Ref(Power)；无返回 | 有效实例在Powers中时先出集合、发PowerRemoved、再销毁；不直接destroy绕过清理 |
-| RemoveEnemyPowersOnDeath | target: Ref(Enemy)；无返回 | 普通敌人的死亡通知完成后，标记DeathResolved并按Powers顺序调用RemovePower；重复调用无额外效果，存活目标失败。仅覆盖当前Power的源默认移除策略，保留／否决消费者尚未接入，见[死亡约定](../../../design/mod-the-spire/combat-end/spec.md) |
+| RemoveEnemyPowersOnDeath | target: Ref(Enemy)；无返回 | 普通敌人的死亡通知完成后，标记DeathResolved并按Powers顺序调用RemovePower；重复调用无额外效果，存活目标失败。仅覆盖当前Power的源默认移除策略，保留／否决消费者尚未接入，见[死亡约定](../spec/combat-end.md) |
 | RemovePowersOnDeath | player／enemy: Binding，恰好一个持有者；无返回 | 要求持有者生命为0；死亡通知完成后快照其Powers，逐个复核仍在集合中并调用RemovePower。玩家失败和敌人死亡共用此操作；只覆盖已加载Power的两项源默认移除资格，不移除其他持有者 |
 | ConsumePower | power: Ref(Power)；无返回 | 调用ModifyPowerAmount(-1) |
 | TickPowerDuration | power: Ref(Power)；无返回 | SkipTick为true时只清标志，否则ConsumePower；不会自行安排调用时点 |

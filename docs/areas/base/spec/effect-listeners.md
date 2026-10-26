@@ -1,6 +1,6 @@
 # 遗物与Power的通知和修正监听
 
-本约定对应DSL-EFFECT-LISTENERS-01，统一当前纯DSL包中已有遗物与Power行为。当前任务见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。不扩大声明支持的内容范围，不宣称正常Run或独立原版比较通过。
+文档类型：参考（Reference）。本约定对应DSL-EFFECT-LISTENERS-01，统一当前纯DSL包中已有遗物与Power行为。当前任务见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。不扩大声明支持的内容范围，不宣称正常Run或独立原版比较通过。
 
 ## 职责与执行
 
@@ -33,7 +33,7 @@ Orichalcum在BeforePlayerSideTurnStart清理实例资格，在BeforePlayerSideTu
 
 通知与修正分开：Before／After通知产生后续行为，Should／Modify修正决定当前计算。伤害拥有者、牌源、攻击者、目标显式传递，嵌套上下文不借全局字段猜测。保留现有开发范围及资源上限，所有旧内容实际行为执行结果继续执行。
 
-Power接收修正需要记录实际参与者，以便计算后执行其副作用，使用[Power改量约定](../../areas/base/reference/powers.md#新建叠加与直接改量的阶段)。PowerAmountReceiving是计算包装通知：实例过程调用pure判定／计算，只写本次隐藏上下文与参与者记录，不在此阶段消费Power、发玩法通知或请求决策。Artifact的判断是pure过程；扣层在AfterModifyingPowerAmountReceived通知执行，资格同时要求本次记录与当前实例仍有效。该流程仍使用相同Session事件栈，不把pure的foldEvent改为可写操作；测试中的暂停专用于验证通用续接，不作为生产修正者的编写方式。
+Power接收修正需要记录实际参与者，以便计算后执行其副作用，使用[Power改量约定](../reference/powers.md#新建叠加与直接改量的阶段)。PowerAmountReceiving是计算包装通知：实例过程调用pure判定／计算，只写本次隐藏上下文与参与者记录，不在此阶段消费Power、发玩法通知或请求决策。Artifact的判断是pure过程；扣层在AfterModifyingPowerAmountReceived通知执行，资格同时要求本次记录与当前实例仍有效。该流程仍使用相同Session事件栈，不把pure的foldEvent改为可写操作；测试中的暂停专用于验证通用续接，不作为生产修正者的编写方式。
 
 ## 迁移和判别
 
@@ -41,4 +41,4 @@ Power接收修正需要记录实际参与者，以便计算后执行其副作用
 
 最小core检查区分有序折叠／空监听、纯性拒绝／类型不符、嵌套调用和预算；base检查反转获得顺序后按实例执行、执行中移除后续监听者、嵌套自动出牌及决策续接、重复查询不写状态／不消费随机，以及现有遗物、伤害／格挡、费用／能量、抽牌和Power寿命回归。公开stdio仍经相同工厂和规则，不加入Host补偿。
 
-清挡的首个阻止者与格挡实际修正者由战斗域的隐藏上下文记录；计算包装通知只运行所属实例的pure判定／计算并写本次上下文。AfterPreventingBlockClear只交给首个仍有效阻止者，AfterModifyingBlockAmount只交给实际参与者；上下文与临时名单在命令结束清理。双方与来源／数值单位见[回合与格挡约定](combat-turn-resources/spec.md#双方格挡命令)。
+清挡的首个阻止者与格挡实际修正者由战斗域的隐藏上下文记录；计算包装通知只运行所属实例的pure判定／计算并写本次上下文。AfterPreventingBlockClear只交给首个仍有效阻止者，AfterModifyingBlockAmount只交给实际参与者；上下文与临时名单在命令结束清理。双方与来源／数值单位见[回合与格挡约定](combat-turn-resources.md#双方格挡命令)。

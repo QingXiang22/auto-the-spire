@@ -18,7 +18,7 @@
 
 共享 schema 放领域实体／集合／事件，rules 放共用操作；独有过程、监听与私有状态放所属内容模块。显式传 owner、card、source、target 等上下文，不能依赖全局“当前对象”。
 
-涉及遗物或Power时，按[监听编写指南](write-effect-listeners.md)先区分通知与修正：主流程emit领域通知或用foldEvent征询纯修正，具体能力用instances绑定有效实例。订阅声明实例顺序，reaction只处理末尾listener；不恢复主流程中的专用字段汇总、Power效果直接调用或各模板重复扫描库存。时机、阶段优先级和候选快照语义以[统一约定](../../../design/mod-the-spire/effect-listeners.md)为准。
+涉及遗物或Power时，按[监听编写指南](write-effect-listeners.md)先区分通知与修正：主流程emit领域通知或用foldEvent征询纯修正，具体能力用instances绑定有效实例。订阅声明实例顺序，reaction只处理末尾listener；不恢复主流程中的专用字段汇总、Power效果直接调用或各模板重复扫描库存。时机、阶段优先级和候选快照语义以[统一约定](../spec/effect-listeners.md)为准。
 
 把生命周期作为一个完整操作实现：验证资格、变更权威状态、维护集合／引用、发事件和清理，按约定保持顺序。局内状态保存在 Engine，不在共享定义、C# 字典或脚本全局保存。集合删除、销毁或暂停恢复时，验证引用仍指向正确实例。
 

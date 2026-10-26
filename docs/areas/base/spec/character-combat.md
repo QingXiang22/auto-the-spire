@@ -1,6 +1,6 @@
 # 角色战斗公共能力约定
 
-本页定义共享机制及当前明确边界；排期和认领只维护[行为要求](../../environment-completion-and-differential-v1.md#env-t06)。所有局内资源与实例仍归Engine，领域对象只生成IR。当前不是完整五角色能力声明。
+文档类型：参考（Reference）。本页定义共享机制及当前明确边界；排期和认领只维护[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t06)。所有局内资源与实例仍归Engine，领域对象只生成IR。当前不是完整五角色能力声明。
 
 ## 阵营回合与确认死亡
 
@@ -12,7 +12,7 @@
 
 源依据：sts2/src/Core/Commands/PlayerCmd.cs的GainStars/LoseStars/SetStars，Entities/Players/PlayerCombatState.cs的资源操作，Models/CardModel.cs的SpendResources/ResolveStarXValue；GatherLight、FallingStar、Stardust说明获得、固定费和X费消费者。
 
-Player.Stars为战斗级非负整数状态，初始化与换战斗清零，不随回合重置。CombatStars.Change捕获输入一次，战斗结算后不操作；Gain先ShouldGain、写状态再AfterGained，Lose封底0，Set增加走Gain、减少直接设定。作者入口、范围及暂未支持参与者见[语言参考](../../../areas/base/how-to/cards-and-combat.md)。默认不执行操作的扩展接口仅适用当前内容，不能代替全部源hook。
+Player.Stars为战斗级非负整数状态，初始化与换战斗清零，不随回合重置。CombatStars.Change捕获输入一次，战斗结算后不操作；Gain先ShouldGain、写状态再AfterGained，Lose封底0，Set增加走Gain、减少直接设定。作者入口、范围及暂未支持参与者见[语言参考](../how-to/cards-and-combat.md)。默认不执行操作的扩展接口仅适用当前内容，不能代替全部源hook。
 
 手动出牌同时校验能量和星星，先支付能量再支付星星；固定星星费用按实际升级形态选取。星星X快照独立于PaidX，支付后效果读取PaidStarX；零星星X可打出。自动出牌不扣资源。费用修正、AfterStarsSpent完整参与者、ChemicalX、重复出牌资源继承和公开费用元数据仍需后续接续，不把受控原语检查当源独立参考比较。
 

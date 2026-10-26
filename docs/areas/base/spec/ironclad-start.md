@@ -1,6 +1,6 @@
 # 纯 DSL 铁甲战士初态与开发战斗起手
 
-关联 CORE-AUTHOR-05／DSL-IRONCLAD-START-01；状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。适用于现有开发 scope，不建立正常 Run 标识。
+文档类型：参考（Reference）。关联 CORE-AUTHOR-05／DSL-IRONCLAD-START-01；状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。适用于现有开发 scope，不建立正常 Run 标识。
 
 ## 来源和初态
 
@@ -10,7 +10,7 @@
 
 ## 战斗与回合顺序
 
-复用 BuildCombatDeck 建立带隐藏 PermanentSource 的独立副本；只对已初始化角色初始洗牌，使用原版布局的 base-spire:run:shuffle 流，随后 BeforeCombatStart。源 CardPile.RandomizeOrderInternal 不发 AfterShuffle，故此处也不发；TheAbacus 只在 DrawOne 所需的弃牌重洗时触发。初始洗牌使用源 UnstableShuffle，重洗另按源条目与升级排序后使用同一流；永久实例次序不变。布局、独立向量及未恢复的整局前置消费见[随机约定](../run-domain/randomness.md)。
+复用 BuildCombatDeck 建立带隐藏 PermanentSource 的独立副本；只对已初始化角色初始洗牌，使用原版布局的 base-spire:run:shuffle 流，随后 BeforeCombatStart。源 CardPile.RandomizeOrderInternal 不发 AfterShuffle，故此处也不发；TheAbacus 只在 DrawOne 所需的弃牌重洗时触发。初始洗牌使用源 UnstableShuffle，重洗另按源条目与升级排序后使用同一流；永久实例次序不变。布局、独立向量及未恢复的整局前置消费见[随机约定](randomness.md)。
 
 回合重置／清格挡及早期 Power、能量和 side 钩子之后，使用 DrawCardsWithSource(owner,count,fromHandDraw=true) 正常抽 5，再发 AfterPlayerTurnStart 与 Late。首次抽牌先把 Innate 副本逐张移到顶部，至少抽 Innate 数量且至多十张；符合源 CombatManager.StartPlayerTurn 顺序。整次DrawCardsWithSource在入口征询一次来源资格，每张经DrawNextCard的满手、ending、重洗与真实抽牌事件；不能用直接入手冒充抽牌。手动开发 Draw 与卡牌、药水、遗物效果使用 fromHandDraw=false。
 

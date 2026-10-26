@@ -21,21 +21,21 @@
 
 拾取资源放在RelicObtained订阅中，使显式开发获得、角色初始化和未来奖励消费者都经过同一生命周期；不要仅写在Obtain动作尾部。ObtainMaxHpRelic供Strawberry／Pear／Mango／LeesWaffle及FakeMango／LoomingFruit／NutritiousOyster复用；PickupResourceRelic供OldCoin／SignetRing／GoldenPearl的金币和百分比治疗复用。两模板通过instances绑定本次有效relic，按库存顺序执行并复核资格，早期移除／熔化会取消尚未执行的拾取效果。移除不撤回已经获得的最大生命或金币；同定义新实例只获得自己的奖励，其他持有者不阻止本玩家开发获得。
 
-出牌计数模板CardCountRelic按真实AfterCardPlayed逐次计数，自动／重复打出分别计算，多段攻击只计一次。perTurn决定回合开始早期重置或跨战保留，实例计数不能从全局出牌数反推。首回合抽牌和营火治疗修正通过ModifyTurnDraw／ModifyRestHeal纯监听贡献；移除／熔化后停止参与。共享参数、完整消费者和边界见[遗物生命周期约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)。
+出牌计数模板CardCountRelic按真实AfterCardPlayed逐次计数，自动／重复打出分别计算，多段攻击只计一次。perTurn决定回合开始早期重置或跨战保留，实例计数不能从全局出牌数反推。首回合抽牌和营火治疗修正通过ModifyTurnDraw／ModifyRestHeal纯监听贡献；移除／熔化后停止参与。共享参数、完整消费者和边界见[遗物生命周期约定](../spec/relic-lifecycle.md)。
 
-回合开始资源监听AfterPlayerSideTurnStart：TurnStartEnergyRelic默认只在turn相等时GainEnergy，VeryHotCocoa用throughTurn=true保留<=turn条件；EveryTurnsEnergyRelic按实例Counter模turns，HappyFlower／FakeHappyFlower分别每3／5次奖励且跨战保留。NoEnergyGain抑制奖励但不停止计数。Sai配置TurnStartBlockRelic，每回合GainUnpoweredBlock，不受敏捷／脆弱影响。Sai的源时点在能量重置、起手抽牌及玩家Early／普通／Late通知之后，因此监听AfterPlayerSideTurnStart；AfterBlockCleared位于能量重置前，首回合和保留格挡时也会发布。准确参数见[操作参考](../reference/operations.md)，顺序与边界见[回合资源约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#回合开始资源dsl-relic-content-06relic-g04)。
+回合开始资源监听AfterPlayerSideTurnStart：TurnStartEnergyRelic默认只在turn相等时GainEnergy，VeryHotCocoa用throughTurn=true保留<=turn条件；EveryTurnsEnergyRelic按实例Counter模turns，HappyFlower／FakeHappyFlower分别每3／5次奖励且跨战保留。NoEnergyGain抑制奖励但不停止计数。Sai配置TurnStartBlockRelic，每回合GainUnpoweredBlock，不受敏捷／脆弱影响。Sai的源时点在能量重置、起手抽牌及玩家Early／普通／Late通知之后，因此监听AfterPlayerSideTurnStart；AfterBlockCleared位于能量重置前，首回合和保留格挡时也会发布。准确参数见[操作参考](../reference/operations.md)，顺序与边界见[回合资源约定](../spec/relic-lifecycle.md#回合开始资源dsl-relic-content-06relic-g04)。
 
 替换与熔化尚无正式 DSL 操作。实现时明确：旧获得效果如何撤回，新获得效果何时生效，是否保留同一实例／计数，熔化时保留哪些库存事实与触发，跨战如何重建。不能仅写 DefinitionId 或 IsMelted 就宣称完整生命周期。
 
-伤害与能量参与者使用CombatModifierRelic订阅ModifyAttackAdditive和ShouldResetEnergy，主流程通过foldEvent征询监听者。DamageEnemyPowered显式传owner和card；Strike加成在虚弱／易伤前参与。ResetTurnEnergy依ShouldResetEnergy结果重置或补最大能量，再发AfterEnergyReset。NoAttackTurnEnergyRelic监听出牌、回合末和能量重置，状态归ArtOfWar.State，获得时创建、移除时清理。完整顺序及签名见[统一监听约定](../../../design/mod-the-spire/effect-listeners.md)。
+伤害与能量参与者使用CombatModifierRelic订阅ModifyAttackAdditive和ShouldResetEnergy，主流程通过foldEvent征询监听者。DamageEnemyPowered显式传owner和card；Strike加成在虚弱／易伤前参与。ResetTurnEnergy依ShouldResetEnergy结果重置或补最大能量，再发AfterEnergyReset。NoAttackTurnEnergyRelic监听出牌、回合末和能量重置，状态归ArtOfWar.State，获得时创建、移除时清理。完整顺序及签名见[统一监听约定](../spec/effect-listeners.md)。
 
-升级牌加伤使用UpgradedAttackDamageRelic，MiniatureCannon配置amount=3；判断实际Card.Upgraded，并保留源“攻击者或牌拥有者满足其一”的资格，不限Strike。PaperPhrog／PaperKrane使用StatusMultiplierRelic，在对应Power确认正层状态后，分别经ModifyVulnerableMultiplier／ModifyEnemyWeakMultiplier调整百分数点，再计算伤害。不要把1.75／0.60作为总伤害固定倍率，也不要在Power中按遗物ID查询。移除／熔化由实例订阅即时失效；计算仍在最终扣格挡前取整一次。参数见[操作参考](../reference/operations.md)，完整边界见[无状态攻击修正约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#无状态攻击修正dsl-relic-content-07relic-g05)。
+升级牌加伤使用UpgradedAttackDamageRelic，MiniatureCannon配置amount=3；判断实际Card.Upgraded，并保留源“攻击者或牌拥有者满足其一”的资格，不限Strike。PaperPhrog／PaperKrane使用StatusMultiplierRelic，在对应Power确认正层状态后，分别经ModifyVulnerableMultiplier／ModifyEnemyWeakMultiplier调整百分数点，再计算伤害。不要把1.75／0.60作为总伤害固定倍率，也不要在Power中按遗物ID查询。移除／熔化由实例订阅即时失效；计算仍在最终扣格挡前取整一次。参数见[操作参考](../reference/operations.md)，完整边界见[无状态攻击修正约定](../spec/relic-lifecycle.md#无状态攻击修正dsl-relic-content-07relic-g05)。
 
-效果 X 参与者复用 `XValueRelic` 模板，ChemicalX配置amount=2；通过ModifyXValue pure监听返回新值，不改Card.PaidX或Player.Energy。卡牌效果调用ResolveEnergyXValue，支付仍用GetCardEnergyCost。移除／熔化立即失效，重复效果重新查询监听；星星 X 尚未接入。完整边界见[效果X约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
+效果 X 参与者复用 `XValueRelic` 模板，ChemicalX配置amount=2；通过ModifyXValue pure监听返回新值，不改Card.PaidX或Player.Energy。卡牌效果调用ResolveEnergyXValue，支付仍用GetCardEnergyCost。移除／熔化立即失效，重复效果重新查询监听；星星 X 尚未接入。完整边界见[效果X约定](../spec/relic-lifecycle.md#效果-x-修正dsl-relic-content-03)。
 
 主动／回合／战斗／受伤／死亡／抽牌等遗物分别消费相应共享机制。涉及长期最大生命、金币或永久牌组时，调用 Run 的权威操作，避免战斗副本与永久状态重复获利。验证一次获得／一次移除、实际触发、不持有／熔化负例、计数边界、两实例／持有者隔离和跨战重建。
 
-同类遗物先沿[分组计划](../../../design/mod-the-spire/relic-combat-start/spec.md)核对触发、状态寿命、随机与完整消费者，再认领主清单中一个完整子包。Whetstone／WarPaint／SandCastle复用PickupRandomUpgradeRelic的definition、kind、amount配置，通过RelicObtained实例订阅调用UpgradeRandomPermanentCards。不要把候选临时移出RunDeck，也不要为只取两张而仅消费两次随机；完整源顺序及隔离要求见[随机永久升级约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#拾取随机永久升级dsl-relic-content-04relic-g01)。选牌升级和Egg的创建修正分别沿其他机制包接续。
+同类遗物先沿[分组计划](../spec/relic-combat-start.md)核对触发、状态寿命、随机与完整消费者，再认领主清单中一个完整子包。Whetstone／WarPaint／SandCastle复用PickupRandomUpgradeRelic的definition、kind、amount配置，通过RelicObtained实例订阅调用UpgradeRandomPermanentCards。不要把候选临时移出RunDeck，也不要为只取两张而仅消费两次随机；完整源顺序及隔离要求见[随机永久升级约定](../spec/relic-lifecycle.md#拾取随机永久升级dsl-relic-content-04relic-g01)。选牌升级和Egg的创建修正分别沿其他机制包接续。
 
 源池保持完整资格和顺序。当前覆盖检查只承认真实 DSL 行为报告，不接受旧 C# 覆盖数量或将一个模板测试标成所有遗物均通过。[行为要求](../../../design/environment-completion-and-differential-v1.md#env-t09)继续有效。
 

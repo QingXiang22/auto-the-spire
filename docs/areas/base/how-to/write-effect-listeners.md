@@ -1,6 +1,6 @@
 # 为遗物与Power编写通知和修正监听
 
-文档类型：操作指南（How-to）。适用于新增或迁移遗物、Power的触发和计算修正。以当前纯DSL包为前提，使用core/0.3文本和支持实例订阅的引擎；先核对[包manifest](../../../../mod-the-spire/base-spire/package.json)。本页给出编写方法，顺序与寿命以[领域约定](../../../design/mod-the-spire/effect-listeners.md)为准，参数和错误语义查[通用作者参考](../../../reference/dsl/0.3/authoring-reference.md#实例订阅与只读修正)。
+文档类型：操作指南（How-to）。适用于新增或迁移遗物、Power的触发和计算修正。以当前纯DSL包为前提，使用core/0.3文本和支持实例订阅的引擎；先核对[包manifest](../../../../mod-the-spire/base-spire/package.json)。本页给出编写方法，顺序与寿命以[领域约定](../spec/effect-listeners.md)为准，参数和错误语义查[通用作者参考](../../../reference/dsl/0.3/authoring-reference.md#实例订阅与只读修正)。
 
 ## 1. 选择通知或修正入口
 

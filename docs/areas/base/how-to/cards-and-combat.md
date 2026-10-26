@@ -27,15 +27,15 @@ X 牌效果通过pure `ResolveEnergyXValue(owner,card)`读取修正值，不能�
 
 状态、诅咒、无色和生成牌按来源组保留标识与资格，不因不进普通池而省略。retain／ethereal／innate／exhaust、自动打出和回合末手牌规则各依赖明确生命周期。普通牌配置优先调用共享模板，特殊牌也不新增 C# 按 ID 分派。
 
-Infection保留源费用-1及Unplayable；局部set／add／免费修改不覆盖负费用。它没有手动出牌或升级候选，自动尝试则经过打出区进入结果牌区，不执行正文或记录真实出牌。新增在手回合末效果时，通过pure的CardHasTurnEndInHandEffect提供资格，再监听CardTurnEndInHandEffect执行效果；FinishTurnHand负责保存名单、先处理其他虚无牌，再按原手牌顺序结算效果牌。Infection调用DamagePlayerFromCard造成3点可格挡、无加成伤害。致死后牌区命令停止移动，致死牌留在打出区，后续效果牌留手；普通清理及敌方阶段停止。准确规则见[费用与回合末约定](../../../design/mod-the-spire/ironclad-dsl/spec.md#不可打出负费用与在手回合末效果)。
+Infection保留源费用-1及Unplayable；局部set／add／免费修改不覆盖负费用。它没有手动出牌或升级候选，自动尝试则经过打出区进入结果牌区，不执行正文或记录真实出牌。新增在手回合末效果时，通过pure的CardHasTurnEndInHandEffect提供资格，再监听CardTurnEndInHandEffect执行效果；FinishTurnHand负责保存名单、先处理其他虚无牌，再按原手牌顺序结算效果牌。Infection调用DamagePlayerFromCard造成3点可格挡、无加成伤害。致死后牌区命令停止移动，致死牌留在打出区，后续效果牌留手；普通清理及敌方阶段停止。准确规则见[费用与回合末约定](../spec/ironclad-dsl.md#不可打出负费用与在手回合末效果)。
 
 验收普通／升级实际差异及关键词时点，覆盖手动与自动路径的适用差别；同一机制不逐牌重跑整套战斗。自动出牌复用 AutoPlayCard，普通抽牌仍经 DrawOne；Hellraiser 只对实际抽到的 Strike 标签牌触发，不能把任意生成入手都当作抽牌。
 
 ## 处理牌区、复制和附着
 
-已迁移定义的 `CardDefinition` 会生成 `<名称>.Obtain` 开发动作与同名过程，例如 `Strike.Obtain`；它调用 `ObtainPermanentCard`，把独立实例放入公开的 `RunDeck` 并发 `CardObtained`。当前只允许存活玩家在房间外、战斗外获得；不生成随机奖励，也不代表原版获得修正已恢复。干净初态也可用 `Ironclad.Initialize` 一次建立源起始牌组和遗物，见[角色初态约定](../../../design/mod-the-spire/character-combat/ironclad-start.md)。
+已迁移定义的 `CardDefinition` 会生成 `<名称>.Obtain` 开发动作与同名过程，例如 `Strike.Obtain`；它调用 `ObtainPermanentCard`，把独立实例放入公开的 `RunDeck` 并发 `CardObtained`。当前只允许存活玩家在房间外、战斗外获得；不生成随机奖励，也不代表原版获得修正已恢复。干净初态也可用 `Ironclad.Initialize` 一次建立源起始牌组和遗物，见[角色初态约定](../spec/ironclad-start.md)。
 
-一旦建立永久牌组，后续 `BeginDevelopmentCombat` 调用 `BuildCombatDeck`：清理旧非永久牌，按永久顺序复制到 DrawPile，保留普通／升级及费用等已有字段，隐藏的 `PermanentSource` 指向具体来源实例。不会把战斗升级反写到 RunDeck；临时生成、消耗和 Power 牌不会混入下一场。显式初始化 Ironclad 后，开战追加原版流初始洗牌，回合自动抽五张并处理首回合 Innate；其他机制探针仍用公开 `Draw` 显式抽牌。原版洗牌算法与流布局已恢复，整局前置消费仍需接续；见[随机约定](../../../design/mod-the-spire/run-domain/randomness.md)。营火消费者见[房间指南](run-and-rooms.md)，准确边界见[永久牌组与锻造约定](../../../design/mod-the-spire/permanent-deck-smith/spec.md)。
+一旦建立永久牌组，后续 `BeginDevelopmentCombat` 调用 `BuildCombatDeck`：清理旧非永久牌，按永久顺序复制到 DrawPile，保留普通／升级及费用等已有字段，隐藏的 `PermanentSource` 指向具体来源实例。不会把战斗升级反写到 RunDeck；临时生成、消耗和 Power 牌不会混入下一场。显式初始化 Ironclad 后，开战追加原版流初始洗牌，回合自动抽五张并处理首回合 Innate；其他机制探针仍用公开 `Draw` 显式抽牌。原版洗牌算法与流布局已恢复，整局前置消费仍需接续；见[随机约定](../spec/randomness.md)。营火消费者见[房间指南](run-and-rooms.md)，准确边界见[永久牌组与锻造约定](../spec/permanent-deck-smith.md)。
 
 先分别定义移动、获得、生成、复制、变换、升级和移除的完整行为。移动必须维护原集合、目标容量、标识及事件；复制要规定永久 ID、成长、费用修改、附着、临时标记的保留／清除。不能把 `create Card` 当作任意复制操作。
 

@@ -28,7 +28,7 @@ SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选
 
 从base `0.7.0-dsl.64`开始，公开MapNodes按原生网格列优先、同列行序排列，随后是独立起点和Boss；MapNode.Index是该序列中的零基位置。使用坐标匹配节点并提交真实候选，不依赖旧创建索引或句柄排序。发布顺序在裁剪和坐标整理后确定，不改变地图抽样、节点实例或连接。
 
-例如 seed `777` 提供 BoomingConch，首个真实遭遇为 SlimesWeak，出生顺序为 LeafSlimeS／TwigSlimeM／TwigSlimeS，HP 为 14／28／11。在首战用起始牌组正常出牌和结束／开始回合；胜利后复用 `ClaimDevelopmentGoldReward`、`ClaimDevelopmentCardReward`／`SkipDevelopmentCardReward` 与药水领取／跳过动作，最后提交 `CloseDevelopmentRewards` 返回地图。这些共享动作的现有名称保留 Development。全流程不使用开发生成目标、手工改血或手工抽牌。永久牌与战斗副本保持各自实例，公开候选来自同一访问状态。完整边界和源顺序见[Run 约定](../../../design/mod-the-spire/run-domain/spec.md#正常开局首段)。首个已支持普通战斗胜利后可领取／跳过奖励并返回合法地图后继；完整正常 Run scope 仍未开放。
+例如 seed `777` 提供 BoomingConch，首个真实遭遇为 SlimesWeak，出生顺序为 LeafSlimeS／TwigSlimeM／TwigSlimeS，HP 为 14／28／11。在首战用起始牌组正常出牌和结束／开始回合；胜利后复用 `ClaimDevelopmentGoldReward`、`ClaimDevelopmentCardReward`／`SkipDevelopmentCardReward` 与药水领取／跳过动作，最后提交 `CloseDevelopmentRewards` 返回地图。这些共享动作的现有名称保留 Development。全流程不使用开发生成目标、手工改血或手工抽牌。永久牌与战斗副本保持各自实例，公开候选来自同一访问状态。完整边界和源顺序见[Run 约定](../spec/run-domain.md#正常开局首段)。首个已支持普通战斗胜利后可领取／跳过奖励并返回合法地图后继；完整正常 Run scope 仍未开放。
 
 ## 定义角色、进阶与正常开局
 
@@ -40,7 +40,7 @@ FlexPotion可从完整正常药水奖励池领取，或在开发场景通过`Fle
 
 在开发 scope 的干净初态提交 `Ironclad.Initialize`，可建立 80 HP、99 金币、5 Strike／4 Defend／1 Bash 的永久牌组及 BurningBlood。它拒绝覆盖已获得的牌、物品、房间或战斗进度。接着用真实遭遇的 `Spawn` 或开发目标入口建敌人，再提交 `BeginDevelopmentCombat` 和 `BeginDevelopmentTurn`：新副本先用原版 Shuffle 流洗牌，回合自动抽五张；后续回合也自动抽牌，首回合按 Innate 优先并扩展抽取数量至十张上限。不要再手动补五次 Draw。旧机制探针没有初始化角色时仍手动抽牌。
 
-BurningBlood 在实际胜利时治疗 6 并封顶；跨战保留永久牌组、生命与遗物。此入口已使用原版随机算法及流布局，但不包含 Neow、进阶、地图和完整前置消费，不能当作正常 Run。准确守卫、顺序与边界见[角色初态约定](../../../design/mod-the-spire/character-combat/ironclad-start.md)。
+BurningBlood 在实际胜利时治疗 6 并封顶；跨战保留永久牌组、生命与遗物。此入口已使用原版随机算法及流布局，但不包含 Neow、进阶、地图和完整前置消费，不能当作正常 Run。准确守卫、顺序与边界见[角色初态约定](../spec/ironclad-start.md)。
 
 在 characters 的内容配置保存角色标识、源池归属及参数，在 run 的 DSL 初始化流程创建权威角色／永久牌组／遗物／药水／资源与源随机状态。区分基础角色配置、进阶修正和 Neow 等正常开局选项。
 
@@ -60,7 +60,7 @@ maps 保存图结构、节点／边、原始节点类型与访问历史；run �
 
 ## 实现各类房间
 
-开发包的营火已可消费永久牌组：先在房间外通过 `Strike.Obtain` 等已迁移定义入口建立 `RunDeck`，再 `EnterDevelopmentRestSite`。`ForgeAtDevelopmentCampfire` 会发布可取消的单张选择；公开 `net.answer_decision` 中带实例字段的是选牌，空字段候选是取消。取消后仍可休息或重新锻造；成功后用 `LeaveDevelopmentRoom` 离场，升级进入后续战斗副本。没有永久可升级牌时不提供锻造，不能用手牌代替；同次访问不能靠重复进入重置选项。旧原稿 `ForgeCardInHand` 已移除。营火遗物修正、多个升级目标和正常地图入口仍未恢复；见[约定](../../../design/mod-the-spire/permanent-deck-smith/spec.md)。
+开发包的营火已可消费永久牌组：先在房间外通过 `Strike.Obtain` 等已迁移定义入口建立 `RunDeck`，再 `EnterDevelopmentRestSite`。`ForgeAtDevelopmentCampfire` 会发布可取消的单张选择；公开 `net.answer_decision` 中带实例字段的是选牌，空字段候选是取消。取消后仍可休息或重新锻造；成功后用 `LeaveDevelopmentRoom` 离场，升级进入后续战斗副本。没有永久可升级牌时不提供锻造，不能用手牌代替；同次访问不能靠重复进入重置选项。旧原稿 `ForgeCardInHand` 已移除。营火遗物修正、多个升级目标和正常地图入口仍未恢复；见[约定](../spec/permanent-deck-smith.md)。
 
 | 房型／内容 | 先定义的局部行为 | 必须区分的结果 |
 | --- | --- | --- |
@@ -78,11 +78,11 @@ maps 保存图结构、节点／边、原始节点类型与访问历史；run �
 
 ## 生成并结算奖励
 
-开发包已恢复 Monster 金币的最小领取链：胜利后 `Player.Room="rewards"`、`GoldRewardPending=true`，`GoldRewardAmount` 保存 10..20 的金额，金币暂不增加。公开候选 `ClaimDevelopmentGoldReward` 领取保存金额；`CloseDevelopmentRewards` 关闭界面，未领取时即跳过。领取后仍需关闭，才能开始下一开发战斗或进入营火。金额仅在生成时抽一次，失败不给奖励；准确参数和边界见[操作参考](../reference/operations.md)与[奖励约定](../../../design/mod-the-spire/combat-rewards/spec.md)。此金币路径已使用原版流布局，但尚非正常 Run；显式角色的卡牌与药水奖励扩展见下文，遗物奖励未恢复。
+开发包已恢复 Monster 金币的最小领取链：胜利后 `Player.Room="rewards"`、`GoldRewardPending=true`，`GoldRewardAmount` 保存 10..20 的金额，金币暂不增加。公开候选 `ClaimDevelopmentGoldReward` 领取保存金额；`CloseDevelopmentRewards` 关闭界面，未领取时即跳过。领取后仍需关闭，才能开始下一开发战斗或进入营火。金额仅在生成时抽一次，失败不给奖励；准确参数和边界见[操作参考](../reference/operations.md)与[奖励约定](../spec/combat-rewards.md)。此金币路径已使用原版流布局，但尚非正常 Run；显式角色的卡牌与药水奖励扩展见下文，遗物奖励未恢复。
 
 显式初始化 Ironclad 后，首幕开发战斗胜利还会提供三张不同的卡牌奖励。公开 CardRewardOptions 和 ClaimDevelopmentCardReward 候选指向真实待领实例；提交所选候选后，该同一实例进入 RunDeck，其他候选销毁，金币奖励仍可独立领取。SkipDevelopmentCardReward 仅跳过卡牌；CloseDevelopmentRewards 同时丢弃未领取的卡牌和金币，之后才能进入下一战。候选生成一次，观察、领取和跳过不重抽；所选牌在下一战重建为独立副本。
 
-奖励使用完整单人 Ironclad 源池中的 80 张 Common／Uncommon／Rare 牌，包含 Feed／NotYet，区别于战斗生成池。基础稀有度、逐项偏移与去重已恢复；仍限首幕 A0、全部解锁、无奖励修正参与者。金币、稀有度、选牌和升级已共用原版玩家 Rewards 流及精确 binary32 抽样；普通来源已按药水掉落判定→金币→适用药水→卡牌的源顺序生成，48项药水候选保留完整源顺序。Elite／Boss、后幕升级率、替代奖励与正常 Run 未恢复。准确参数见[奖励约定](../../../design/mod-the-spire/combat-rewards/spec.md)。
+奖励使用完整单人 Ironclad 源池中的 80 张 Common／Uncommon／Rare 牌，包含 Feed／NotYet，区别于战斗生成池。基础稀有度、逐项偏移与去重已恢复；仍限首幕 A0、全部解锁、无奖励修正参与者。金币、稀有度、选牌和升级已共用原版玩家 Rewards 流及精确 binary32 抽样；普通来源已按药水掉落判定→金币→适用药水→卡牌的源顺序生成，48项药水候选保留完整源顺序。Elite／Boss、后幕升级率、替代奖励与正常 Run 未恢复。准确参数见[奖励约定](../spec/combat-rewards.md)。
 
 显式 Ironclad 胜利会建立带访问号的 CombatRewardSet，并公开固定 PotionRewardOptions。ClaimDevelopmentPotionReward 领取同一实例；满三栏时保留原候选，可用 DiscardPotion 腾出槽位后再次领取。SkipDevelopmentPotionReward 只跳过药水；关闭奖励清理全部未选实例。48项均可获得，EffectSupported=false 的药水尚不可使用；已有六种效果按窗口和目标提供使用动作。正常访问调用 OfferNormalCombatRewards 并传唯一 visitId，开发自动访问号不能充当正常地图路径。
 

@@ -1,6 +1,6 @@
 # 战斗结束与死亡清理
 
-关联 CORE-AUTHOR-05／**DSL-COMBAT-END-01**；实施与认领见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本包接在伤害与修正之后，按[纯 DSL 规格](../base-architecture.md)和[机制迁移指南](../../../areas/base/how-to/migrate-mechanism.md)编写；状态只在 GitHub Issues 维护。
+文档类型：参考（Reference）。关联 CORE-AUTHOR-05／**DSL-COMBAT-END-01**；实施与认领见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本包接在伤害与修正之后，按[纯 DSL 规格](../../../design/mod-the-spire/base-architecture.md)和[机制迁移指南](../how-to/migrate-mechanism.md)编写；状态只在 GitHub Issues 维护。
 
 ## 已核实来源与范围
 
@@ -20,7 +20,7 @@
 
 BattleFriendV1／V2／V3 的固定 HP 为75／150／300，每次真实创建仍消耗一次 niche HP 抽样；IDLE 为固定自循环且不消费 AI 随机。战斗加入阶段在 BeforeCombatStart 前赋予3层 BattlewornDummyTimeLimitPower。该 Power 只在存活持有者的敌方回合结束时推进：3→2→1，第三次保留1层并标记过期，随后由该靶人消费者执行 EscapeEnemy。先完成计时再执行逃离；多个实例独立计时，移除 Power 同时清理其私有状态。父事件访问与奖励返回另行实现，本组件不提供完整 BattlewornDummy 事件入口。
 
-正常战斗的外层余效、奖励和永久提交见 [Run 约定](../run-domain/spec.md)。`CombatOutcome` 是玩法字符串字段，不是公开协议里的终局声明。
+正常战斗的外层余效、奖励和永久提交见 [Run 约定](run-domain.md)。`CombatOutcome` 是玩法字符串字段，不是公开协议里的终局声明。
 
 ## 行为要求与设计
 

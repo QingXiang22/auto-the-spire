@@ -1,6 +1,6 @@
 # 永久牌组、战斗副本与营火锻造
 
-关联 **CORE-AUTHOR-05／DSL-DECK-SMITH-01**。按[纯 DSL 规格](../base-architecture.md)扩展卡牌实例与一个真实消费者；认领和状态只见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
+文档类型：参考（Reference）。关联 **CORE-AUTHOR-05／DSL-DECK-SMITH-01**。按[纯 DSL 规格](../../../design/mod-the-spire/base-architecture.md)扩展卡牌实例与一个真实消费者；认领和状态只见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
 ## 来源与支持边界
 
@@ -34,7 +34,7 @@
 
 ## 判别与完成验证记录
 
-角色基础初态与自动抽牌由后续[角色初态约定](../character-combat/ironclad-start.md)扩展：BuildCombatDeck 本身仍只复制，显式 Ironclad 初始化的消费者在开战时追加开发流洗牌、回合追加自动抽牌；原版随机与正常 Run 仍未恢复。上文手动探针的未支持边界不排除该显式消费者。
+角色基础初态与自动抽牌由后续[角色初态约定](ironclad-start.md)扩展：BuildCombatDeck 本身仍只复制，显式 Ironclad 初始化的消费者在开战时追加开发流洗牌、回合追加自动抽牌；原版随机与正常 Run 仍未恢复。上文手动探针的未支持边界不排除该显式消费者。
 
 1. 从显式 Obtain 建立两个同定义永久实例；与旧开发牌区分离、标识不合并，非战斗来源守卫拒绝非法获得。
 2. 空永久牌组或全部升级后不开放锻造；有手牌但没有永久候选也不可用。

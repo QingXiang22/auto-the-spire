@@ -1,6 +1,6 @@
 # 遗物内容接续与生命周期
 
-关联 CORE-AUTHOR-05／DSL-RELIC-CONTENT-01／02／03；当前状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本约定覆盖纯DSL当前单人开发范围，遗物来源目录保留297项；分别报告已有定义、行为执行结果、独立比较与正常 Run 的验证结果。
+文档类型：参考（Reference）。关联 CORE-AUTHOR-05／DSL-RELIC-CONTENT-01／02／03；当前状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。本约定覆盖纯DSL当前单人开发范围，遗物来源目录保留297项；分别报告已有定义、行为执行结果、独立比较与正常 Run 的验证结果。
 
 ## 内容与源依据
 
@@ -14,7 +14,7 @@ Nunchaku每10次攻击打完+1能量，实例计数跨回合／跨战保留。Ku
 
 两模板以RelicObtained的本次relic绑定有效持有实例，按库存顺序响应并在执行前复核资格；早期订阅移除或熔化本次遗物后，不再发放拾取资源。当前实例获得一次，旧同定义实例不会因新获得而重发；开发动作按本持有者HasOwnedRelic阻止重复，包括熔化但仍持有的实例，其他持有者不阻止本玩家开发获得。移除不撤回永久生命／治疗／金币；移除后再次真实获得新实例按源再发一次。开战／回合／结束不重放拾取，也不消费随机。参数差异用逐件表驱动执行结果，机制验证拾取失效、两持有者和同定义新实例；正常来源资格及资源修正者仍按原范围恢复。
 
-现行统一接入见[通知与修正监听](../effect-listeners.md)。通知和修正均声明instances，按实际库存顺序响应；主流程不再调用遗物专属查询。
+现行统一接入见[通知与修正监听](effect-listeners.md)。通知和修正均声明instances，按实际库存顺序响应；主流程不再调用遗物专属查询。
 
 所有局内状态在Engine实体。Relic.Counter保持独立实例计数，OncePerCombat使用标志仍归Relic，ArtOfWar私有标志归ArtOfWar.State。提供pure HasActiveRelic(owner,definition)与共用有效实例筛选；修正参与者由模板声明纯监听，不在Host按ID分派。
 

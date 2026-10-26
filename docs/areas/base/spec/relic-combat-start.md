@@ -1,6 +1,6 @@
 # 遗物机制与行为要求
 
-本文保存遗物机制分组与行为要求；具体接口见[生命周期参考](content-lifecycle.md)，开发与认领见[GitHub Issues](https://github.com/QingXiang22/auto-the-spire/issues/28)。分组不是支持名单，也不代表固定执行顺序。
+文档类型：参考（Reference）。本文保存遗物机制分组与行为要求；具体接口见[生命周期参考](relic-lifecycle.md)，开发与认领见[GitHub Issues](https://github.com/QingXiang22/auto-the-spire/issues/28)。分组不是支持名单，也不代表固定执行顺序。
 
 ## 已核实来源与范围
 

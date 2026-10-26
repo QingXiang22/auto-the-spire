@@ -43,7 +43,7 @@
 | 查includes、manifest、静态JSON和内容模块边界 | [包格式参考](../../reference/dsl/0.3/package-reference.md) |
 | 理解源目录、内容自有规则与共享操作的关系 | [开发模型](../../development/base-spire/explanation/development-model.md) |
 | 对照sts2-sim战斗阶段、遗物／Power生命周期与复用边界 | [战斗引擎图文对照](../../development/base-spire/explanation/combat-engine-comparison.md) |
-| 审阅后续出牌、攻击、牌区、实例能力与 Run 重构 | [内容行为约定](../../design/mod-the-spire/content-behavior-migration.md)，目标设计不等于现有接口 |
+| 审阅后续出牌、攻击、牌区、实例能力与 Run 重构 | [内容行为约定](spec/behavior.md)，目标设计不等于现有接口 |
 | 用 agent 做开发，减少重复检索 | [项目 skill](../../../.agents/skills/base-spire-development/SKILL.md) |
 
 本手册由 base 规则维护者随共享机制维护。新增一个机制时，更新准确操作参考、对应领域指南与必要教程；不逐个内容复制共享规则，也不把运行结果数量固化到 skill。交付要求见[开发约定](../../../CONTRIBUTING.md)。

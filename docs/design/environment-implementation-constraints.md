@@ -4,7 +4,7 @@
 
 规则来源以[锁定 sts2-sim](../../reference/baselines/sts2-sim.json)为准，替代本地 `sts2/`；当前锁定实现声明 v0.111.0。参考 checkout 保持纯上游，只在明确更新基线时切换干净提交，不修改其规则。
 
-随机目标采用锁定实现的默认顺序路径：UTF-8 XxHash64 派生根及具名流、ulong 加法回绕，`old` 前缀仅对根 seed 使用旧 hash32。当前 DSL 的实际实现与边界见[随机约定](mod-the-spire/run-domain/randomness.md)，不能把旧 C# 工厂的 `RandomLayoutId=sts2-v0.109-xxhash64@1` 当作当前包已实现该目标。游戏内容源基线单独标识；受控机制 case 的窄适配范围见第 10 节，不自动扩展到正常 Run。
+随机目标采用锁定实现的默认顺序路径：UTF-8 XxHash64 派生根及具名流、ulong 加法回绕，`old` 前缀仅对根 seed 使用旧 hash32。当前 DSL 的实际实现与边界见[随机约定](../areas/base/spec/randomness.md)，不能把旧 C# 工厂的 `RandomLayoutId=sts2-v0.109-xxhash64@1` 当作当前包已实现该目标。游戏内容源基线单独标识；受控机制 case 的窄适配范围见第 10 节，不自动扩展到正常 Run。
 
 | 项目 | 约定 |
 | --- | --- |
@@ -115,7 +115,7 @@ dotnet run --project net-the-spire/Net.TheSpire.Host -- --ruleset base-spire-sin
 
 所有玩法状态最终在Engine类型化存储/关系/集合中，参与确定性及诊断；base可以有不可变配置/编译缓存和临时计算缓冲，不能有看不到的并行RunState副本。未支持持久化恢复不要求新增整体快照能力；测试诊断读取完整状态不自动开放load/fork。
 
-实体存储的 Clone 或持久字段 StateHash 不能代表完整会话可续接。后续有实际恢复／搜索需求时，须另行规定稳定边界，并覆盖调度栈、局部量、待决策与请求编号、随机状态、状态标记及规则历史；精确复制、隐藏信息重采样与随机重键分别定义和验证。当前不新增公开 fork／恢复接口，也不把完整克隆作为正常 Run 的前置。规则历史的状态与寿命按 [HIST-01～04](mod-the-spire/spec.md#影响后续规则的历史事实)维护，不能从调试轨迹重建玩法状态。
+实体存储的 Clone 或持久字段 StateHash 不能代表完整会话可续接。后续有实际恢复／搜索需求时，须另行规定稳定边界，并覆盖调度栈、局部量、待决策与请求编号、随机状态、状态标记及规则历史；精确复制、隐藏信息重采样与随机重键分别定义和验证。当前不新增公开 fork／恢复接口，也不把完整克隆作为正常 Run 的前置。规则历史的状态与寿命按 [HIST-01～04](../areas/base/spec/overview.md#影响后续规则的历史事实)维护，不能从调试轨迹重建玩法状态。
 
 ## 7. 完整Run与终局约束
 
@@ -123,7 +123,7 @@ dotnet run --project net-the-spire/Net.TheSpire.Host -- --ruleset base-spire-sin
 
 房间推进按阶段验证：未结束战斗/待选未答/奖励未处理不能进入下一房；战斗结束不等于Run终止。源规则的最后击杀余效、监听器和长期提交、适用奖励、房间返回/幕转换必须完成后才发布稳定边界；各阶段实际顺序以源码为准，不能提前SetTerminal截掉父效果。死亡/复活/否决移除按源机制处理，不只看存活集合数量。
 
-阶段、访问所有权、父事件续接和提交守卫遵循 [RUN-01～05](mod-the-spire/run-domain/spec.md#run-阶段与访问续接)，奖励来源、有序候选与生成／获得分离遵循 [REWARD-01～05](mod-the-spire/combat-rewards/spec.md#奖励来源上下文目标要求)。规则在 base DSL 中复用同一会话状态，不能在 Host 再维护推进循环。
+阶段、访问所有权、父事件续接和提交守卫遵循 [RUN-01～05](../areas/base/spec/run-domain.md#run-阶段与访问续接)，奖励来源、有序候选与生成／获得分离遵循 [REWARD-01～05](../areas/base/spec/combat-rewards.md#奖励来源上下文目标要求)。规则在 base DSL 中复用同一会话状态，不能在 Host 再维护推进循环。
 
 每个状态转换只能发生一次；重复request/奖励领取不重复扣费、加牌或结算，重复非法调用无状态/RNG变化。final奖励是否存在、最终事件如何结束按源规则实现，不自行发默认Boss奖励或以房间计数超过阈值获得Victory。
 

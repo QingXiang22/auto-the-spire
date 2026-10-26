@@ -31,7 +31,7 @@ description: "开发、迁移或审阅 auto-the-spire 的纯 DSL base 内容与�
 | 新共享触发／生命周期 | [机制迁移](../../../docs/areas/base/how-to/migrate-mechanism.md) | 对应领域 spec 和[操作参考](../../../docs/areas/base/reference/operations.md)；语法实践看[共享规则教程](../../../docs/start/shared-rule.md) |
 | 卡牌、附着、费用、伤害、回合 | [卡牌与战斗](../../../docs/areas/base/how-to/cards-and-combat.md) | 目标源类／共享约定，不通读全部 Cards |
 | Power、遗物、药水 | [Power 与物品](../../../docs/areas/base/how-to/powers-relics-potions.md) | 目标生命周期和一个真实调用方 |
-| 遗物／Power通知、伤害／费用等修正或迁移旧反应 | [编写通知与修正监听](../../../docs/areas/base/how-to/write-effect-listeners.md) | [领域约定](../../../docs/design/mod-the-spire/effect-listeners.md)与[通用签名](../../../docs/reference/dsl/0.3/authoring-reference.md#实例订阅与只读修正)，再读一个同类消费者 |
+| 遗物／Power通知、伤害／费用等修正或迁移旧反应 | [编写通知与修正监听](../../../docs/areas/base/how-to/write-effect-listeners.md) | [领域约定](../../../docs/areas/base/spec/effect-listeners.md)与[通用签名](../../../docs/reference/dsl/0.3/authoring-reference.md#实例订阅与只读修正)，再读一个同类消费者 |
 | 敌人、行动、遭遇 | [敌人与遭遇](../../../docs/areas/base/how-to/enemies-and-encounters.md) | 对应敌人／遭遇与随机约定 |
 | 角色、房间、地图、奖励、跨幕／终局 | [Run 与房间](../../../docs/areas/base/how-to/run-and-rooms.md) | 本次拥有状态的领域约定及必要消费者 |
 | 加载失败、公开结果或覆盖问题 | [验证与排障](../../../docs/areas/base/how-to/verify-and-debug.md) | 报错文件附近；包字段只查[格式参考](../../../docs/reference/dsl/0.3/package-reference.md) |

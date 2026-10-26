@@ -14,9 +14,9 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 
 拾取时随机升级永久牌使用[`UpgradeRandomPermanentCards(owner,kind,amount)`](../../../../mod-the-spire/base-spire/cards/rules/random-permanent-upgrade.spire)：owner为Ref(Player)，kind只接受attack／skill／all，amount为Int(1..999)。操作拥有资格筛选、SourceCardSortKey、完整Niche洗牌、原实例UpgradeCard及临时状态清理；不改RunDeck顺序，不触发战斗洗牌事件。调用方法和边界见[遗物指南](../how-to/powers-relics-potions.md)。
 
-能量 X 的实际支付查询为 `GetCardEnergyCost(owner: Ref(Player), card: Ref(Card)) → Int`，效果查询为 [`ResolveEnergyXValue(owner,card) → Int`](../../../../mod-the-spire/base-spire/cards/rules/operations.spire)，两者均为pure。`CardPlayRecord.RawX` 保存每次执行关联的序列捕获值，`Card.PaidX`保留兼容读取，效果通过 `ModifyXValue(value: Int, owner: Ref(Player), card: Ref(Card))` 征询实例监听，不修改能量或捕获值；非 X 效果查询返回0。自动出牌不扣费但捕获当前能量，重复出牌不重新捕获；准确顺序及 ChemicalX 消费者见[遗物生命周期](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
+能量 X 的实际支付查询为 `GetCardEnergyCost(owner: Ref(Player), card: Ref(Card)) → Int`，效果查询为 [`ResolveEnergyXValue(owner,card) → Int`](../../../../mod-the-spire/base-spire/cards/rules/operations.spire)，两者均为pure。`CardPlayRecord.RawX` 保存每次执行关联的序列捕获值，`Card.PaidX`保留兼容读取，效果通过 `ModifyXValue(value: Int, owner: Ref(Player), card: Ref(Card))` 征询实例监听，不修改能量或捕获值；非 X 效果查询返回0。自动出牌不扣费但捕获当前能量，重复出牌不重新捕获；准确顺序及 ChemicalX 消费者见[遗物生命周期](../spec/relic-lifecycle.md#效果-x-修正dsl-relic-content-03)。
 
-角色初态入口 `Ironclad.Initialize(owner: Ref(Player))` 与同名公开 action 只接受干净开发初态，建立源资源、永久牌组与起始遗物；`CanInitializeCharacter(owner)` 是共用 pure 守卫。`Player.CharacterId` 为 String(64)，默认 `none`；`AutoDrawPerTurn` 为 Int(0..10)，默认 0，初始化后为 5。源顺序、初始化拒绝与未支持范围见[角色初态约定](../../../design/mod-the-spire/character-combat/ironclad-start.md)。
+角色初态入口 `Ironclad.Initialize(owner: Ref(Player))` 与同名公开 action 只接受干净开发初态，建立源资源、永久牌组与起始遗物；`CanInitializeCharacter(owner)` 是共用 pure 守卫。`Player.CharacterId` 为 String(64)，默认 `none`；`AutoDrawPerTurn` 为 Int(0..10)，默认 0，初始化后为 5。源顺序、初始化拒绝与未支持范围见[角色初态约定](../spec/ironclad-start.md)。
 
 | 声明 | 字段／载荷 | 约束与归属 |
 | --- | --- | --- |
@@ -41,7 +41,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | AfterPlayerSideTurnEnd | owner: Ref(Player) | 自动打出→BeforePlayerSideTurnEndVeryEarly／Early／普通→手牌回合末效果与Flush之后发出；Rage等在本阶段按获得顺序到期 |
 | EnemyAddedToCombat | owner: Ref(Player)、target: Ref(Enemy) | 开战时对活动敌人在 BeforeCombatStart 前逐一发出；BattleFriend 在此获得3层计时 Power |
 | EnemyEscaped | owner: Ref(Player)、target: Ref(Enemy) | 全部Power移除、Escaped及CombatTimedOut写入后发出；不发EnemyDied或Fatal |
-| EnemyDied | target: Ref(Enemy) | 普通敌人确认死亡时发出一次，完成通知后标记DeathResolved并通过RemovePower清理其Power；完整死亡钩子、防死与保留策略未迁移，见[死亡约定](../../../design/mod-the-spire/combat-end/spec.md) |
+| EnemyDied | target: Ref(Enemy) | 普通敌人确认死亡时发出一次，完成通知后标记DeathResolved并通过RemovePower清理其Power；完整死亡钩子、防死与保留策略未迁移，见[死亡约定](../spec/combat-end.md) |
 | CombatEnded | owner: Ref(Player)、victory: Bool | 结束态已经写入 `CombatOutcome` 并关闭回合门与活跃标记之后发出；开发胜利可生成奖励；正常访问在结束通知、清理及胜利通知后提交并生成奖励 |
 | CombatVictoryEarly／CombatVictory | owner: Ref(Player)、victory: Bool | 胜利时依次通知早期／普通胜利效果；正常访问先清理能力、格挡与战斗牌，再发送这两项通知，之后提交访问及生成奖励 |
 | EnemyTurnStarted | owner: Ref(Player)、target: Ref(Enemy) | 玩家回合结束后，对每个 `Hp > 0` 的敌人各发一次；敌人内容模板按 DefinitionId 订阅并实现自己的招 |
@@ -57,9 +57,9 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 
 开发便利 action 只在 `Player.CurrentRun` 未关联正常 Run 时提供；`CanUseDevelopmentActions(owner)` 返回这一资格。直接加牌／获得／生成、移除遗物、开发靶人、免费抽牌／弃手牌／升级和直接进入开发房间均受该守卫约束。`StartNormalRun` 后仍复用正常出牌、回合、药水、奖励和地图动作；正常规则调用下表共享 procedure 不受开发 action 守卫限制。
 
-遗物与Power统一使用[通知与修正监听](../../../design/mod-the-spire/effect-listeners.md)：通知通过emit，计算通过foldEvent；订阅声明instances与instance_order，过程接收载荷和末尾listener实例。主流程不读取遗物专属字段或直接调用Power效果过程。具体监听与私有状态位于powers/shared对应模块；通用定义与生命周期位于powers/rules。
+遗物与Power统一使用[通知与修正监听](../spec/effect-listeners.md)：通知通过emit，计算通过foldEvent；订阅声明instances与instance_order，过程接收载荷和末尾listener实例。主流程不读取遗物专属字段或直接调用Power效果过程。具体监听与私有状态位于powers/shared对应模块；通用定义与生命周期位于powers/rules。
 
-遗物共享生命周期提供以下实际入口，参数名区分大小写；内容仅配置模板，状态在Engine遗物实例中。详细时序见[遗物生命周期约定](../../../design/mod-the-spire/relic-combat-start/content-lifecycle.md)。
+遗物共享生命周期提供以下实际入口，参数名区分大小写；内容仅配置模板，状态在Engine遗物实例中。详细时序见[遗物生命周期约定](../spec/relic-lifecycle.md)。
 
 | 遗物入口 | 参数 | 行为与边界 |
 | --- | --- | --- |
@@ -75,7 +75,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | HealToMaximum | owner: Ref(Player) | 计算MaxHp-Hp并调用Heal；支持最大生命至999999，不替代复活或完整治疗修正 |
 | BeforePlayerSideTurnStart／BeforePlayerSideTurnEnd | owner: Ref(Player)，事件 | 前者在清格挡／能量与回合号增加前；后者在回合末自动打出及VeryEarly／Early阶段后、手牌回合末效果前。StoneCalendar致胜后不再执行敌方行动 |
 
-卡牌奖励保存在公开 CardRewardOptions；Player.CardRewardPending 表示该条目尚可选择，CardRarityOffset 是隐藏的跨奖励偏移。Card.Rarity 与 CardBlueprint.Rarity 为 String(16)，由源内容配置。下列入口限首幕 A0、全部解锁 Ironclad 开发配置；算法及未支持范围见[奖励约定](../../../design/mod-the-spire/combat-rewards/spec.md)。
+卡牌奖励保存在公开 CardRewardOptions；Player.CardRewardPending 表示该条目尚可选择，CardRarityOffset 是隐藏的跨奖励偏移。Card.Rarity 与 CardBlueprint.Rarity 为 String(16)，由源内容配置。下列入口限首幕 A0、全部解锁 Ironclad 开发配置；算法及未支持范围见[奖励约定](../spec/combat-rewards.md)。
 
 | 奖励入口 | 参数 | 行为 |
 | --- | --- | --- |
@@ -93,7 +93,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | GainBlock | owner=Ref(Player)、amount=Int(0..999999999) | 捕获当前card／play并以powered Move调用共享命令；先加法再乘法，最终取整。源旗标、持有者和独立实例决定修正，不在Frail后提前取整 |
 | GainEnemyBlock／GainEnemyUnpoweredBlock | target=Ref(Enemy)、amount=Int(0..999999999) | 怪物招式与无加成格挡使用同一GainCombatBlock；Frail／Dexterity可作用于怪物招式，Plating走无加成入口 |
 | GainCombatBlock | player、enemy=Binding（恰一非空）、amount=Int、unpowered、move=Bool、card、play=Binding → Int | 返回修正后的百万分之一格挡单位；BeforeBlockGained→加法→乘法→非负截断→实际修正者回调→提交→AfterBlockGained。接受后不因Before导致ending撤销提交；通知仍遵守阶段门禁 |
-| CalculateBlockAmount | 同GainCombatBlock参数，pure → Int | 返回相同中间单位；不创建上下文、不写状态、不消费随机。支持的精度与[格挡约定](../../../design/mod-the-spire/combat-turn-resources/spec.md#双方格挡命令)一致 |
+| CalculateBlockAmount | 同GainCombatBlock参数，pure → Int | 返回相同中间单位；不创建上下文、不写状态、不消费随机。支持的精度与[格挡约定](../spec/combat-turn-resources.md#双方格挡命令)一致 |
 | ClearCombatantBlock | player、enemy=Binding（恰一非空） | Direct顺序记录首个阻止者，清零或仅向该仍有效实例发AfterPreventingBlockClear；通知后的AfterBlockCleared由侧开始流程发布 |
 | [ApplyPlayerPower](../../../../mod-the-spire/base-spire/powers/rules/lifecycle.spire) | owner=Ref(Player)、definition=String(64)、stacks=Int(-999..999) | 先查定义，未知即失败；同持有者同定义合并，否则创建。定义决定负值／Single策略；零层移除，事件交给所属模块处理 |
 | ApplyEnemyPower | target=Ref(Enemy)、definition、stacks | 对敌人执行同一合并语义；已确认死亡或逃离的持有者不再接受Power |
@@ -140,7 +140,7 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | Wriggler.Create | slot=String(16)、startStunned=Bool → Binding | 验证四个真实槽名后抽HP，登记模块私有出生状态，不初始化图或选招；条件节点不消费AI随机，未知槽位拒绝 |
 | PerformEnemyMove | owner=Ref(Player)、target=Ref(Enemy) | 复核双方生命，按保存节点分派ExecuteEnemyMove；完成后标记需要选招，暂停续接不重放正文 |
 | SelectNextEnemyMove | target=Ref(Enemy) | 普通玩家BeforePlayerSideTurnStart之后对存活且未准备实例解析初始节点或共享后继，保存MoveId／MoveIndex／Intent及实例历史；随机节点按源顺序与binary32权重消费monster_ai，已准备实例不再选招 |
-| EnemyMoveGraphDefinition／EnemyMoveNodeDefinition／EnemyMoveBranchDefinition | 具体参数见[招式图约定](../../../design/mod-the-spire/enemy-turn/spec.md#共享图的当前操作与失败方式) | 固定、条件和随机招式复用同一状态与执行分派；具体敌人模块保存源节点、后继、意图和正文 |
+| EnemyMoveGraphDefinition／EnemyMoveNodeDefinition／EnemyMoveBranchDefinition | 具体参数见[招式图约定](../spec/enemy-turn.md#共享图的当前操作与失败方式) | 固定、条件和随机招式复用同一状态与执行分派；具体敌人模块保存源节点、后继、意图和正文 |
 
 Assassin、Axe、BowlbugEgg、Brute、Crossbow、Stabbot与Tracker均复用共享图。Axe／BowlbugEgg的复合意图为attack,defend，Stabbot为attack,debuff；Tracker的HOUNDS_MOVE调用一次EnemyAttack(amount=1,hits=8)。怪物施加Power通过ApplyPowerWithSource保留applierEnemy，card／play为空。各模块的Spawn动作名和最小HP保持既有定义，旧轮转模板已移除。
 
@@ -186,7 +186,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 | HasUpgradablePermanentCards | owner: Ref(Player)，纯过程→Bool | 检查本玩家 RunDeck 中 CanUpgrade=true 且 Upgraded=false 的实例 |
 | CanUseUnusedRestSite | owner: Ref(Player)，纯过程→Bool | 当前是营火、存活、非战斗、尚未用过且无 PendingForge；动作与过程复用同一资格判断 |
 
-`BeginDevelopmentCombat` 与 `EnterDevelopmentRestSite` 仅在 Room=none、玩家存活且非战斗时开放。锻造的取消／选牌统一使用 `net:action:net.answer_decision`；不再暴露 ForgeCardInHand。准确寿命和未支持边界见[约定](../../../design/mod-the-spire/permanent-deck-smith/spec.md)。
+`BeginDevelopmentCombat` 与 `EnterDevelopmentRestSite` 仅在 Room=none、玩家存活且非战斗时开放。锻造的取消／选牌统一使用 `net:action:net.answer_decision`；不再暴露 ForgeCardInHand。准确寿命和未支持边界见[约定](../spec/permanent-deck-smith.md)。
 
 ## 模板与内容配置
 

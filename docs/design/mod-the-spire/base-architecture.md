@@ -1,6 +1,6 @@
 # base-spire 的 DSL 规则组织
 
-文档类型：解释（Explanation）。base 是 Engine 执行的规则包，目录按游戏领域与具体内容组织。它没有 C# 工厂、效果解释器或独立执行后端。包版本以 manifest 为准；行为要求见[内容行为约定](content-behavior-migration.md)，修改内容见[开发手册](../../areas/base/README.md)。
+文档类型：解释（Explanation）。base 是 Engine 执行的规则包，目录按游戏领域与具体内容组织。它没有 C# 工厂、效果解释器或独立执行后端。包版本以 manifest 为准；行为要求见[内容行为约定](../../areas/base/spec/behavior.md)，修改内容见[开发手册](../../areas/base/README.md)。
 
 Engine 负责类型、状态、事件、随机、编译与唯一 IR 执行。共享游戏机制和具体内容均由 DSL 描述。简单内容使用模板配置；复杂内容可在所属模块声明独有过程、监听和私有状态。卡牌、Power 和遗物各有领域目录；实体模型在 `schema.spire`，真正共享的过程与模板在 `rules/`，具名内容按来源组一项一文件。
 
@@ -20,7 +20,7 @@ flowchart LR
 
 生产 `catalog.json` 只保存已加载内容的 id 与 definition 映射，不维护未实现条目、来源哈希或开发进度。完整来源标识、哈希、池成员和源排除事实由工具固定数据保存，覆盖检查将其与实际定义及行为结果分别核对。公开 `get_catalog` 仍由规则声明与 public 元数据生成；来源目录不属于公开协议目录。包加载拒绝执行型 JSON、未知字段、包外引用和未声明文件。
 
-当前已有统一出牌、牌区、永久牌／战斗副本、Power 定义生命周期和实例修正等可复用 DSL。准确入口与限制见[当前控制流程](control-flow-modules.md)和[操作参考](../../areas/base/reference/operations.md)。卡牌正文与纯基础伤害由所属模块的唯一分派绑定表达，攻击与结果各有独立标识，费用与附魔采用独立状态及复制通知。精确边界见[行为迁移约定](content-behavior-migration.md)。
+当前已有统一出牌、牌区、永久牌／战斗副本、Power 定义生命周期和实例修正等可复用 DSL。准确入口与限制见[当前控制流程](control-flow-modules.md)和[操作参考](../../areas/base/reference/operations.md)。卡牌正文与纯基础伤害由所属模块的唯一分派绑定表达，攻击与结果各有独立标识，费用与附魔采用独立状态及复制通知。精确边界见[行为迁移约定](../../areas/base/spec/behavior.md)。
 
 包 manifest 目前只开放开发 scope；显式 Ironclad 初态与开发战斗不代表包含 Neow、地图、事件往返和跨幕的正常 Run。旧 C# 与检查只在[迁移对照](../../../tools/base-migration-baseline/README.md)保存，生产与默认 Host 不回退。后续恢复与认领按[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)执行。
 

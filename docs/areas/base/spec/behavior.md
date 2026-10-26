@@ -1,6 +1,6 @@
 # 内容行为与执行约定
 
-本文规定纯 DSL base 的出牌、攻击、实例能力与访问边界。准确调用签名见[操作参考](../../areas/base/reference/card-behavior.md)，执行范围与任务状态只在[GitHub Issues](https://github.com/QingXiang22/auto-the-spire/issues/28)维护。下列行为要求不代表全部实现或验收通过。
+文档类型：参考（Reference）。本文规定纯 DSL base 的出牌、攻击、实例能力与访问边界。准确调用签名见[操作参考](../reference/card-behavior.md)，执行范围与任务状态只在[GitHub Issues](https://github.com/QingXiang22/auto-the-spire/issues/28)维护。下列行为要求不代表全部实现或验收通过。
 
 ## 出牌正文与上下文
 
@@ -40,9 +40,9 @@ MoveCombatCard 统一拥有者、永久／战斗资格、原区／目的区、�
 
 CardCloned、CardCombatCopied、CardRemoving 是附属能力的复制与清理接缝。Stomp 的费用与 HowlFromBeyond 的耗尽堆自动行为归所属模块；通用 Card 不再保存它们的专属开关。CardAttachment 保存附魔标识与状态，Sown 在明确附魔阶段回能后禁用；永久→战斗副本与战斗克隆按各自来源复制，升级不重置状态，销毁前清理。公开附属实体采用通用 identity_from 依附卡标识，隐藏抽牌堆不泄漏附魔或卡引用。
 
-Power施加接收applierPlayer／applierEnemy／card／play，按shared／per-applier／independent匹配后，与直接Modify共用一次Before、Given加法／乘法、Received计算、提交、修正者After和改量通知。隐藏计算上下文记录实际接收修正者，Artifact在计算后消费自身；powerType／stackType与实例模式分别声明，single不抑制锁定参考的再施加增量。完整接口与零量、ending、临时力量约定见[Power参考](../../areas/base/reference/powers.md)。Vigor保留敌我攻击资格与层数快照，Rupture消费实际DamageResult来源。
+Power施加接收applierPlayer／applierEnemy／card／play，按shared／per-applier／independent匹配后，与直接Modify共用一次Before、Given加法／乘法、Received计算、提交、修正者After和改量通知。隐藏计算上下文记录实际接收修正者，Artifact在计算后消费自身；powerType／stackType与实例模式分别声明，single不抑制锁定参考的再施加增量。完整接口与零量、ending、临时力量约定见[Power参考](../reference/powers.md)。Vigor保留敌我攻击资格与层数快照，Rupture消费实际DamageResult来源。
 
-准确类型、调用签名和阶段见[行为操作参考](../../areas/base/reference/card-behavior.md)。
+准确类型、调用签名和阶段见[行为操作参考](../reference/card-behavior.md)。
 
 ## 资源、访问与登记
 
@@ -52,13 +52,13 @@ EventVisit 独立拥有 DefinitionId、Page、Status、ReturnRoom 与访问序�
 
 构建工具 validate／check 从启动后的 CardLibrary、PowerLibrary 核对可执行 ID、完整来源 catalog 和公开 content_ids；错误文件映射与缺登记分别报错。sync-content 仅从这两个定义库及显式启动实例派生相应公开 ID 列表，不改公开政策、来源条目总数或池顺序。遗物行为执行结果仍由实际执行登记；其他种类的目录派生继续按真实消费者扩展，不引入运行时目录扫描。
 
-Host 的派生 0.2 应答目录增加可选 Boolean Flag，Bool 暂停发布 false／true 两个完整候选；实体单选与取消保持原形状。提交仅回填 Engine 的对应 RequestId／Flag，不增加业务专用命令；目录与后端标识随声明变化，准确合同见[协议](../../areas/net/reference/protocol.md)。
+Host 的派生 0.2 应答目录增加可选 Boolean Flag，Bool 暂停发布 false／true 两个完整候选；实体单选与取消保持原形状。提交仅回填 Engine 的对应 RequestId／Flag，不增加业务专用命令；目录与后端标识随声明变化，准确合同见[协议](../../net/reference/protocol.md)。
 
 ## 验证与迁移
 
 首包复用现有 Ironclad／内容模型与公开检查，补足能区分下列错误的判别：重复／缺正文、未知键、模板词法绑定、错误签名、pure 拒绝、正文顺序、付款次数、嵌套执行标识及原生选择暂停。局部调试按失败定向运行；集成时固定最终包执行受影响 Engine、base 与公开组，不反复跑未变化状态。
 
-core 文本分派进入编译标识 dispatch/1；依附标识投影、pure 显式失败与 none 相等比较进入当前执行语义；64位字与文本操作由 engine/ir@0.9、Core.TheSpire 0.9.4标识。base版本见[包manifest](../../../mod-the-spire/base-spire/package.json)，公开构建标识同步。旧规则产物不能冒用新标识。原正常 scope、来源条目总数、独立比较与 ENV／W 完整条件不变，未执行独立参考比较不记通过。
+core 文本分派进入编译标识 dispatch/1；依附标识投影、pure 显式失败与 none 相等比较进入当前执行语义；64位字与文本操作由 engine/ir@0.9、Core.TheSpire 0.9.4标识。base版本见[包manifest](../../../../mod-the-spire/base-spire/package.json)，公开构建标识同步。旧规则产物不能冒用新标识。原正常 scope、来源条目总数、独立比较与 ENV／W 完整条件不变，未执行独立参考比较不记通过。
 
 ## 行为要求与完成条件
 

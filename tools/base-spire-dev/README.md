@@ -31,7 +31,7 @@ dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/
 
 AttackModifierRelicChecks随同一定向入口执行MiniatureCannon／PaperPhrog／PaperKrane：升级资格、显式攻击者或牌拥有者、有无状态与正确敌人、力量／虚弱／易伤／Cruelty／格挡顺序、移除／熔化、自动／重复和只读预览。公开cannon-phrog轨迹从永久升级到实际Bash易伤与升级Strike伤害；paper-krane轨迹实际施加Shockwave，再观察敌人的攻击／增益／攻击三回合，未注入伤害结果。
 
-同一遗物定向入口还执行ChemicalX的捕获／支付与效果X分离、零能量、普通／升级、嵌套自动与重复出牌、实例／持有者隔离、移除／熔化、纯查询和选牌暂停续接判别。原版星星X、正常商店获得与独立参考比较仍未验证；约定见[效果X修正](../../docs/design/mod-the-spire/relic-combat-start/content-lifecycle.md#效果-x-修正dsl-relic-content-03)。
+同一遗物定向入口还执行ChemicalX的捕获／支付与效果X分离、零能量、普通／升级、嵌套自动与重复出牌、实例／持有者隔离、移除／熔化、纯查询和选牌暂停续接判别。原版星星X、正常商店获得与独立参考比较仍未验证；约定见[效果X修正](../../docs/areas/base/spec/relic-lifecycle.md#效果-x-修正dsl-relic-content-03)。
 
 拾取随机升级组也使用`check --relic-content-only`，验证Whetstone／WarPaint／SandCastle的类型／张数、完整Niche洗牌、固定源选中实例／事件顺序／游标、重复获得、嵌套调用、无临时状态残留及两战副本。向量只来自独立源码神谕，生成方式见[rng-oracle](../rng-oracle/README.md)；公开stdio逐件观察永久升级和实际攻击／格挡，不构成正常Run。
 
@@ -41,9 +41,9 @@ AttackModifierRelicChecks随同一定向入口执行MiniatureCannon／PaperPhrog
 
 分阶段学习与实际公开结果见[base 开发教程](../../docs/areas/base/README.md)。教学驱动复用现有 Python 客户端，不修改正式包或原版行为执行结果。
 
-金币奖励在胜利后先显示待领金额；通过 `ClaimDevelopmentGoldReward` 领取，再用 `CloseDevelopmentRewards` 关闭，也可直接关闭跳过。未关闭时不能开始下一战或进入营火。详见[奖励约定](../../docs/design/mod-the-spire/combat-rewards/spec.md)。公开路径的定向检查使用 `dotnet run --project net-the-spire/Net.TheSpire.Tests -- --base-dsl-only`；默认不带参数的 net 入口仍运行完整迁移检查组。
+金币奖励在胜利后先显示待领金额；通过 `ClaimDevelopmentGoldReward` 领取，再用 `CloseDevelopmentRewards` 关闭，也可直接关闭跳过。未关闭时不能开始下一战或进入营火。详见[奖励约定](../../docs/areas/base/spec/combat-rewards.md)。公开路径的定向检查使用 `dotnet run --project net-the-spire/Net.TheSpire.Tests -- --base-dsl-only`；默认不带参数的 net 入口仍运行完整迁移检查组。
 
-永久牌组与营火锻造使用已迁移定义的开发获得入口，例如 `Strike.Obtain`。营火从公开 RunDeck 选择可升级永久实例，选择／取消走通用 `net.answer_decision`；取消不消耗选项，成功后显式离场。后续战斗重建副本，临时升级不反写永久牌；显式 Ironclad 初态使用原版 Shuffle 流洗牌并自动抽牌；正常开局另由 `StartNormalRun` 执行，完整房间返回与整局仍未迁移。见[永久牌组与锻造约定](../../docs/design/mod-the-spire/permanent-deck-smith/spec.md)。
+永久牌组与营火锻造使用已迁移定义的开发获得入口，例如 `Strike.Obtain`。营火从公开 RunDeck 选择可升级永久实例，选择／取消走通用 `net.answer_decision`；取消不消耗选项，成功后显式离场。后续战斗重建副本，临时升级不反写永久牌；显式 Ironclad 初态使用原版 Shuffle 流洗牌并自动抽牌；正常开局另由 `StartNormalRun` 执行，完整房间返回与整局仍未迁移。见[永久牌组与锻造约定](../../docs/areas/base/spec/permanent-deck-smith.md)。
 
 显式 Ironclad 的首幕开发战斗胜利还提供三张不同的卡牌奖励。通过 `ClaimDevelopmentCardReward` 候选选择一张，所选同一实例加入 RunDeck；未选实例销毁。`SkipDevelopmentCardReward` 仅跳过卡牌，金币仍可领取；`CloseDevelopmentRewards` 丢弃全部未领奖励。奖励使用完整80张可奖励源牌、稀有度偏移与去重，已使用原版随机映射和共享 Rewards 游标，包含普通来源药水掉落等前置消费；正常首战接入见下文，完整 Run 与独立参考比较仍未通过验收。
 

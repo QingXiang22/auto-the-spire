@@ -12,7 +12,7 @@
 
 派发流程、标签含义和关闭条件见 [开发约定](../CONTRIBUTING.md#任务拆分与派发)。任务名称及旧 evidence 不能证明功能已经实现，认领时核对当前定义、PR 和实际检查范围。
 
-产品范围见 [项目规格](design/spec.md)，完整行为条件见 [环境验收规格](design/environment-completion-and-differential-v1.md)。[遗物机制索引](design/mod-the-spire/relic-combat-start/spec.md#遗物机制索引)只用于查找共享机制，不代表当前派单顺序。
+产品范围见 [项目规格](design/spec.md)，完整行为条件见 [环境验收规格](design/environment-completion-and-differential-v1.md)。[遗物机制索引](areas/base/spec/relic-combat-start.md#遗物机制索引)只用于查找共享机制，不代表当前派单顺序。
 
 ## 里程碑
 

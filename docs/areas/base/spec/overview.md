@@ -1,8 +1,8 @@
 # mod-the-spire 规格
 
-规则依据为[锁定 sts2-sim](../../../reference/README.md) 的源码与顺序执行；本地 `sts2/` 不再裁决当前目标。base 仍以纯 DSL 独立实现，现有旧来源内容逐项迁移并绑定实际来源摘要；不以重新标记版本代替行为核对。
+文档类型：参考（Reference）。规则依据为[锁定 sts2-sim](../../../../reference/README.md) 的源码与顺序执行；本地 `sts2/` 不再裁决当前目标。base 仍以纯 DSL 独立实现，现有旧来源内容逐项迁移并绑定实际来源摘要；不以重新标记版本代替行为核对。
 
-mod 承载游戏规则包及其扩展，core 提供通用引擎。base 使用完整 Engine DSL 定义原版玩法，Spire 是面向内容作者的受限写法。产品范围见[项目规格](../spec.md)，包结构见[base 架构](base-architecture.md)，准确接口见[开发手册](../../areas/base/README.md)。
+mod 承载游戏规则包及其扩展，core 提供通用引擎。base 使用完整 Engine DSL 定义原版玩法，Spire 是面向内容作者的受限写法。产品范围见[项目规格](../../../design/spec.md)，包结构见[base 架构](../../../design/mod-the-spire/base-architecture.md)，准确接口见[开发手册](../README.md)。
 
 ## 规则包职责
 
@@ -12,7 +12,7 @@ mod 承载游戏规则包及其扩展，core 提供通用引擎。base 使用完
 - 根入口显式装配，定义、依赖、命名空间和启动顺序确定；未知字段、冲突声明、缺引用、包外文件及执行型 JSON 均明确失败。
 - 规则构建后不可变，每局可变状态由同一个 Engine Session 持有。扩展、替换和组合必须显式声明，不能采用最后加载者静默覆盖。
 
-行为要求见[内容行为约定](content-behavior-migration.md)，完整环境验收见[ENV 规格](../environment-completion-and-differential-v1.md)与[实现约束](../environment-implementation-constraints.md)。开发 scope、加载和局部行为通过不代表正常 Run 已恢复。
+行为要求见[内容行为约定](behavior.md)，完整环境验收见[ENV 规格](../../../design/environment-completion-and-differential-v1.md)与[实现约束](../../../design/environment-implementation-constraints.md)。开发 scope、加载和局部行为通过不代表正常 Run 已恢复。
 
 ## 永久状态与战斗副本
 
@@ -33,11 +33,11 @@ mod 承载游戏规则包及其扩展，core 提供通用引擎。base 使用完
 
 | 领域 | 权威要求 | 详细行为 |
 | --- | --- | --- |
-| Run 与访问 | 显式保存阶段、访问标识、父访问及待提交事项；外层余效完成后依源顺序推进 | [Run 阶段与访问续接](run-domain/spec.md#run-阶段与访问续接) |
-| 敌人行动 | 每个实例保存当前节点、已选下一招和必要历史，意图读取同一招式事实 | [敌人招式图](enemy-turn/spec.md#共享招式图目标要求) |
-| 奖励生成 | 来源上下文控制候选资格、源顺序、稀有度、升级和随机调用；生成与领取分离 | [奖励来源上下文](combat-rewards/spec.md#奖励来源上下文目标要求) |
+| Run 与访问 | 显式保存阶段、访问标识、父访问及待提交事项；外层余效完成后依源顺序推进 | [Run 阶段与访问续接](run-domain.md#run-阶段与访问续接) |
+| 敌人行动 | 每个实例保存当前节点、已选下一招和必要历史，意图读取同一招式事实 | [敌人招式图](enemy-turn.md#共享招式图目标要求) |
+| 奖励生成 | 来源上下文控制候选资格、源顺序、稀有度、升级和随机调用；生成与领取分离 | [奖励来源上下文](combat-rewards.md#奖励来源上下文目标要求) |
 
-这些边界借鉴锁定的 [sts2-sim](../../../reference/baselines/sts2-sim.json) 的领域划分，原版源码继续决定规则语义。base 使用 DSL 表达状态与流程，core 提供通用执行能力，Host 只处理控制和公开输出。
+这些边界借鉴锁定的 [sts2-sim](../../../../reference/baselines/sts2-sim.json) 的领域划分，原版源码继续决定规则语义。base 使用 DSL 表达状态与流程，core 提供通用执行能力，Host 只处理控制和公开输出。
 
 ## 影响后续规则的历史事实
 

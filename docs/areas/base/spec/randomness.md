@@ -1,6 +1,6 @@
 # 纯 DSL 原版随机机制
 
-关联 CORE-AUTHOR-05／DSL-RNG-RESTORE-01；状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。目标来源为[锁定 sts2-sim](../../../../reference/baselines/sts2-sim.json) 的顺序随机实现。根与具名流使用新版 XxHash64／ulong 布局；历史 hash32 向量仅证明其原来源回归，不能作为新版期望。
+文档类型：参考（Reference）。关联 CORE-AUTHOR-05／DSL-RNG-RESTORE-01；状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。目标来源为[锁定 sts2-sim](../../../../reference/baselines/sts2-sim.json) 的顺序随机实现。根与具名流使用新版 XxHash64／ulong 布局；历史 hash32 向量仅证明其原来源回归，不能作为新版期望。
 
 ## 通用能力与内容职责
 
@@ -22,7 +22,7 @@ gameSeed 为不可变会话输入，公开入口保留请求原文（bootstrap �
 
 [向量生成工具](../../../../tools/rng-oracle/README.md)先验证参考checkout与commit／tree锁一致且干净，再独立执行原生参考。原生向量覆盖共享与玩家遗物袋、三幕队列、Neow、首幕地图和Gaussian、seed777真实开战，以及十组SlimesWeak编队／HP／三回合。Python独立重写64位派生与消费者随机算法，保留金币／卡牌局部向量、完整48项药水奖励逐次抽样、拾取升级与招式图向量；根哈希与old前缀同时对照原生输出。所有当前向量记录锁定来源，旧source-catalogs仍只表示原迁移清单。
 
-实际DSL逐项核对数值、候选顺序、实例来源及流游标。原十组seed、原20261021显式未支持回归保留；额外覆盖old／old777／oldold777／Old777。seed777经BoomingConch、真实SlimesWeak、起始牌组战斗、领取或跳过奖励返回原地图后继，仍属于指定正常路径。SlimesWeak累计楼层和初始化顺序见[Run规格](spec.md#战斗副本来源与结算写回)。
+实际DSL逐项核对数值、候选顺序、实例来源及流游标。原十组seed、原20261021显式未支持回归保留；额外覆盖old／old777／oldold777／Old777。seed777经BoomingConch、真实SlimesWeak、起始牌组战斗、领取或跳过奖励返回原地图后继，仍属于指定正常路径。SlimesWeak累计楼层和初始化顺序见[Run规格](run-domain.md#战斗副本来源与结算写回)。
 
 Ironclad新版原生池为90项，五项按源IsMultiplayerOnly排除，完整单人池85项、奖励池80项。Bloodletting／Cruelty／Dominate／Taunt的稀有度随来源迁移；ExpectAFight为3费，按正力量获得15+5×力量格挡，升级为16+8×力量，使用共享有加成格挡。Cascade的源X费用哨兵-1在DSL以IsX=true和非负Cost保存，支付仍取当前能量。
 

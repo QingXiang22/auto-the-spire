@@ -1,10 +1,10 @@
 # 整局操作行为要求
 
-归属 ENV-T09 资源／遗物与 ENV-T06 永久牌组。下列操作名称用于说明源行为和待恢复范围，旧编译接口不作为当前可调用 API；当前签名见[操作参考](../../../areas/base/reference/operations.md)和[行为参考](../../../areas/base/reference/card-behavior.md)。未实现要求不代表现有开发 scope 已支持。所有可变状态与暂停仍由同一 Engine Session 管理。
+文档类型：参考（Reference）。归属 ENV-T09 资源／遗物与 ENV-T06 永久牌组。下列操作名称用于说明源行为和待恢复范围，旧编译接口不作为当前可调用 API；当前签名见[操作参考](../reference/operations.md)和[行为参考](../reference/card-behavior.md)。未实现要求不代表现有开发 scope 已支持。所有可变状态与暂停仍由同一 Engine Session 管理。
 
 | 操作 | 前置条件与顺序 | 范围及依据 |
 | --- | --- | --- |
-| GainGold | 输入快照一次，Modify→AfterModifying→正值才写金币→AfterGained | 沿用[资源约定](../event-domain/spec.md)，奖励/宝箱/遗物共用同一服务 |
+| GainGold | 输入快照一次，Modify→AfterModifying→正值才写金币→AfterGained | 沿用[资源约定](event-domain.md)，奖励/宝箱/遗物共用同一服务 |
 | LoseGold | 非负输入快照一次，金币最低0；购买调用方先校验够钱 | PlayerCmd.LoseGold；当前不建地图历史，Spent/Lost/Stolen历史分类仍未支持，不能以负GainGold实现 |
 | HealLivingPlayer | 非负输入快照一次，存活且回复最多MaxHp | 营火保留源回复量计算；不实现复活或未登记治疗参与者 |
 | GainMaxHp | 非负输入快照一次，先增加MaxHp，再按实际增量回复且封顶 | CreatureCmd.GainMaxHp；当前整数范围和存活玩家，无上限修正参与者 |
@@ -124,7 +124,7 @@ AfterObtained／AfterRemoved 表示获得与移除的通知阶段，准确 DSL �
 
 遗物的生成球／增加球槽复用CombatOrbs.Emit，与卡牌使用同一队列、槽位上限、满槽激发、随机目标与战斗重置。FocusPower声明为既有Focus角色，不另写遗物伤害；Lightning专属值修正在Focus处理后按遗物持有顺序执行（源CombatState.IterateHookListeners先能力后遗物）。数据磁盘、破损核心、注能核心、共生病毒与符文电容器的检查须实际观察球被动／激发伤害或存值、首回合限制及下一战重建，不能只检查Power或球实例存在。
 
-每件可执行遗物须有实际行为检查，覆盖报告从执行结果生成。遗漏／重复源标识、资格漂移、空场景及无用例的可执行定义均失败；来源、行为、独立比较和正常公开路径分别报告，规则见[遗物生命周期](../relic-combat-start/content-lifecycle.md)。
+每件可执行遗物须有实际行为检查，覆盖报告从执行结果生成。遗漏／重复源标识、资格漂移、空场景及无用例的可执行定义均失败；来源、行为、独立比较和正常公开路径分别报告，规则见[遗物生命周期](relic-lifecycle.md)。
 
 ## 永久牌组选择与变换
 

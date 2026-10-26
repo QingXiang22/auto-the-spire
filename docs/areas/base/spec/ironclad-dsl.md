@@ -1,6 +1,6 @@
 # 铁甲战士完整卡牌与共享接口
 
-关联 **CORE-AUTHOR-05／DSL-IRONCLAD-ALL-01**；用户于 2026-10-18 明确优先完整铁甲战士。当前状态、认领与下一机制唯一维护在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。沿用[纯 DSL 边界](../base-architecture.md)，旧 C# 卡牌实现仅作迁移验证记录。
+文档类型：参考（Reference）。关联 **CORE-AUTHOR-05／DSL-IRONCLAD-ALL-01**；用户于 2026-10-18 明确优先完整铁甲战士。当前状态、认领与下一机制唯一维护在[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。沿用[纯 DSL 边界](../../../design/mod-the-spire/base-architecture.md)，旧 C# 卡牌实现仅作迁移验证记录。
 
 ## 范围与来源
 
@@ -22,7 +22,7 @@
 | 能力反应 | 按源精确绑定获得格挡、生命损失、消耗、回合、伤害修正与抽牌事件，保留参与者、寿命和源顺序 | 数量／多实例／零域；非来源事件不触发；死亡、移除、临时和永久边界 |
 | 自动／重复出牌 | 共用出牌过程，显式付款模式、目标策略、强制消耗和结果区；保留嵌套父上下文与实际次数 | Havoc／Cascade、OneTwoPunch、Hellraiser／Stampede，禁止通过再次收费或手写 C# 调度替代 |
 
-这些是完整实施约定，尚未交付能力保持未支持，不能把表格当作已实现声明。单人范围不自动授权多人或暂停的敌人召唤／复活。准确过程签名、定义自动注册、费用寿命、事件和未支持边界见[共享操作参考](../../../areas/base/reference/ironclad-shared-operations.md)。
+这些是完整实施约定，尚未交付能力保持未支持，不能把表格当作已实现声明。单人范围不自动授权多人或暂停的敌人召唤／复活。准确过程签名、定义自动注册、费用寿命、事件和未支持边界见[共享操作参考](../reference/ironclad-shared-operations.md)。
 
 X 牌按源 CardEnergyCost.GetAmountToSpend 首先支付当前能量，普通免费修正不能改变它；自动出牌只捕获、不支付。InfernalBlade 的免费修改在打出或回合结束时失效，Stomp 的本回合加性减费独立保留。HowlFromBeyond 没有原生 Exhaust，只有耗尽堆中的回合末自动打出，不能从 hover tip 推导关键词。BodySlam 的计算伤害仍走 powered 修正链。
 

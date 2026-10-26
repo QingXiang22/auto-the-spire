@@ -10,7 +10,7 @@
 
 为目标敌人记录开场、状态机节点、分支条件、历史回避、意图与动作的源顺序。DSL 中先决定并保存下一行动，再让公开投影读取同一行动，不能显示一个意图却执行另一条逻辑。多击意图需明确每击修正与显示合计的关系。
 
-固定和随机节点复用[共享招式图](../../../design/mod-the-spire/enemy-turn/spec.md#共享图的当前操作与失败方式)：内容文件组合EnemyMoveGraphDefinition、EnemyMoveNodeDefinition与EnemyMoveBranchDefinition，绑定ExecuteEnemyMove正文。TwigSlimeM示范固定首招与随机历史限制，FuzzyWurmCrawler示范源顺序固定轮转。生成入口只创建敌人与内容私有状态；战斗开始先为全部敌人初始化图，再执行入场效果与BeforeCombatStart。普通玩家BeforePlayerSideTurnStart完成后、清格挡前才保存首招或后继，敌方阶段结束不选招；观察读取Enemy.MoveId／MoveIndex／Intent，不能调用SelectNextEnemyMove生成意图。
+固定和随机节点复用[共享招式图](../spec/enemy-turn.md#共享图的当前操作与失败方式)：内容文件组合EnemyMoveGraphDefinition、EnemyMoveNodeDefinition与EnemyMoveBranchDefinition，绑定ExecuteEnemyMove正文。TwigSlimeM示范固定首招与随机历史限制，FuzzyWurmCrawler示范源顺序固定轮转。生成入口只创建敌人与内容私有状态；战斗开始先为全部敌人初始化图，再执行入场效果与BeforeCombatStart。普通玩家BeforePlayerSideTurnStart完成后、清格挡前才保存首招或后继，敌方阶段结束不选招；观察读取Enemy.MoveId／MoveIndex／Intent，不能调用SelectNextEnemyMove生成意图。
 
 把敌人动作写成共享操作组合，目标使用真实存活集合与源资格。行动、回合末衰减和切换意图的时点由战斗流程调用，不为每个敌人再写一套轮转调度器。
 
@@ -30,7 +30,7 @@
 
 Wriggler.Create(slot,startStunned)支持wriggler1..wriggler4，按仍在敌侧列表中实例已用的不同最大HP排除17..21中的值，再用niche抽候选偏移；耗尽才按整个区间抽取。未知槽位在抽样前失败。1／3槽首招bite，2／4槽首招wriggle；StartStunned先执行SPAWNED_MOVE再进入槽位初招。wriggle生成Infection到弃牌堆后获得2力量，复合意图按源顺序发布为buff,status。Wriggler.Spawn提供四槽开发入口；父事件调用完整Create过程，不能据开发动作宣称事件访问已完成。移除实例时调用RemoveCombatEnemy，清理Power、招式和模块私有状态。
 
-Whistle为2费Ancient攻击，造成33／44伤害后耗尽，并对仍存活的目标调用StunEnemy。目标公开STUNNED／stun，实际跳过一次行动后恢复原已选招式本身；恢复不抽随机，不能跳到其后继。此入口只支持已迁移招式图，未迁移图具名失败；不在Host补偿行动。详见[击晕约定](../../../design/mod-the-spire/enemy-turn/spec.md#whistle击晕与恢复)。
+Whistle为2费Ancient攻击，造成33／44伤害后耗尽，并对仍存活的目标调用StunEnemy。目标公开STUNNED／stun，实际跳过一次行动后恢复原已选招式本身；恢复不抽随机，不能跳到其后继。此入口只支持已迁移招式图，未迁移图具名失败；不在Host补偿行动。详见[击晕约定](../spec/enemy-turn.md#whistle击晕与恢复)。
 
 ## 编排遭遇与编队
 

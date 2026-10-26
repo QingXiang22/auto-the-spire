@@ -7,7 +7,7 @@
 | 模块 | 职责 | 规格 |
 | --- | --- | --- |
 | core-the-spire | 通用类型化状态、DSL 编译、唯一执行器、选择续接、随机与观察原语 | [core 规格](core-the-spire/spec.md)、[活动约定](../contracts/core-engine-baseline.md) |
-| mod-the-spire/base-spire | 用 DSL 定义原版玩法、内容、生命周期与 Run | [base 规格](mod-the-spire/spec.md)、[当前架构](mod-the-spire/base-architecture.md) |
+| mod-the-spire/base-spire | 用 DSL 定义原版玩法、内容、生命周期与 Run | [base 规格](../areas/base/spec/overview.md)、[当前架构](mod-the-spire/base-architecture.md) |
 | net-the-spire | 加载相同规则包，透传公开观察及合法候选，维护协议与幂等控制 | [net 规格](net-the-spire/spec.md)、[协议](../areas/net/reference/protocol.md) |
 | ai-the-spire | 消费公开协议，采样、训练及评价；不读取隐藏状态 | [AI 规格](ai-the-spire/spec.md)、[策略约定](ai-the-spire/policy-contract.md) |
 | tools | 构建、CI、定向检查、独立参考适配和来源核对 | [工程工具](../../tools/README.md) |
@@ -42,7 +42,7 @@
 
 战斗终止与整局终止分离；结算幂等并完成最后击杀余效。HP、MaxHp、金币、药水、遗物和永久牌组跨房间正确保留，同定义实例来源明确，临时变化隔离。地图、遭遇、奖励、商店、营火、宝箱、先古之民、事件战斗返回、幕转换与终局均属于完整 Run。
 
-Run 阶段、敌人招式图、奖励来源上下文及规则历史按 [base 共享领域模型](mod-the-spire/spec.md#共享领域模型)及其领域规格实现；共享状态由同一 Engine Session 持有，Host 不另建玩法推进循环。
+Run 阶段、敌人招式图、奖励来源上下文及规则历史按 [base 共享领域模型](../areas/base/spec/overview.md#共享领域模型)及其领域规格实现；共享状态由同一 Engine Session 持有，Host 不另建玩法推进循环。
 
 ### W-06
 

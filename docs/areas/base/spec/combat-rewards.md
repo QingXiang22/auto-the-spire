@@ -1,6 +1,6 @@
 # 首幕普通战斗奖励
 
-关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定首幕普通战斗奖励的上下文、生成、领取与关闭；认领和状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。遵守[纯 DSL 边界](../base-architecture.md)。
+文档类型：参考（Reference）。关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定首幕普通战斗奖励的上下文、生成、领取与关闭；认领和状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。遵守[纯 DSL 边界](../../../design/mod-the-spire/base-architecture.md)。
 
 ## 来源与边界
 
@@ -30,7 +30,7 @@
 
 药水候选为 Ironclad4Epoch 的三项，接 SharedPotionPool 的45项，全部解锁，共48项；不能按效果支持情况过滤。静态 `PotionBlueprint` 只承载候选元数据。待领药水为真实 `Potion`，绑定当前奖励容器；获得调用 `ObtainPotion`，将同一实例放入第一个空槽后通知 `PotionObtained`。满三栏时领取不改变待领条目，玩家可丢弃已有药水后再次领取，也可跳过或关闭；没有自动替换或额外取消选择。观察、满栏重试、领取、跳过和关闭均不抽样。关闭清理未领药水与卡牌，互不消耗其他已生成条目。
 
-药水获得支持与效果支持分别记录：48项可生成及获得，只有已有六种效果可使用；其余条目明确标记 EffectSupported=false，不发布使用候选，直接调用使用过程报告 unsupported_capability。未知定义明确失败。此范围不包含药水修正遗物、额外槽位、其他来源或完整独立模拟器比较。正常首幕普通访问已由[Run 结算](../run-domain/spec.md#正常开局首段)接入相同生成及获得操作。
+药水获得支持与效果支持分别记录：48项可生成及获得，只有已有六种效果可使用；其余条目明确标记 EffectSupported=false，不发布使用候选，直接调用使用过程报告 unsupported_capability。未知定义明确失败。此范围不包含药水修正遗物、额外槽位、其他来源或完整独立模拟器比较。正常首幕普通访问已由[Run 结算](run-domain.md#正常开局首段)接入相同生成及获得操作。
 
 ## 状态与过程
 
@@ -64,7 +64,7 @@
 
 Player.CardRarityOffset 以隐藏 Int 保存 binary32 位型，初值 -0.05f（3175926989），上限0.4f，跨奖励／战斗保留。每张先抽源 NextFloat：小于 binary32(0.03f+offset) 为 Rare，小于 binary32(0.37f+binary32(0.03f+offset)) 为 Uncommon，其余 Common；Rare 后重置 -0.05f，其他结果按 binary32 加0.01f并封顶0.4f。偏移更新先于稀有度回退。当前稀有度无可用牌时按 Common→Uncommon→Rare→Common 回退，不能静默缩小来源表。再在该稀有度的剩余源顺序中随机选一张，同组三张定义互异；最后消费一次升级抽样。首幕基础升级概率为零，保留源 `<=` 的零边界。
 
-金币、稀有度、候选与升级共用 `base-spire:player:rewards`，采用源流布局、有界整数和精确 NextFloat 映射；不再使用24-bit开发网格。独立源向量分别验证金币／卡牌局部操作与完整普通奖励上下文，后者包含药水掉落、适用药水稀有度和候选抽取的参数、结果、有序候选及游标。这些仍是受控访问验证，不能据此宣称正常 Run 可达或完整模拟器双侧一致。第一幕以外仍未接入；准确边界见[随机约定](../run-domain/randomness.md)。
+金币、稀有度、候选与升级共用 `base-spire:player:rewards`，采用源流布局、有界整数和精确 NextFloat 映射；不再使用24-bit开发网格。独立源向量分别验证金币／卡牌局部操作与完整普通奖励上下文，后者包含药水掉落、适用药水稀有度和候选抽取的参数、结果、有序候选及游标。这些仍是受控访问验证，不能据此宣称正常 Run 可达或完整模拟器双侧一致。第一幕以外仍未接入；准确边界见[随机约定](randomness.md)。
 
 CardRewardOptions 是待领 Card 集合，CardRewardPending 是 Player 标记；候选为未入战斗的真实 Card 实例，不进入 RunDeck、手牌或出牌历史，不发 CardEnteredCombat。先创建定义元数据再判断升级，候选固定后观察／无效领取均不重抽。CardLibrary／偏移不发布隐藏未来信息。
 
