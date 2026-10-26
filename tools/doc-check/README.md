@@ -22,7 +22,7 @@ git diff --check
 
 也可以运行统一入口 `python tools/ci/check.py docs`。未安装 Vale、版本不符、规则配置错误或受限表达命中时，检查返回非零；CI 会保留命令输出。
 
-`check_terms.py` 只负责核对版本、获取 Git 文件列表和分批调用 Vale。规则位于[项目风格](../../.github/styles/Project/Terms.yml)，含义与推荐写法见[术语规范](../../docs/terminology.md)。
+`check_terms.py` 只负责核对版本、获取 Git 文件列表和分批调用 Vale。规则位于[项目风格](../../.github/styles/Project/Terms.yml)，含义与推荐写法见[术语规范](../../docs/meta/glossary.md)。
 
 ## 检查范围
 

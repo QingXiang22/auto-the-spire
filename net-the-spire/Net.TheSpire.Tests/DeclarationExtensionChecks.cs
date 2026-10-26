@@ -369,7 +369,7 @@ internal static class DeclarationExtensionChecks
     /// </summary>
     private static void SchemaConformance()
     {
-        var schemaPath = Path.Combine(RepositoryRoot(), "docs", "contracts", "net", "0.2", "wire.schema.json");
+        var schemaPath = Path.Combine(RepositoryRoot(), "docs", "specs", "net", "0.2", "wire.schema.json");
         Check.True(File.Exists(schemaPath), $"缺少 0.2 wire schema：{schemaPath}");
         var schema = LiteSchema.FromJson(File.ReadAllText(schemaPath));
 

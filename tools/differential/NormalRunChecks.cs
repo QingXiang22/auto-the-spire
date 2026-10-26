@@ -7,6 +7,7 @@ internal static class NormalRunChecks
 {
     public static void Run(string repository)
     {
+        NormalReportChecks.Run();
         var values = new SortedDictionary<string, string>(StringComparer.Ordinal);
         foreach (var key in NormalRunComparison.RequiredPaths) values.Add(key, "present");
         var boundary = new NormalBoundary("neow-ready", values, [], new { fault_injection = true });

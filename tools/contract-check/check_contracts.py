@@ -29,7 +29,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 REPO_ROOT = HERE.parents[1]
-CONTRACT_DIR = REPO_ROOT / "docs" / "contracts" / "net" / "0.2"
+CONTRACT_DIR = REPO_ROOT / "docs" / "specs" / "net" / "0.2"
 SCHEMA_PATH = CONTRACT_DIR / "wire.schema.json"
 COVERAGE_SCHEMA_PATH = CONTRACT_DIR / "coverage.schema.json"
 FIXTURES = HERE / "fixtures"

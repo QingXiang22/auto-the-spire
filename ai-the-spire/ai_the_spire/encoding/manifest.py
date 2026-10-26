@@ -14,7 +14,7 @@
   ``version_mismatch``，不返回编码。
 
 不维护历史、不保存 ``known_top``、不读取隐藏状态、不执行规则、不导入活动 client/core。
-协议结构与判定复用共享资产（``docs/contracts/net/0.2`` + ``tools/contract-check``），
+协议结构与判定复用共享资产（``docs/specs/net/0.2`` + ``tools/contract-check``），
 不另写第二套 codec。
 """
 

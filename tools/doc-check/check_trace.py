@@ -47,10 +47,10 @@ def collect(path: Path, id_col: int, scenario_cols: list[int]) -> dict[str, set[
 
 def main() -> int:
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
-    ai = collect(root / "docs/design/ai-the-spire/spec.md", 0, [2])
-    net = collect(root / "docs/design/net-the-spire/spec.md", 0, [2])
+    ai = collect(root / "docs/areas/ai/spec/overview.md", 0, [2])
+    net = collect(root / "docs/areas/net/spec/overview.md", 0, [2])
     spec = {**ai, **net}
-    matrix = collect(root / "docs/design/ai-net-verification.md", 0, [2])
+    matrix = collect(root / "docs/specs/ai-net/verification.md", 0, [2])
 
     problems = 0
     for req in sorted(spec, key=lambda r: (r[:2], int(r[3:]))):
