@@ -12,7 +12,7 @@ template UnmovablePowerModule { body = {
         if = { condition = greater(field(listener, Power.Stacks), 0) then = { return = { value = 2000000 } } }
         return = { value = 1000000 }
       } }
-      if = { condition = less(aggregate(where(collection(CardPlays), r, and(equal(field(r, CardPlayRecord.Owner), field(field(listener, Power.HolderPlayer), Player.Owner)), and(equal(field(r, CardPlayRecord.Turn), field(field(listener, Power.HolderPlayer), Player.TurnNumber)), not(equal(r, play))))), Sum, r, field(r, CardPlayRecord.PoweredBlocks)), field(listener, Power.Stacks)) then = { return = { value = 2000000 } } }
+      if = { condition = less(aggregate(where(collection(CardPlays), r, and(equal(field(r, CardPlayRecord.Owner), field(field(listener, Power.HolderPlayer), Player.Owner)), and(equal(field(r, CardPlayRecord.Turn), field(field(listener, Power.HolderPlayer), Player.TurnNumber)), and(equal(field(r, CardPlayRecord.EnemyPhase), field(field(listener, Power.HolderPlayer), Player.EnemyPhase)), not(equal(r, play)))))), Sum, r, field(r, CardPlayRecord.PoweredBlocks)), field(listener, Power.Stacks)) then = { return = { value = 2000000 } } }
       return = { value = 1000000 }
     }
   }

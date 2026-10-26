@@ -8,8 +8,9 @@ entity AutoPlayEntry { fields = { Batch = { type = Ref(AutoPlayBatch) visibility
 # Entries belong to a particular batch so nested autoplays cannot consume the parent's remaining cards.
 procedure AutoPlayFromDrawPile {
   parameters = { owner = Ref(Player) play = Binding count = Int forceExhaust = Bool }
-  locals = { batch = Binding next = Binding entry = Binding resultPile = String(length = 16) }
+  locals = { batch = Binding next = Binding entry = Binding }
   body = {
+    if = { condition = pureCall(CombatIsEnding) then = { return = {} } }
     create = { type = AutoPlayBatch scope = entityScope(owner) into = batch fields = { Owner = owner Play = play } }
     repeat = { count = maximum(0, count) body = {
       call = { procedure = ReshuffleDiscard args = { owner = owner } }
@@ -23,14 +24,11 @@ procedure AutoPlayFromDrawPile {
     } }
     forEach = { query = where(type(AutoPlayEntry), e, equal(field(e, AutoPlayEntry.Batch), batch)) item = item body = {
       let = { into = next value = field(item, AutoPlayEntry.Card) }
-      if = { condition = and(field(owner, Player.CombatActive), and(greater(field(owner, Player.Hp), 0), exists(where(type(Enemy), e, pureCall(EnemyIsActive, e))))) then = {
-        call = { procedure = ResolveAutoCard args = { owner = owner card = next forceExhaust = forceExhaust prepared = true } }
-      } else = {
-        if = { condition = greater(field(owner, Player.Hp), 0) then = {
-          let = { into = resultPile value = "discard" }
-          if = { condition = field(next, Card.LeavesPlay) then = { let = { into = resultPile value = "removed" } } }
-          if = { condition = or(forceExhaust, pureCall(CardHasKeyword, next, "exhaust")) then = { let = { into = resultPile value = "exhaust" } } }
-          call = { procedure = FinishCardPlay args = { owner = owner card = next resultPile = resultPile } }
+      if = { condition = greater(field(owner, Player.Hp), 0) then = {
+        set = { target = next field = Card.ForceExhaust value = forceExhaust }
+        # Source assigns the flag even when ending; preloaded cards then remain in Play.
+        if = { condition = not(pureCall(CombatIsEnding)) then = {
+          call = { procedure = ResolveAutoCard args = { owner = owner card = next forceExhaust = forceExhaust prepared = true } }
         } }
       } }
       destroy = { target = item }

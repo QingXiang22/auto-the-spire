@@ -6,11 +6,11 @@ template OneTwoPunchPowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:one-two-punch-power" } }
 
 procedure OneTwoPunch {
-  pure = true parameters = { value = Int owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  pure = true parameters = { value = Int owner = Ref(Player) card = Ref(Card) target = Binding listener = Ref(Power) }
   result = Int body = {
     if = {
       condition = and(equal(field(card, Card.Kind), "attack"), greater(field(listener, Power.Stacks), 0)) then = {
-        return = { value = maximum(value, 2) }
+        return = { value = add(value, 1) }
       }
     }
     return = { value = value }
@@ -18,16 +18,32 @@ procedure OneTwoPunch {
 }
 
 subscription OneTwoPunch {
-  event = ModifyPlayCount reaction = OneTwoPunch instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:one-two-punch-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
+  event = ModifyCardPlayCount reaction = OneTwoPunch instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:one-two-punch-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
+}
+
+procedure CaptureOneTwoPunchCount {
+  parameters = { preparation = Ref(CardPlayPreparation) listener = Ref(Power) }
+  body = {
+    call = { procedure = SetCardPlayCount args = {
+      preparation = preparation
+      value = pureCall(OneTwoPunch, field(preparation, CardPlayPreparation.Count), field(preparation, CardPlayPreparation.Player), field(preparation, CardPlayPreparation.Card), field(preparation, CardPlayPreparation.Target), listener)
+      power = listener relic = none
+    } }
+  }
+}
+subscription CaptureOneTwoPunchCount {
+  event = CardPlayCountModifying reaction = CaptureOneTwoPunchCount
+  instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), field(preparation, CardPlayPreparation.Player)), equal(field(p, Power.DefinitionId), "base-spire:one-two-punch-power")))
+  instance_order = pureCall(PowerHookOrder, listener, false)
 }
 
 procedure RepeatConsumed {
-  parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) }
+  parameters = { preparation = Ref(CardPlayPreparation) listener = Ref(Power) }
   body = {
     if = {
-      condition = equal(field(card, Card.Kind), "attack") then = {
+      condition = pureCall(CardPlayCountModifiedBy, preparation, listener, none) then = {
         call = {
-          procedure = ConsumePower args = {
+          procedure = TickPowerDuration args = {
             power = listener
           }
         }
@@ -37,7 +53,7 @@ procedure RepeatConsumed {
 }
 
 subscription RepeatConsumed {
-  event = BeforeCardPlaySequence reaction = RepeatConsumed instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:one-two-punch-power"))) instance_order = collectionIndex(Powers, listener) priority = 0
+  event = AfterModifyingCardPlayCount reaction = RepeatConsumed instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), field(preparation, CardPlayPreparation.Player)), equal(field(p, Power.DefinitionId), "base-spire:one-two-punch-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 procedure Expire { parameters = { owner = Ref(Player) listener = Ref(Power) } body = { call = { procedure = RemovePower args = { power = listener } } } }
 subscription Expire { event = AfterPlayerSideTurnEnd reaction = Expire instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:one-two-punch-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }

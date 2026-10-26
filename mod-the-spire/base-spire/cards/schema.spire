@@ -44,6 +44,7 @@ entity CardPlayRecord {
     Card = { type = Ref(Card) visibility = Hidden }
     Kind = { type = String(length = 16) }
     Turn = { type = Int }
+    EnemyPhase = { type = Bool default = false visibility = Hidden }
     Sequence = { type = Int }
     ActionNumber = { type = Int visibility = Hidden }
     ParentPlay = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
