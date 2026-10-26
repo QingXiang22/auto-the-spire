@@ -41,6 +41,7 @@ action DenseVegetationFight {
     let = { into = owner value = first(type(Player)) }
     call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "fight" } }
     call = { procedure = BeginNormalEventCombat args = { owner = owner visit = visit encounter = "base-spire:dense-vegetation" } into = child }
+    call = { procedure = PrepareEnemyBirthContext }
     call = { procedure = Wriggler.Create args = { slot = "wriggler1" startStunned = false } into = target }
     call = { procedure = Wriggler.Create args = { slot = "wriggler2" startStunned = false } into = target }
     call = { procedure = Wriggler.Create args = { slot = "wriggler3" startStunned = false } into = target }

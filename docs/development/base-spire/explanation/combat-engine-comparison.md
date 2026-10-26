@@ -4,7 +4,7 @@
 
 先打开[交互图文](combat-engine-comparison.html)：六个主题分别展示架构、开始阶段、结束阶段、监听与攻击、Power和遗物。点击节点可定位锁定源码，支持突出差异、导出SVG和打印全部图文。下面的静态图与文字适合在仓库内阅读。
 
-本文比较[锁定sts2-sim](../../../../reference/README.md)的提交`611cea2b498ee1eba3743d185c210c6b2a4624a6`（声明版本v0.111.0），以及base-spire提交`2a9b96ef17c2866d66069d0765f64fe56a802c68`（包版本`0.7.0-dsl.73`）。图中展示这两个版本的主要路径；差异节点表示当前实现边界，不表示已修复。具体接口仍查[操作参考](../reference/operations.md)和[Power参考](../reference/powers.md)。
+本文比较[锁定sts2-sim](../../../../reference/README.md)的提交`611cea2b498ee1eba3743d185c210c6b2a4624a6`（声明版本v0.111.0），以及base-spire提交`4aa22d16dfc59430580fa8ceefa129a3487797b0`（包版本`0.7.0-dsl.74`）。图中展示这两个版本的主要路径；差异节点表示当前实现边界，不表示已修复。具体接口仍查[操作参考](../reference/operations.md)和[Power参考](../reference/powers.md)。
 
 ## 两侧的职责与状态
 
@@ -26,9 +26,9 @@ base-spire把这些领域规则放在DSL：Host提交公开动作，通用`Sessi
 
 参考普通玩家回合的主要顺序为：保存各Power的回合开始量，`BeforeSideTurnStart`，为怪物`RollMove`，按条件清格挡与`AfterBlockCleared`，重置能量与`AfterEnergyReset`，增加`TurnNumber`，起手抽牌，`AfterPlayerTurnStart`，`AfterSideTurnStart`，充能球和自动出牌阶段，胜负检查，再允许操作。`AfterPlayerTurnStart`的dispatcher内部依次调用Early、普通和Late；额外回合不按普通路径重新选招。
 
-当前DSL的`BeginDevelopmentCombat`清理旧战斗状态与准备牌区，发布敌人入场和`BeforeCombatStart`；部分生成入口已提前重置招式图，开场订阅又会重置。普通玩家回合先`BeforePlayerSideTurnStart`，按条件清格挡及`AfterBlockCleared`，重置能量与`AfterEnergyReset`，此时仍是旧回合号；再增加回合号，发布`BeforeHandDraw`并抽牌，随后依次Early、普通、Late和`AfterPlayerSideTurnStart`。
+当前DSL创建阶段仅保存敌人与内容私有状态。`BeginDevelopmentCombat`清理旧战斗状态与准备牌区，按槽位整理行动顺序，为全部敌人建空图，再发布正常房间进入、敌人入场和`BeforeCombatStart`。普通玩家回合先`BeforePlayerSideTurnStart`，通知完成后准备敌人招式，再按条件清格挡及`AfterBlockCleared`，重置能量与`AfterEnergyReset`，此时仍是旧回合号；再增加回合号，发布`BeforeHandDraw`并抽牌，随后依次Early、普通、Late和`AfterPlayerSideTurnStart`。
 
-Sai、HappyFlower等当前按明确阶段与实例获得顺序响应。选招仍在上一敌方阶段末，出生／槽位与选招时点尚需独立迁移；不能由普通开始阶段的组件一致推断全部编队流程已符合。
+Sai、HappyFlower等当前按明确阶段与实例获得顺序响应。普通玩家BeforeSideTurnStart之后、清格挡之前准备敌人首招或后继；出生稳定编号与槽位行动顺序分开保存，图初始化先于入场效果。额外回合和全部编队仍需各自消费者与验证，不能由普通开始阶段的组件一致推断。
 
 源码入口：[参考CombatRoom](https://github.com/iRyougi/sts2-sim/blob/611cea2b498ee1eba3743d185c210c6b2a4624a6/src/Sts2Sim.Core/Rooms/CombatRoom.cs)、[参考Hook](https://github.com/iRyougi/sts2-sim/blob/611cea2b498ee1eba3743d185c210c6b2a4624a6/src/Sts2Sim.Core/Hooks/Hook.cs)、[当前敌方流程](../../../../mod-the-spire/base-spire/combat/enemy-turn.spire)。
 

@@ -21,6 +21,7 @@ internal static partial class PackageChecks
     {
         var witnesses = new List<string>();
         void Case(string name, Action body) { check(name, body); witnesses.Add(name); }
+        RunEnemyBirthChecks(package, Case);
         using var vectors = JsonDocument.Parse(typeof(PackageChecks).Assembly.GetManifestResourceStream("BaseSpire.Dev.fixtures.enemy-move-vectors.json")!);
         Case("MOVE vectors identify the locked reference and actual source paths", () =>
         {
@@ -31,6 +32,7 @@ internal static partial class PackageChecks
         });
         using var copy = new Copy(package.Root);
         var probes = """
+            action PrepareAll { role = player body = { forEach = { query = type(Enemy) item = enemy body = { call = { procedure = SelectNextEnemyMove args = { target = enemy } } } } } }
             action PerformFirst { role = player body = { call = { procedure = PerformEnemyMove args = { owner = first(type(Player)) target = first(type(Enemy)) } } } }
             action SelectFirst { role = player body = { call = { procedure = SelectNextEnemyMove args = { target = first(type(Enemy)) } } } }
             """;
@@ -57,7 +59,7 @@ internal static partial class PackageChecks
                 var s = observedPackage.CreateSession(1, ["player"], seed, new SessionDebugOptions(MaxRecords: 100_000)); s.Start(); Healthy(s);
                 Submit(s, "TwigSlimeM.Spawn"); var enemy = FirstTarget(s);
                 Equal(26L, EnemyHp(s), "A0 minimum HP, no HP RNG claim");
-                Equal("STICKY_SHOT_MOVE", MoveText(s, enemy, "Enemy", "MoveId"), "fixed initial move");
+                Equal("none", MoveText(s, enemy, "Enemy", "MoveId"), "creation has no selected move");
                 Equal(0L, s.Random.TotalDraws, "first move does not sample");
                 Equal(vector.GetProperty("monster_ai_seed").GetUInt64(), s.Random.Capture().ExplicitSeeds[MonsterAi], "source stream seed");
                 var branchType = s.RuleSet.TypeByQualifiedId("base-spire:EnemyMoveBranch");
@@ -66,6 +68,7 @@ internal static partial class PackageChecks
                     .Select(n => s.State.GetField(n, nodeType.FieldIndex("Id")).AsString()).ToArray();
                 Submit(s, "BeginDevelopmentCombat");
                 Set(s, Player(s), "Player", "Hp", Value.Of(1000L)); Set(s, Player(s), "Player", "MaxHp", Value.Of(1000L));
+                Submit(s, "BeginDevelopmentTurn");
                 long expectedHp = 1000; var expectedSlimed = 0;
                 var next = vector.GetProperty("initial").GetString();
                 foreach (var roll in vector.GetProperty("rolls").EnumerateArray())
@@ -76,11 +79,11 @@ internal static partial class PackageChecks
                     var before = s.State.StateHash(); var version = s.StateVersion; var draws = s.Random.TotalDraws;
                     for (var read = 0; read < 3; read++) { s.Observe(s.Participant(0), "base-spire:PlayerView"); s.LegalActions(s.Participant(0)); _ = s.Debug!.Capture(); }
                     Equal(before, s.State.StateHash(), "observation does not select"); Equal(version, s.StateVersion, "observation version"); Equal(draws, s.Random.TotalDraws, "observation RNG");
-                    Submit(s, "BeginDevelopmentTurn");
                     if (next == "STICKY_SHOT_MOVE") expectedSlimed++; else expectedHp -= 11;
                     Submit(s, "EndDevelopmentTurn");
                     Equal(expectedHp, Hp(s), "saved move executes full attack or status effect");
                     Equal(expectedSlimed, Members(s, "DiscardPile").Count(c => CardDefinition(s, c) == "base-spire:slimed"), "one real status instance per sticky shot");
+                    Submit(s, "BeginDevelopmentTurn");
                     next = roll.GetProperty("selected").GetString();
                     Equal(next, MoveText(s, enemy, "Enemy", "MoveId"), "source selected move is saved");
                     Equal(next == "STICKY_SHOT_MOVE" ? "status" : "attack", EnemyIntent(s), "public intent reads saved move");
@@ -108,9 +111,10 @@ internal static partial class PackageChecks
             Equal(1050253722L, IntField(s, branches[0], "EnemyMoveBranch", "Weight"), "0.3f is preserved without integer conversion");
             Equal(1063675494L, IntField(s, branches[1], "EnemyMoveBranch", "Weight"), "0.9f is preserved");
             Set(s, Player(s), "Player", "Hp", Value.Of(1000L)); Set(s, Player(s), "Player", "MaxHp", Value.Of(1000L));
+            Submit(s, "BeginDevelopmentTurn");
             foreach (var roll in vector.GetProperty("rolls").EnumerateArray())
             {
-                Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
+                Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
                 Equal(roll.GetProperty("selected").GetString(), MoveText(s, FirstTarget(s), "Enemy", "MoveId"), "independent fractional selection");
                 Equal(roll.GetProperty("after").GetInt64(), s.Random.DrawCount(MonsterAi), "fractional branch counter");
             }
@@ -118,7 +122,7 @@ internal static partial class PackageChecks
         Case("MOVE two same-definition enemies and sessions keep separate histories, and new combat resets", () =>
         {
             var s = Start(observedPackage); Submit(s, "TwigSlimeM.Spawn"); Submit(s, "TwigSlimeM.Spawn");
-            var enemies = Targets(s).ToArray(); Submit(s, "BeginDevelopmentCombat");
+            var enemies = Targets(s).ToArray(); Submit(s, "BeginDevelopmentCombat"); Submit(s, "PrepareAll");
             var first = MoveState(s, enemies[0]); var second = MoveState(s, enemies[1]);
             Submit(s, "PerformFirst"); Submit(s, "SelectFirst");
             Equal("POKEY_POUNCE_MOVE", MoveText(s, enemies[0], "Enemy", "MoveId"), "first advanced after status");
@@ -128,7 +132,7 @@ internal static partial class PackageChecks
             Equal(0L, other.Random.DrawCount(MonsterAi), "another session has not rolled");
             var before = s.State.StateHash(); var draws = s.Random.TotalDraws;
             Submit(s, "SelectFirst"); Equal(before, s.State.StateHash(), "prepared move is not selected twice"); Equal(draws, s.Random.TotalDraws, "no duplicate random draw");
-            Submit(s, "EndDevelopmentCombat"); Submit(s, "BeginDevelopmentCombat");
+            Submit(s, "EndDevelopmentCombat"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "PrepareAll");
             Equal("STICKY_SHOT_MOVE", MoveText(s, enemies[0], "Enemy", "MoveId"), "new combat fixed initial move");
             Equal(1L, IntField(s, MoveState(s, enemies[0]), "EnemyMoveState", "Sequence"), "new combat cleared old log");
             Equal(2, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:EnemyMoveHistory").Id).Count(), "only each initial history remains");
@@ -136,7 +140,7 @@ internal static partial class PackageChecks
         });
         Case("MOVE cooldown and use-once restrictions inspect the selected instance history", () =>
         {
-            var s = Start(observedPackage); Submit(s, "TwigSlimeM.Spawn"); Submit(s, "BeginDevelopmentCombat");
+            var s = Start(observedPackage); Submit(s, "TwigSlimeM.Spawn"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "PrepareAll");
             var branches = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:EnemyMoveBranch").Id).ToArray();
             Set(s, branches[1], "EnemyMoveBranch", "Cooldown", Value.Of(2L));
             Submit(s, "PerformFirst"); Submit(s, "SelectFirst");
@@ -146,7 +150,7 @@ internal static partial class PackageChecks
             Submit(s, "AttackLimitWeights"); // Status has now left the cooldown window.
             Submit(s, "PerformFirst"); Submit(s, "SelectFirst");
             Equal("STICKY_SHOT_MOVE", MoveText(s, FirstTarget(s), "Enemy", "MoveId"), "status becomes eligible after two attacks");
-            s = Start(observedPackage); Submit(s, "TwigSlimeM.Spawn"); Submit(s, "BeginDevelopmentCombat");
+            s = Start(observedPackage); Submit(s, "TwigSlimeM.Spawn"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "PrepareAll");
             branches = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:EnemyMoveBranch").Id).ToArray();
             Set(s, branches[0], "EnemyMoveBranch", "Once", Value.Of(true));
             Submit(s, "PerformFirst"); Submit(s, "SelectFirst"); Submit(s, "AttackLimitWeights");
@@ -158,7 +162,7 @@ internal static partial class PackageChecks
         Case("MOVE dead targets do not act or select, and fixed graphs consume no AI random words", () =>
         {
             var s = Start(observedPackage); Submit(s, "FuzzyWurmCrawler.Spawn"); Submit(s, "TwigSlimeM.Spawn");
-            Submit(s, "BeginDevelopmentCombat"); var dead = Targets(s)[1]; Set(s, dead, "Enemy", "Hp", Value.Of(0L));
+            Submit(s, "BeginDevelopmentCombat"); Submit(s, "PrepareAll"); var dead = Targets(s)[1]; Set(s, dead, "Enemy", "Hp", Value.Of(0L));
             for (var turn = 0; turn < 3; turn++) { Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn"); }
             Equal(0L, s.Random.DrawCount(MonsterAi), "deterministic cycle and dead slime never sample");
             Equal(0, Members(s, "DiscardPile").Count(c => CardDefinition(s, c) == "base-spire:slimed"), "dead status monster cannot create cards");
@@ -193,12 +197,14 @@ internal static partial class PackageChecks
             using var empty = new Copy(package.Root);
             var path = empty.Path("enemies/shared/twig-slime-m.spire"); File.WriteAllText(path, File.ReadAllText(path).Replace("maxRepeats = 2", "maxRepeats = 2 weight = 0.0", StringComparison.Ordinal));
             var s = Start(empty.Load()); Submit(s, "TwigSlimeM.Spawn"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
-            Throws<EngineFaultException>(() => Submit(s, "EndDevelopmentTurn")); Equal(0L, s.Random.DrawCount(MonsterAi), "zero total never samples");
+            Submit(s, "EndDevelopmentTurn");
+            Throws<EngineFaultException>(() => Submit(s, "BeginDevelopmentTurn")); Equal(0L, s.Random.DrawCount(MonsterAi), "zero total never samples");
             True(s.Fault!.Message.Contains("no legal branch", StringComparison.Ordinal), "no silent fallback");
             using var loop = new Copy(package.Root);
             path = loop.Path("enemies/shared/twig-slime-m.spire"); File.WriteAllText(path, File.ReadAllText(path).Replace("target = \"POKEY_POUNCE_MOVE\" maxRepeats = 2", "target = \"RAND\" maxRepeats = 2", StringComparison.Ordinal));
             s = Start(loop.Load()); Submit(s, "TwigSlimeM.Spawn"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
-            Throws<EngineFaultException>(() => Submit(s, "EndDevelopmentTurn")); Equal(SessionStatus.Faulted, s.Status, "transition loop stops at core budget");
+            Submit(s, "EndDevelopmentTurn");
+            Throws<EngineFaultException>(() => Submit(s, "BeginDevelopmentTurn")); Equal(SessionStatus.Faulted, s.Status, "transition loop stops at core budget");
             Equal(EngineFaultCode.BudgetExceeded, s.Fault!.Code, "transition recursion uses the core budget failure");
             True(s.Random.DrawCount(MonsterAi) > 0 && s.Random.DrawCount(MonsterAi) <= s.Budget.MaxCallDepth, "bounded transitions, no infinite loop");
         });
@@ -219,7 +225,9 @@ internal static partial class PackageChecks
             Equal(before, s.State.StateHash(), "stale answer is atomic"); Equal(0L, s.Random.DrawCount(MonsterAi), "no advance while paused");
             s.Answer(new DecisionAnswer(request.RequestId, Flag: true)); Healthy(s);
             Equal(1, Members(s, "DiscardPile").Count(c => CardDefinition(s, c) == "base-spire:slimed"), "one card after continuation");
-            Equal(1L, s.Random.DrawCount(MonsterAi), "one selection after continuation");
+            Equal(0L, s.Random.DrawCount(MonsterAi), "enemy end does not select after continuation");
+            Submit(s, "BeginDevelopmentTurn");
+            Equal(1L, s.Random.DrawCount(MonsterAi), "next player start selects once");
             before = s.State.StateHash(); Throws<EngineFaultException>(() => s.Answer(new DecisionAnswer(request.RequestId, Flag: true)));
             Equal(before, s.State.StateHash(), "duplicate answer is atomic"); Equal(1L, s.Random.DrawCount(MonsterAi), "duplicate does not select again");
         });

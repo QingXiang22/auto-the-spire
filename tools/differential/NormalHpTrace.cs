@@ -13,15 +13,31 @@ internal static class NormalHpTrace
         for (var i = 0; i < origins.Length; i++)
         {
             var origin = origins[i]; var call = offsets[i];
-            if (origin.Minimum >= origin.Maximum || origin.Hp < origin.Minimum || origin.Hp >= origin.Maximum
-                || origins.Take(i).Any(previous => previous.Hp >= origin.Minimum && previous.Hp < origin.Maximum))
-                throw Missing("native HP exclusions require ordered available-candidate mapping");
-            if (call.Stream != "base-spire:run:niche" || call.Kind != "integer" || call.Minimum != "0"
-                || call.Maximum != (origin.Maximum - origin.Minimum).ToString(CultureInfo.InvariantCulture))
-                throw Missing("native HP offset parameters");
-            var hp = checked(origin.Minimum + long.Parse(call.Result, CultureInfo.InvariantCulture));
-            if (hp != origin.Hp) throw Missing("native initial HP does not match its actual draw");
-            result.Add(NormalScalarTrace.Integer(call.Stream, call.Before, call.After, origin.Minimum, origin.Maximum, hp));
+            if (origin.Minimum < 1 || origin.Maximum > 10000 || origin.Minimum >= origin.Maximum
+                || origin.Hp < origin.Minimum || origin.Hp >= origin.Maximum)
+                throw Missing("native HP creation bounds");
+            var available = Enumerable.Range((int)origin.Minimum, (int)(origin.Maximum - origin.Minimum))
+                .Where(hp => !origins.Take(i).Any(previous => previous.Hp == hp)).ToArray();
+            long selected;
+            if (available.Length == 0)
+            {
+                if (call.Minimum != origin.Minimum.ToString(CultureInfo.InvariantCulture)
+                    || call.Maximum != origin.Maximum.ToString(CultureInfo.InvariantCulture))
+                    throw Missing("native exhausted HP parameters");
+                selected = long.Parse(call.Result, CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                if (call.Minimum != "0" || call.Maximum != available.Length.ToString(CultureInfo.InvariantCulture))
+                    throw Missing("native HP offset parameters");
+                var offset = long.Parse(call.Result, CultureInfo.InvariantCulture);
+                if (offset < 0 || offset >= available.Length) throw Missing("native HP offset result");
+                selected = available[offset];
+            }
+            if (call.Stream != "base-spire:run:niche" || call.Kind != "integer" || selected != origin.Hp)
+                throw Missing("native initial HP does not match its actual draw");
+            // Both producers now execute the same HP offset operation. Retain its actual parameters/result.
+            result.Add(call);
         }
         return NormalScalarTrace.Canonical(result);
     }

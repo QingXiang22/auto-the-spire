@@ -8,13 +8,13 @@
 
 `TwigSlimeM.cs` 的 A0 初始 HP 为26..28，攻击 `POKEY_POUNCE_MOVE` 造成11点伤害，状态招 `STICKY_SHOT_MOVE` 向每个目标的弃牌堆加入一张Slimed，首招固定为状态招。源码 `AddBranch(moveState, 2)` 选择最多连续两次的重载，默认权重1；状态招使用CannotRepeat，同样权重1，冷却均为0。两个分支保持攻击、状态的源顺序。Slimed花1能量，抽1张后耗尽，不能升级。
 
-敌方阶段依次发BeforeEnemySideTurnStart、清本侧全部格挡并逐个发AfterEnemyBlockCleared、AfterEnemySideTurnStart，然后按活动敌人各发一次 `EnemyTurnStarted`，结束时分VeryEarly／Early／普通阶段后发 `AfterEnemySideTurnEnd`。共享图消费者执行已经保存的招式；当前实现仍在敌方阶段结束、持续时间更新后为存活敌人选择下一招。源通常在玩家BeforeSideTurnStart后准备下一招；条件选招时点以及出生标识／槽位分离尚未迁移，不由本阶段调整认证。`DamagePlayerPowered` 复用攻击链，公开 `Enemy.MoveId`、`MoveIndex` 和 `Intent` 表示同一份已选结果。观察不选招。
+敌方阶段依次发BeforeEnemySideTurnStart、清本侧全部格挡并逐个发AfterEnemyBlockCleared、AfterEnemySideTurnStart，然后按活动敌人各发一次 `EnemyTurnStarted`，结束时分VeryEarly／Early／普通阶段后发 `AfterEnemySideTurnEnd`。共享图消费者执行已经保存的招式；普通玩家回合在BeforePlayerSideTurnStart完成之后、清格挡之前按槽位行动顺序准备招式；敌方阶段结束不选招。首次准备解析初始节点，后续准备解析已执行节点的后继，Ready为true时不重复解析或抽样。额外回合尚无生产消费者，不由普通入口冒充支持。`DamagePlayerPowered` 复用攻击链，公开 `Enemy.MoveId`、`MoveIndex` 和 `Intent` 表示同一份已选结果。观察不选招。
 
 图消费者包括FuzzyWurmCrawler、TwigSlimeM、SlimesWeak四类史莱姆、BattleFriend三档、Wriggler及下述七个固定轮转敌人。FuzzyWurmCrawler与TwigSlimeM的开发生成使用源最小HP，Wriggler按下述源候选抽样。完整遭遇队列、意图伤害数值、动态权重函数、通用强制迁移钩子及完整正常Run不在此实现范围。原来源目录与遭遇池完整保留，不能据此宣称ENV-T01全部完成。
 
 ### 固定轮转与完整敌人攻击
 
-七个既有敌人按锁定参考的节点和后继登记同一共享图，正文由各自内容模块提供，不再由内容订阅EnemyTurnStarted自行改MoveIndex。Assassin的KILLSHOT_MOVE、BowlbugEgg的BITE_MOVE及Stabbot的STAB_MOVE各自循环；Axe为SWING_1→SWING_2→BIG_SWING→SWING_1；Brute为BEAT_MOVE与ROAR_MOVE交替；Crossbow从RELOAD_MOVE开始与FIRE_MOVE交替；Tracker从TRACK_MOVE进入HOUNDS_MOVE并保持。固定后继不消费monster_ai，首次生成、跨战重置和StunEnemy沿用已有共享图操作。
+七个既有敌人按锁定参考的节点和后继登记同一共享图，正文由各自内容模块提供，不再由内容订阅EnemyTurnStarted自行改MoveIndex。Assassin的KILLSHOT_MOVE、BowlbugEgg的BITE_MOVE及Stabbot的STAB_MOVE各自循环；Axe为SWING_1→SWING_2→BIG_SWING→SWING_1；Brute为BEAT_MOVE与ROAR_MOVE交替；Crossbow从RELOAD_MOVE开始与FIRE_MOVE交替；Tracker从TRACK_MOVE进入HOUNDS_MOVE并保持。固定后继不消费monster_ai，首次准备、跨战重置和StunEnemy沿用共享图操作。
 
 Axe的两次普通挥击及BowlbugEgg公布attack,defend，Stabbot公布attack,debuff，顺序与源Intents一致。开发Spawn保留原动作ID和A0最小HP；这不包含正常编队的出生抽样或选招时点验收。
 
@@ -34,9 +34,21 @@ EnemyAttack接收attacker、defender、amount和hits，拒绝负命中数，一�
 
 ## 共享招式图目标要求
 
+### 批量出生与普通玩家回合准备
+
+正常单人战斗先登记玩家CombatId=0，再按遭遇工厂顺序为敌人分配单调BirthOrder及CombatId=BirthOrder+1；移除／死亡／逃离不复用序号。只有显式准备一个全新且无敌人的战斗上下文时重置计数，不能从当前集合长度推导。真实敌人的开发Spawn动作只在非活动战斗可用，活动中不提供候选，强行提交在状态／随机变化前拒绝；其入场生命周期按独立消费者实现。开发入口给定HP是人工配置，不宣称正常出生抽样；保留实例后重新开始开发战斗只重置行动图。
+
+源出生HP使用niche：在闭区间[min,max]中排除当前仍属于敌侧列表实例的不同MaxHp；零HP但尚未确认死亡者仍排除，已DeathResolved或Escaped者不排除。候选非空时调用NextInt(0,候选数)，按数值升序取偏移；耗尽时调用NextInt(min,max+1)。固定HP也消费一次，重复MaxHp只排除一次，非法范围抽样前失败。当前内容的HP范围限于1..9999。
+
+每个敌人保存独立的出生编号、源CombatId、槽位序号和源个体种子。种子以uint64加法计算run根种子+地图列+地图行+幕索引+CombatId；无Run位置的开发上下文位置项为0。正常入口和真实事件子战斗在创建前显式准备新上下文。所有HP抽样和私有状态创建按工厂顺序完成，随后按遭遇Slots序号稳定排列行动／监听顺序；无槽位对应源索引-1，稳定出生编号及种子不随排序改变。
+
+战斗开始依次建齐图、发布正常房间进入通知、执行敌人入场效果、BeforeCombatStart；事件子战斗不重复父房间进入通知。图条件直到普通玩家BeforePlayerSideTurnStart完成之后才解析，首次与后续准备均位于清格挡之前；入场Power或该通知改变条件时必须读取改变后的值。敌方执行只使用保存招式，结束时保留已执行节点且Ready=false，下一普通玩家入口才迁移。击晕恢复复用已选真实节点，不重新解析条件或随机。观察不产生历史／随机消费。完整移除清图和内容私有状态；新上下文和会话不串历史。
+
+出生与槽位比较使用玩家先登记的原生准备顺序，并保留源原始CombatId、HP调用参数、个体种子和行动顺序。先AddMonster后StartCombat的受控旧组件只证明各自明确归一化的维度，不能作为正常出生编号的依据。工具专用入场／条件探针不登记为正式内容；召唤、复活、额外回合和其他未迁移机制仍明确未支持。
+
 ### Wriggler槽位条件与实例寿命
 
-锁定Wriggler在A0按niche从17..21的尚未使用最大生命候选中抽取；按当前活动敌人出生顺序排除已用值，候选耗尽才按原范围抽样，不重设流或补抽。四槽wriggler1／3初始NASTY_BITE_MOVE（6点加成攻击），wriggler2／4初始WRIGGLE_MOVE（给目标玩家弃牌堆生成一张Infection，再获得2层Strength），两招固定交替。StartStunned=true先执行一次SPAWNED_MOVE空招，再按槽位进入上述初招。没有AI随机消费；未知槽位明确拒绝，不使用注释中的无槽回退。开发创建入口在抽HP前验证这项支持前置。
+锁定Wriggler在A0按niche从17..21的尚未使用最大生命候选中抽取；按当前仍在敌侧列表的实例排除已用最大生命值（不以生命大于0为条件），候选耗尽才按原范围抽样，不重设流或补抽。四槽wriggler1／3初始NASTY_BITE_MOVE（6点加成攻击），wriggler2／4初始WRIGGLE_MOVE（给目标玩家弃牌堆生成一张Infection，再获得2层Strength），两招固定交替。StartStunned=true先执行一次SPAWNED_MOVE空招，再按槽位进入上述初招。没有AI随机消费；未知槽位明确拒绝，不使用注释中的无槽回退。开发创建入口在抽HP前验证这项支持前置。
 
 共享图的conditional节点通过定义分派返回下一节点，递归解析至真实move，不记入已选行动历史，也不抽随机。缺分派／静态未知节点在装配时拒绝，无合法条件在执行时失败，循环仍受既有预算保护。实例保留真实槽名与StartStunned；重置行动图不能改写它们。WRIGGLE的复合意图按源顺序发布为buff,status，具体状态牌数量以真实生成结果验证；通用意图伤害数值仍未迁移。
 
@@ -66,7 +78,7 @@ StunEnemy保存当前已选真实节点，以公开STUNNED／stun替换下一行
 
 定义位于[敌人schema](../../../../mod-the-spire/base-spire/enemies/schema.spire)，注册、校验、选招和历史位于[共享规则](../../../../mod-the-spire/base-spire/enemies/rules/move-graph.spire)。启动时先登记图、再按源顺序登记节点和分支，最后检查初始节点、后继、重复定义／节点／分支及动作分派。定义表仅在启动时构造，逐实例状态由Engine保存；不存在C#敌人调度器。
 
-`EnemyMoveState`保存敌人、所属图、当前已选节点、Ready、FirstPerformed、连续次数及历史序号，`EnemyMoveHistory`保存该实例每次已选招式。初始招式即入历史，第一次固定首招不抽样。`ResetEnemyMoves`供生成入口调用，`BeforeCombatStart`重新初始化每个敌人的历史，保留局内随机流位置。`PerformEnemyMove`复核目标生命并执行保存结果；`SelectNextEnemyMove`只处理尚未准备且存活的实例。内容生成和`SpawnDevelopmentEnemy`使用同一初始化操作。
+`EnemyMoveState`保存敌人、所属图、当前已选节点、Ready、FirstPerformed、连续次数及历史序号，`EnemyMoveHistory`保存该实例每次已选招式。首次实际选招才入历史，固定首招不抽样。`ResetEnemyMoves`仅建空图状态；生成只建敌人与内容私有状态，不建图或选招。战斗开始在全部敌人的EnemyAddedToCombat之前统一重置图；BeforeCombatStart不再次清历史或选招，保留局内随机流位置。`PerformEnemyMove`复核目标生命并执行保存结果；`SelectNextEnemyMove`只处理尚未准备且存活的实例。内容生成和`SpawnDevelopmentEnemy`只创建实例；战斗入口在批量创建后统一调用图初始化。
 
 随机节点根据实例历史计算有效权重：MaxRepeats=0为无限制，正值限制连续次数；Cooldown检查最近指定数量的已选招式；Once排除曾选过的目标。权重以源binary32位型保存，总权重按LINQ Sum(float)的顺序用double累加，最后转binary32。当前静态权重参数为Fixed六位小数，转换成binary32后执行；动态权重函数仍未支持。TwigSlimeM的两个真实分支权重均为1，整数参数2不会变成权重。
 

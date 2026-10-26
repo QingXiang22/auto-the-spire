@@ -188,7 +188,7 @@ procedure RandomLivingEnemy {
   body = {
     let = { into = target value = none }
     if = { condition = exists(where(type(Enemy), e, pureCall(EnemyIsActive, e))) then = {
-      samplePick = { stream = "base-spire:run:combat_targets" candidates = where(type(Enemy), e, pureCall(EnemyIsActive, e)) into = target }
+      samplePick = { stream = "base-spire:run:combat_targets" candidates = sort(where(type(Enemy), e, pureCall(EnemyIsActive, e)), e, field(e, Enemy.SpawnOrder)) into = target }
     } }
     return = { value = target }
   }

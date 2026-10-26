@@ -1,4 +1,5 @@
 using CoreTheSpire.Engine;
+using CoreTheSpire;
 
 namespace Differential;
 
@@ -14,8 +15,8 @@ internal static class NormalScalarChecks
         Require(diagnostic.RootElement.GetProperty("unmapped_scalar_calls").GetArrayLength() == 0,
             "reference maps every actual scalar call");
         var hp = projection.Calls.Where(c => c.Stream == "base-spire:run:niche").ToArray();
-        Require(hp.Select(c => (c.Minimum, c.Maximum, c.Result)).SequenceEqual(new[] { ("11", "16", "14"), ("26", "29", "28"), ("7", "12", "11") }),
-            "three real SlimesWeak HP draws compare actual intervals and final values");
+        Require(hp.Select(c => (c.Minimum, c.Maximum, c.Result)).SequenceEqual(new[] { ("0", "5", "3"), ("0", "3", "2"), ("0", "5", "4") }),
+            "three real SlimesWeak HP draws compare actual available-count intervals and offsets");
         var origins = System.Text.Json.JsonSerializer.Deserialize<NormalHpOrigin[]>(diagnostic.RootElement.GetProperty("random").GetProperty("hp_initialization").GetRawText())!;
         Require(origins.Length == 3 && origins.Select(o => o.Hp).SequenceEqual(new long[] { 14, 28, 11 }), "native pre-setup origins remain in raw diagnostics");
         CheckHpRejections(origins, hp);
@@ -37,6 +38,8 @@ internal static class NormalScalarChecks
         Reject(random.Select((r, i) => i == index ? r with { Random = null } : r).ToArray(), 0);
         Reject(random.Select((r, i) => i == index ? r with { Random = r.Random! with { CandidatesTruncated = true } } : r).ToArray(), 0);
         Reject(random, 1);
+        var hpRecord = random.First(r => r.Subject == "base-spire:run:niche");
+        Reject(random.Select(r => r == hpRecord ? r with { Source = new DslSourceLocation("unknown-hp-source.spire", 1, 1) } : r).ToArray(), 0);
         Reject([.. random, random[index]], 0);
         Reject(random.Reverse().ToArray(), 0);
         var weightedIndex = Array.FindIndex(random, r => r.Random!.Operation == "pick" && r.Subject == "base-spire:run:up_front"
@@ -56,8 +59,12 @@ internal static class NormalScalarChecks
 
     private static void CheckHpRejections(NormalHpOrigin[] origins, NormalScalarCall[] hp)
     {
-        var offsets = hp.Select((c, i) => c with { Minimum = "0", Maximum = (origins[i].Maximum - origins[i].Minimum).ToString(System.Globalization.CultureInfo.InvariantCulture),
-            Result = (origins[i].Hp - origins[i].Minimum).ToString(System.Globalization.CultureInfo.InvariantCulture) }).ToArray();
+        var uniqueOrigins = new[] { 18L, 19L, 17L, 18L }.Select(h => new NormalHpOrigin("controlled-source-hp", 17, 20, h)).ToArray();
+        var uniqueCalls = new[] { (0L, 3L, 1L), (0L, 2L, 1L), (0L, 1L, 0L), (17L, 20L, 18L) }
+            .Select((c, i) => NormalScalarTrace.Integer("base-spire:run:niche", i, i + 1, c.Item1, c.Item2, c.Item3)).ToArray();
+        Require(NormalHpTrace.Normalize(uniqueOrigins, uniqueCalls).SequenceEqual(uniqueCalls),
+            "source uniqueness and exhausted-range draws retain their actual parameters and results");
+        var offsets = hp;
         foreach (var invalid in new[] { origins[..^1], origins.Reverse().ToArray(),
             new[] { origins[0] with { Minimum = origins[0].Minimum + 1, Maximum = origins[0].Maximum + 1 } }.Concat(origins.Skip(1)).ToArray(),
             new[] { origins[0] with { Hp = origins[0].Hp - 1 } }.Concat(origins.Skip(1)).ToArray(),

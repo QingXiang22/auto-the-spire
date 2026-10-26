@@ -44,29 +44,15 @@ template WrigglerContent { body = {
   dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:wriggler" procedure = Execute }
   procedure Create {
     parameters = { slot = String(length = 16) startStunned = Bool } result = Binding
-    locals = { available = Int value = Int offset = Int hp = Int target = Binding own = Binding }
+    locals = { target = Binding own = Binding }
     body = {
       if = { condition = not(or(equal(slot, "wriggler1"), or(equal(slot, "wriggler2"), or(equal(slot, "wriggler3"), equal(slot, "wriggler4"))))) then = { fail = { message = "Wriggler: unsupported slot" } } }
-      let = { into = available value = 0 }
-      let = { into = value value = 17 }
-      repeat = { count = 5 body = {
-        if = { condition = not(exists(where(type(Enemy), e, and(pureCall(EnemyIsActive, e), equal(field(e, Enemy.MaxHp), value))))) then = { let = { into = available value = add(available, 1) } } }
-        let = { into = value value = add(value, 1) }
-      } }
-      if = { condition = greater(available, 0) then = {
-        sampleInt = { stream = "base-spire:run:niche" min = 0 max = available into = offset }
-        let = { into = value value = 17 }
-        repeat = { count = 5 body = {
-          if = { condition = not(exists(where(type(Enemy), e, and(pureCall(EnemyIsActive, e), equal(field(e, Enemy.MaxHp), value))))) then = {
-            if = { condition = equal(offset, 0) then = { let = { into = hp value = value } } }
-            let = { into = offset value = subtract(offset, 1) }
-          } }
-          let = { into = value value = add(value, 1) }
-        } }
-      } else = { sampleInt = { stream = "base-spire:run:niche" min = 17 max = 22 into = hp } } }
-      call = { procedure = CreateEncounterEnemy args = { definition = "base-spire:wriggler" hp = hp } into = target }
+      call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:wriggler" min = 17 max = 21 } into = target }
+      set = { target = target field = Enemy.SlotIndex value = 0 }
+      if = { condition = equal(slot, "wriggler2") then = { set = { target = target field = Enemy.SlotIndex value = 1 } } }
+      if = { condition = equal(slot, "wriggler3") then = { set = { target = target field = Enemy.SlotIndex value = 2 } } }
+      if = { condition = equal(slot, "wriggler4") then = { set = { target = target field = Enemy.SlotIndex value = 3 } } }
       create = { type = State scope = entityScope(target) into = own fields = { Enemy = target Slot = slot StartStunned = startStunned } }
-      call = { procedure = ResetEnemyMoves args = { target = target } }
       return = { value = target }
     }
   }
@@ -74,7 +60,7 @@ template WrigglerContent { body = {
     forEach = { query = where(type(State), s, equal(field(s, State.Enemy), target)) item = own body = { destroy = { target = own } } }
   } }
   subscription Remove { event = EnemyRemoving reaction = Remove }
-  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) locals = { target = Binding } body = {
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) locals = { target = Binding } body = {
     call = { procedure = Create args = { slot = "wriggler1" startStunned = false } into = target }
     call = { procedure = Create args = { slot = "wriggler2" startStunned = false } into = target }
     call = { procedure = Create args = { slot = "wriggler3" startStunned = false } into = target }

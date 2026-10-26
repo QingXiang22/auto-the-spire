@@ -16,8 +16,9 @@ procedure BattlewornDummyVisit {
     forEach = { query = where(type(BattlewornOption), o, equal(field(o, BattlewornOption.Visit), visit)) item = previous body = { destroy = { target = previous } } }
     set = { target = visit field = EventVisit.Page value = "setting-2" }
     call = { procedure = BeginDevelopmentEventCombat args = { owner = owner visit = visit } }
-    sampleInt = { stream = "base-spire:run:niche" min = 0 max = 1 into = hp }
-    call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:battle-friend-v2" hp = add(150, hp) } }
+    call = { procedure = PrepareEnemyBirthContext }
+    call = { procedure = RollEncounterEnemyHp args = { min = 150 max = 150 } into = hp }
+    call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:battle-friend-v2" hp = hp } }
     call = { procedure = BeginDevelopmentCombat args = { owner = owner } }
     call = { procedure = BeginDevelopmentTurn args = { owner = owner } }
   }
