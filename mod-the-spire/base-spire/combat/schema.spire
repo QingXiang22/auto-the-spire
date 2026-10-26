@@ -20,6 +20,8 @@ entity Player {
     # Development combat outcome: none while it runs, then victory or defeat. Run settlement, rewards and
     # the true engine terminal are not migrated.
     CombatOutcome = { type = String(length = 16) default = "none" }
+    DeathResolving = { type = Bool default = false visibility = Hidden }
+    DeathResolved = { type = Bool default = false visibility = Hidden }
     CombatTimedOut = { type = Bool default = false }
     # Development stand-ins for the source's per-turn combat history (Spite, EvilEye). Both reset at turn start.
     LostHpThisTurn = { type = Bool default = false }

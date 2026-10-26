@@ -10,6 +10,8 @@ internal static partial class PackageChecks
             if (filter is not null && !name.StartsWith(filter, StringComparison.OrdinalIgnoreCase)) return;
             body(); count++; Console.WriteLine("ok   " + name);
         }
+        RunCombatEndChecks(package, Check);
+        Check("END normal settlement order: source end before cleanup, victory and rewards", () => RunNormalSettlementOrderChecks(package));
         RunCardBehaviorChecks(package, Check);
         RunAttackBehaviorChecks(package, Check);
         RunCardLifecycleChecks(package, Check);

@@ -29,6 +29,7 @@ internal static class DamageComparison
         bool Vulnerable = false, int Cruelty = 0, long Block = 0, long PlayerBlock = 0, int Hp = 1000, bool SelfHarm = false, bool Reactions = false, int PlayerHp = 80, bool PenNib = false, bool AllTargets = false, bool Incoming = false);
     private static readonly Plan[] Plans = [
         new("plain"), new("retaliation-kills-attacker", Incoming: true, Hp: 3, PlayerBlock: 4),
+        new("retaliation-mutual-death", Incoming: true, Hp: 3, PlayerHp: 1),
         new("whirlwind-double-kill", AllTargets: true, Hp: 5), new("self-harm", SelfHarm: true),
         new("self-harm-reactions", SelfHarm: true, Reactions: true),
         new("lethal-self-harm", SelfHarm: true, Reactions: true, PlayerHp: 1),
@@ -44,7 +45,7 @@ internal static class DamageComparison
         new("body-slam-large-chain", PlayerBlock: 999999999, Strength: 999, Vigor: 999, Weak: true, Vulnerable: true, Cruelty: 999),
     ];
     private sealed record Row(string Actor, string Dealer, bool Move, bool Powered, bool Unblockable, long Blocked, long Unblocked, long Overkill, bool BlockBroken, bool FullyBlocked, bool Killed);
-    private sealed record Notification(string Actor, string Stage, long AmountScaled, long Hp, long Block, string Card, string Dealer, long OtherHp);
+    private sealed record Notification(string Actor, string Stage, long AmountScaled, long Hp, long Block, string Card, string Dealer, long OtherHp, bool Active, bool Ending, string Outcome);
     private sealed record Result(long Hp, long Block, long Energy, long PlayerHp, long Strength, long[] EnemyHps, Row[] Results, Notification[] Notifications);
 
     private sealed record Outcome(Result Value, string State);
@@ -114,9 +115,9 @@ internal static class DamageComparison
         }).ToArray();
         if (s.Debug is { DroppedRecords: > 0 }) throw new InvalidOperationException("Truncated damage diagnostics.");
         var notifications = (s.Debug?.Capture() ?? []).Where(r => r.Sequence > cursor && r.Kind == SessionDebugKind.EventEmit && r.Subject == "base-spire:DamageProbePoint").Select(r => {
-            if (r.Snapshot is not { Complete: true } snapshot || snapshot.Values.Count != 8) throw new InvalidOperationException("Incomplete damage notification.");
+            if (r.Snapshot is not { Complete: true } snapshot || snapshot.Values.Count != 11) throw new InvalidOperationException("Incomplete damage notification.");
             string S(int i) => snapshot.Values[i].Scalar!;
-            return new Notification(S(0), S(1), long.Parse(S(2)), long.Parse(S(3)), long.Parse(S(4)), S(5), S(6), long.Parse(S(7)));
+            return new Notification(S(0), S(1), long.Parse(S(2)), long.Parse(S(3)), long.Parse(S(4)), S(5), S(6), long.Parse(S(7)), bool.Parse(S(8)), bool.Parse(S(9)), S(10));
         }).ToArray();
         var result = new Result(Field(enemy, "Enemy", "Hp").AsInt(), Field(enemy, "Enemy", "Block").AsInt(), Field(player, "Player", "Energy").AsInt(), Field(player, "Player", "Hp").AsInt(),
             All("Power").Where(p => Field(p, "Power", "HolderPlayer") == Value.OfRef(player) && Field(p, "Power", "DefinitionId").AsString() == "base-spire:strength-power").Sum(p => Field(p, "Power", "Stacks").AsInt()), All("Enemy").Select(e => Field(e, "Enemy", "Hp").AsInt()).ToArray(), rows, notifications);
@@ -135,10 +136,10 @@ internal static class DamageComparison
         foreach (var e in enemies) { e.SetMaxHpInternal(1000); e.SetCurrentHpInternal(1000); }
         string Actor(Creature c) => ReferenceEquals(c, player.Creature) ? "player" : "enemy:" + Array.IndexOf(enemies, c); enemy.SetMaxHpInternal(1000); enemy.SetCurrentHpInternal(1000);
         var rows = new List<Row>();
-        var notifications = new List<Notification>(); var capture = false;
+        var notifications = new List<Notification>(); var capture = false; CombatEngine? liveEngine = null;
         var probe = (DamageProbeRelic)new DamageProbeRelic().MutableClone(); probe.AssignOwner(player); player.AddRelicInternal(probe);
         probe.Capture = (stage, amount, target, card, dealer) => {
-            if (capture) notifications.Add(new(Actor(target), stage, (long)(amount * 10000), target.CurrentHp, target.Block, card?.Id.Entry ?? "", ReferenceEquals(dealer, player.Creature) ? "player" : ReferenceEquals(dealer, enemy) ? "enemy" : "none", ReferenceEquals(target, player.Creature) ? enemy.CurrentHp : enemies.FirstOrDefault(e => !ReferenceEquals(e, target))?.CurrentHp ?? -1));
+            if (capture) notifications.Add(new(Actor(target), stage, (long)(amount * 10000), target.CurrentHp, target.Block, card?.Id.Entry ?? "", ReferenceEquals(dealer, player.Creature) ? "player" : ReferenceEquals(dealer, enemy) ? "enemy" : "none", ReferenceEquals(target, player.Creature) ? enemy.CurrentHp : enemies.FirstOrDefault(e => !ReferenceEquals(e, target))?.CurrentHp ?? -1, liveEngine!.IsInProgress, combat.IsOverOrEnding(), liveEngine.IsInProgress ? "none" : liveEngine.Won ? "victory" : "defeat"));
         };
         var observer = DispatchProxy.Create(typeof(CombatEngine).Assembly.GetType("Sts2Sim.Core.Combat.ICombatObserver")!, typeof(NormalReferenceObserver));
         ((NormalReferenceObserver)observer).Record = (name, args) => {
@@ -146,7 +147,7 @@ internal static class DamageComparison
                 rows.Add(new(Actor(r.Receiver), ReferenceEquals(dealer, player.Creature) ? "player" : ReferenceEquals(dealer, enemy) ? "enemy" : "none", r.Props.HasFlag(ValueProp.Move), r.Props.IsPoweredAttack(), r.Props.HasFlag(ValueProp.Unblockable), r.BlockedDamage, r.UnblockedDamage, r.OverkillDamage, r.WasBlockBroken, r.WasFullyBlocked, r.WasTargetKilled));
         };
         var engine = (CombatEngine)Activator.CreateInstance(typeof(CombatEngine), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [combat, observer], null)!;
-        engine.StartCombatAsync().GetAwaiter().GetResult();
+        liveEngine = engine; engine.StartCombatAsync().GetAwaiter().GetResult();
         if (plan.PenNib)
         {
             RelicCmd.Obtain(ModelDb.Relic<Sts2Sim.Core.Models.Relics.PenNib>(), player).GetAwaiter().GetResult(); player.PlayerCombatState!.Energy = 12;
@@ -207,7 +208,7 @@ internal static class DamageComparison
                     else = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = definition stacks = stacks } } } }
                 } }
                 action DamageProbeIncoming { role = player body = { call = { procedure = EnemyAttack args = { attacker = first(type(Enemy)) defender = first(type(Player)) amount = 6 hits = 2 } } } }
-                event DamageProbePoint { payload = { actor = String(length = 16) stage = String(length = 16) amount = Int hp = Int block = Int card = String(length = 64) dealer = String(length = 16) otherHp = Int } }
+                event DamageProbePoint { payload = { actor = String(length = 16) stage = String(length = 16) amount = Int hp = Int block = Int card = String(length = 64) dealer = String(length = 16) otherHp = Int active = Bool ending = Bool outcome = String(length = 16) } }
                 event DamageProbeResolved { payload = { actor = String(length = 16) dealer = String(length = 16) move = Bool powered = Bool unblockable = Bool blocked = Int unblocked = Int overkill = Int broken = Bool full = Bool killed = Bool } }
                 procedure DamageProbeResolved { parameters = { result = Ref(DamageResult) } locals = { actor = String(length = 16) dealer = String(length = 16) } body = {
                   let = { into = dealer value = "none" }
@@ -242,7 +243,7 @@ internal static class DamageComparison
                     let = { into = hp value = field(field(result, DamageResult.Player), Player.Hp) }
                     let = { into = block value = field(field(result, DamageResult.Player), Player.Block) }
                   } }
-                  emit = { event = DamageProbePoint payload = { actor = actor stage = stage amount = amount hp = hp block = block card = card dealer = dealer otherHp = otherHp } }
+                  emit = { event = DamageProbePoint payload = { actor = actor stage = stage amount = amount hp = hp block = block card = card dealer = dealer otherHp = otherHp active = field(first(type(Player)), Player.CombatActive) ending = pureCall(CombatIsOverOrEnding) outcome = field(first(type(Player)), Player.CombatOutcome) } }
                 } }
                 procedure DamageProbeEnemyDeath { parameters = { target = Ref(Enemy) } locals = { actor = String(length = 16) other = Binding hp = Int } body = {
                   let = { into = actor value = "enemy:0" }
@@ -250,11 +251,11 @@ internal static class DamageComparison
                   let = { into = other value = first(where(type(Enemy), e, not(equal(e, target)))) }
                   let = { into = hp value = -1 }
                   if = { condition = not(isNone(other)) then = { let = { into = hp value = field(other, Enemy.Hp) } } }
-                  emit = { event = DamageProbePoint payload = { actor = actor stage = "death" amount = 0 hp = field(target, Enemy.Hp) block = field(target, Enemy.Block) card = "" dealer = "none" otherHp = hp } }
+                  emit = { event = DamageProbePoint payload = { actor = actor stage = "death" amount = 0 hp = field(target, Enemy.Hp) block = field(target, Enemy.Block) card = "" dealer = "none" otherHp = hp active = field(first(type(Player)), Player.CombatActive) ending = pureCall(CombatIsOverOrEnding) outcome = field(first(type(Player)), Player.CombatOutcome) } }
                 } }
                 subscription DamageProbeEnemyDeath { event = EnemyDied reaction = DamageProbeEnemyDeath }
                 procedure DamageProbePlayerDeath { parameters = { owner = Ref(Player) } body = {
-                  emit = { event = DamageProbePoint payload = { actor = "player" stage = "death" amount = 0 hp = field(owner, Player.Hp) block = field(owner, Player.Block) card = "" dealer = "none" otherHp = field(first(type(Enemy)), Enemy.Hp) } }
+                  emit = { event = DamageProbePoint payload = { actor = "player" stage = "death" amount = 0 hp = field(owner, Player.Hp) block = field(owner, Player.Block) card = "" dealer = "none" otherHp = field(first(type(Enemy)), Enemy.Hp) active = field(first(type(Player)), Player.CombatActive) ending = pureCall(CombatIsOverOrEnding) outcome = field(first(type(Player)), Player.CombatOutcome) } }
                 } }
                 subscription DamageProbePlayerDeath { event = PlayerDied reaction = DamageProbePlayerDeath }
                 procedure DamageProbeBefore { parameters = { result = Ref(DamageResult) } body = { call = { procedure = DamageProbeCapture args = { result = result stage = "before" amount = field(result, DamageResult.ModifiedScaled) } } } }

@@ -127,8 +127,10 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | [CombatEnded 奖励订阅](../../../../mod-the-spire/base-spire/rewards/rules/combat-gold.spire) | owner=Ref(Player)、victory=Bool | 仅用于开发战斗；存活玩家胜利时，Ironclad调用完整普通奖励操作；未选角色的金币探针仅从命名流 `base-spire:player:rewards` 的 `[10, 21)` 抽金额；写入待领状态、Room=`rewards`；Gold 不变；失败不生成也不抽随机 |
 | ClaimDevelopmentGoldReward | owner=Ref(Player) | 公开 action 与同名过程：只在 rewards 且条目 pending 时把保存金额加进 Gold（开发上限 99999），清空条目；领取不关闭界面，不重抽，不能重复领取 |
 | CloseDevelopmentRewards | owner=Ref(Player) | 公开 action 与同名过程：只在 rewards 时清空未领条目、金额与房间状态；允许不领取直接关闭，不给金币也不抽随机；关闭前禁止开始新战斗、进入营火或 LeaveDevelopmentRoom |
-| [CheckCombatVictory](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | 在伤害、攻击、出牌、回合或药水操作的外层边界检查；本场已有真实敌人死亡通知、深度均归零且已无存活敌人时，写 victory、关闭回合与活跃标记，按结束→正常清理→早期胜利→普通胜利顺序通知，再提交正常访问及生成奖励 |
-| CheckCombatDefeat | owner=Ref(Player) | 每次玩家掉血后调用：生命为0且战斗仍活跃时写defeat并关闭状态，发PlayerDied，完整清理该玩家Power及私有状态，再发CombatEnded并提交失败访问；重复调用不重复死亡或结案 |
+| [CheckCombatVictory](../../../../mod-the-spire/base-spire/combat/lifecycle.spire) | owner=Ref(Player) | 在伤害、攻击、出牌、回合或药水操作的外层边界检查；本场已有真实敌人死亡通知、深度均归零且已无存活敌人时，写 victory、关闭回合与活跃标记，按结果提交CombatEnded→胜利专属AfterCombatEnd→正常清理→早期胜利→普通胜利顺序通知，再提交正常访问及生成奖励 |
+| CombatIsEnding／CombatIsOverOrEnding | pure，返回 Bool | 前者查询活跃战斗的潜在胜负；后者还包含已提交结果。命令按自身来源使用；空开发场不自动胜利 |
+| AfterCombatEnd | owner: Ref(Player) | 胜利结果提交后、正常清理前发出，对应来源胜利专属结束钩子；失败不发出 |
+| CheckCombatDefeat | owner=Ref(Player) | 每次玩家掉血后调用：生命为0且战斗仍活跃时关闭回合门，保留战斗上下文发PlayerDied并完整清理该玩家Power及私有状态；DeathResolving／DeathResolved防止重入和重复死亡，外层深度归零后才写defeat、关闭战斗、发CombatEnded并提交失败访问；重复调用不重复死亡或结案 |
 | [DamagePlayerPowered](../../../../mod-the-spire/base-spire/combat/enemy-turn.spire) | attacker=Ref(Enemy)、owner=Ref(Player)、amount | 敌方攻击链：防守方 `after-attacked-damage`（Thorns）先以无加成伤害反击攻击者，再按攻击者 Strength→攻击者 Weak ×0.75→防守方 Vulnerable ×1.5（整数向下取整）→格挡→生命，并做失败判定 |
 | EnemyAttack | attacker=Ref(Enemy)、defender=Ref(Player)、amount=Int(0..999)、hits=Int | 一次Attack包含指定命中数；负命中数拒绝，BeforeAttack／AfterAttack各一次，逐击走已有伤害／反应／死亡流程；单击DamagePlayerPowered复用此过程 |
 | RunEnemyTurn | owner=Ref(Player) | 敌方阶段：BeforeEnemySideTurnStart→先清全体参与者格挡→逐个AfterEnemyBlockCleared→AfterEnemySideTurnStart→逐个EnemyTurnStarted→BeforeEnemySideTurnEndVeryEarly／Early／普通→AfterEnemySideTurnEnd；选招位置仍保留已有边界 |
@@ -190,7 +192,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 
 ## 模板与内容配置
 
-[CardDiscardBlockRelic](../../../../mod-the-spire/base-spire/relics/rules/card-discard-block.spire) 接受 definition: String(64)、amount: Int(0..999)，生成 `WhenCardDiscarded`、`OnCardDiscarded` 与 `Obtain`。有效持有实例在 CardDiscarded 后、CombatActive 且非 EnemyPhase 时调用 GainUnpoweredBlock；ToughBandages 配置为 3。DiscardCombatCard 先移动本玩家手牌、发布 CardMoved，再发布 CardDiscarded；普通移牌和回合末 FinishTurnHand 清手不发布弃牌通知。
+[CardDiscardBlockRelic](../../../../mod-the-spire/base-spire/relics/rules/card-discard-block.spire) 接受 definition: String(64)、amount: Int(0..999)，生成 `WhenCardDiscarded`、`OnCardDiscarded` 与 `Obtain`。有效持有实例在 CardDiscarded 后、CombatActive 且非 EnemyPhase 时调用 GainUnpoweredBlock；ToughBandages 配置为 3。DiscardCombatCard 以同步Add语义移动本玩家手牌，再发布CardDiscarded；不发布AddAsync的CardMoved；普通移牌和回合末 FinishTurnHand 清手不发布弃牌通知。
 
 [AfterShuffleBlockRelic](../../../../mod-the-spire/base-spire/relics/rules/after-shuffle-block.spire) 的参数为 definition: String(64)、amount: Int(0..999)。它生成 `WhenShuffled`、`OnShuffle` 与 `Obtain`，按当前持有库存过滤并调用 GainUnpoweredBlock。`use TheAbacus` 生成 `TheAbacus.Obtain` 等名称；TheAbacus 正式参数为 6。
 
@@ -250,3 +252,5 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 开发牌堆、InPlay、ExhaustPile、RemovedFromCombat、Powers和定义集合按metadata各自声明发布或具名不发布。集合不发布不等于可忽略实体上的公开事实；新增集合必须明确用途。当前声明不构成完整原版牌序、能力生命周期或正常Run约定。
 
 公开 action_type 为 `net:action:base-spire:TheAbacus.Obtain`，格挡字段为 `net:field:base-spire:Player.Block`；生命、能量与回合见 `net:field:base-spire:Player.Hp`／`Player.Energy`／`Player.TurnNumber`／`Player.TurnOpen`／`Player.CombatActive`，目标生命见 `net:field:base-spire:Enemy.Hp`，能力层数见 `net:field:base-spire:Power.Stacks`，战斗结果见 `net:field:base-spire:Player.CombatOutcome`，回合内标志见 `net:field:base-spire:Player.LostHpThisTurn`／`Player.ExhaustedCardThisTurn`，公开动作见 `net:action:base-spire:BeginDevelopmentCombat`／`EndDevelopmentCombat`／`BeginDevelopmentTurn`／`EndDevelopmentTurn`／`EndTurn`／`AddDevelopmentTarget`／`PlayCardFromHand`／`PlayAttackFromHand`／`UpgradeCardInHand`。协议用真实候选 ID 提交动作；元数据不改变状态、触发顺序或合法动作守卫。
+
+CardCountRelic的resetAtCombatEnd独立于perTurn：Kunai／Shuriken／OrnamentalFan在AfterCombatEnd重置，LetterOpener只按其开始时点重置，Nunchaku保留跨战计数。

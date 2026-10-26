@@ -247,19 +247,31 @@ internal static partial class PackageChecks
     {
         using var copy = new Copy(package.Root);
         copy.Include("settlement-order.spire", """
+            entity EndOrder { fields = { Phase = { type = Int default = 0 } } }
             procedure CheckEnd { parameters = { owner = Ref(Player) victory = Bool } body = {
               if = { condition = victory then = {
                 if = { condition = or(not(equal(field(owner, Player.MaxHp), 83)), or(not(equal(count(collection(ExhaustPile)), 0)), not(equal(field(first(collection(InPlay)), Card.DefinitionId), "base-spire:feed")))) then = { fail = { message = "Feed growth must precede combat end while ending refuses self-exhaust" } } }
                 if = { condition = not(isNone(field(owner, Player.CurrentRewardSet))) then = { fail = { message = "Rewards generated before combat-end hooks" } } }
+                set = { target = first(type(EndOrder)) field = EndOrder.Phase value = 1 }
               } }
             } }
             subscription End { event = CombatEnded reaction = CheckEnd priority = 200 }
+            procedure SourceEnd { parameters = { owner = Ref(Player) } body = {
+              if = { condition = or(not(equal(field(first(type(EndOrder)), EndOrder.Phase), 1)), or(not(exists(collection(InPlay))), not(exists(collection(Powers))))) then = { fail = { message = "Source end must follow result commit and precede combat cleanup" } } }
+              set = { target = first(type(EndOrder)) field = EndOrder.Phase value = 2 }
+              call = { procedure = CheckCombatVictory args = { owner = owner } }
+            } }
+            subscription SourceEnd { event = AfterCombatEnd reaction = SourceEnd }
             procedure CheckVictory { parameters = { owner = Ref(Player) victory = Bool } body = {
+              if = { condition = or(not(equal(field(first(type(EndOrder)), EndOrder.Phase), 2)), exists(collection(Powers))) then = { fail = { message = "Victory must follow source end and complete cleanup" } } }
+              set = { target = first(type(EndOrder)) field = EndOrder.Phase value = 3 }
               if = { condition = or(not(equal(field(owner, Player.Hp), 49)), or(not(equal(field(owner, Player.Block), 0)), exists(collection(Hand)))) then = { fail = { message = "Cleanup then BurningBlood must precede settlement" } } }
               if = { condition = not(isNone(field(owner, Player.CurrentRewardSet))) then = { fail = { message = "Rewards must wait for all victory hooks" } } }
             } }
             subscription Victory { event = CombatVictory reaction = CheckVictory priority = 200 }
-            action SetupControlledFeed { role = player locals = { card = Binding } body = {
+            action SetupControlledFeed { role = player locals = { card = Binding audit = Binding } body = {
+              create = { type = EndOrder scope = frameScope() into = audit }
+              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:dexterity-power" stacks = 1 } }
               call = { procedure = CreateCombatCard args = { owner = first(type(Player)) definition = "base-spire:feed" } into = card }
               call = { procedure = AddGeneratedToHand args = { card = card } }
             } }
@@ -273,6 +285,7 @@ internal static partial class PackageChecks
         Submit(s, "SetupControlledFeed");
         var feed = Hand(s).Single(c => CardDefinition(s, c) == "base-spire:feed");
         Submit(s, "PlayAttackFromHand", feed);
+        Equal(3L, IntField(s, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:EndOrder").Id).Single(), "EndOrder", "Phase"), "commit, source end, cleanup and victory all completed once");
         Equal(83L, IntField(s, Player(s), "Player", "MaxHp"), "last-kill growth persists");
         Equal(49L, Hp(s), "growth heals three before victory heals six");
         Equal("rewards", TextField(s, Player(s), "Player", "Room"), "rewards publish after the source end order");

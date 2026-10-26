@@ -25,11 +25,18 @@ internal static partial class PackageChecks
                 } }
                 procedure InspectPlayerDeath { parameters = { owner = Ref(Player) } body = {
                   if = { condition = not(equal(count(where(collection(Powers), p, equal(field(p, Power.HolderPlayer), owner))), 3)) then = { fail = { message = "Player death notification must see all original Powers" } } }
-                  if = { condition = or(field(owner, Player.CombatActive), or(field(owner, Player.TurnOpen), not(equal(field(owner, Player.CombatOutcome), "defeat")))) then = { fail = { message = "Death notification requires the committed defeat state" } } }
+                  if = { condition = or(not(field(owner, Player.CombatActive)), or(field(owner, Player.TurnOpen), not(equal(field(owner, Player.CombatOutcome), "none")))) then = { fail = { message = "Death notification requires the pending defeat context" } } }
                   set = { target = first(type(PlayerDeathAudit)) field = PlayerDeathAudit.Deaths value = add(field(first(type(PlayerDeathAudit)), PlayerDeathAudit.Deaths), 1) }
                   call = { procedure = CheckCombatDefeat args = { owner = owner } }
                 } }
                 subscription InspectPlayerDeath { event = PlayerDied reaction = InspectPlayerDeath }
+                procedure InspectFatalCard { parameters = { owner = Ref(Player) card = Ref(Card) } body = {
+                  if = { condition = equal(field(owner, Player.Hp), 0) then = {
+                    if = { condition = or(not(field(owner, Player.CombatActive)), or(not(equal(field(owner, Player.CombatOutcome), "none")), isNone(field(owner, Player.CurrentPlay)))) then = { fail = { message = "Fatal card reactions retain the live outer play until its boundary" } } }
+                    if = { condition = exists(where(collection(Powers), p, equal(field(p, Power.HolderPlayer), owner))) then = { fail = { message = "Fatal card reactions follow death Power cleanup" } } }
+                  } }
+                } }
+                subscription InspectFatalCard { event = AfterCardPlayed reaction = InspectFatalCard }
                 procedure InspectPlayerPowerRemoval { parameters = { power = Ref(Power) } body = {
                   if = { condition = equal(field(power, Power.HolderPlayer), first(type(Player))) then = {
                     if = { condition = greaterOrEqual(collectionIndex(Powers, power), 0) then = { fail = { message = "Player Power removed before leaving its collection" } } }

@@ -69,6 +69,8 @@ procedure MoveCombatCard {
   parameters = { owner = Ref(Player) card = Ref(Card) to = String(length = 16) reason = String(length = 32) }
   locals = { from = String(length = 16) }
   body = {
+    # AddAsync rejects pending ending and does not publish a successful move; Remove is separate.
+    if = { condition = and(not(equal(to, "removed")), pureCall(CombatIsOverOrEnding)) then = { return = {} } }
     let = { into = from value = pureCall(CombatCardPile, card) }
     call = { procedure = MoveCombatCardWithoutNotification args = { owner = owner card = card to = to } }
     emit = { event = CardMoved payload = { owner = owner card = card from = from to = pureCall(CombatCardPile, card) reason = reason } }
@@ -78,7 +80,8 @@ procedure DiscardCombatCard {
   parameters = { owner = Ref(Player) card = Ref(Card) }
   body = {
     if = { condition = less(collectionIndex(Hand, card), 0) then = { fail = { message = "Active discard requires a hand card" } } }
-    call = { procedure = MoveCombatCard args = { owner = owner card = card to = "discard" reason = "discard" } }
+    # CardCmd.Discard uses synchronous Add and its own discard hook, not AddAsync.
+    call = { procedure = MoveCombatCardWithoutNotification args = { owner = owner card = card to = "discard" } }
     emit = { event = CardDiscarded payload = { owner = owner card = card } }
   }
 }

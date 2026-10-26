@@ -31,29 +31,29 @@ procedure RunEnemyTurn {
     forEach = { query = sort(where(type(Enemy), e, pureCall(EnemyIsOnSide, e)), e, field(e, Enemy.SpawnOrder)) item = enemy body = {
       call = { procedure = SnapshotPowerTurnStart args = { player = none enemy = enemy } }
     } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforeEnemySideTurnStart payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BeforeEnemySideTurnStart payload = { owner = owner } } } }
     forEach = { query = sort(where(type(Enemy), e, pureCall(EnemyIsOnSide, e)), e, field(e, Enemy.SpawnOrder)) item = enemy body = {
       call = { procedure = ClearCombatantBlock args = { player = none enemy = enemy } }
     } }
     forEach = { query = sort(where(type(Enemy), e, pureCall(EnemyIsOnSide, e)), e, field(e, Enemy.SpawnOrder)) item = enemy body = {
-      if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterEnemyBlockCleared payload = { owner = owner target = enemy } } } }
+      if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterEnemyBlockCleared payload = { owner = owner target = enemy } } } }
     } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterEnemySideTurnStart payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterEnemySideTurnStart payload = { owner = owner } } } }
     # forEach captures this list after AfterSideTurnStart and retains its cursor over decisions.
     forEach = { query = sort(where(type(Enemy), e, pureCall(EnemyIsOnSide, e)), e, field(e, Enemy.SpawnOrder)) item = enemy body = {
       if = { condition = not(exists(where(type(Enemy), e, equal(e, enemy)))) then = { fail = { message = "unsupported_capability: fully removed enemy in captured action list" } } }
       if = { condition = field(enemy, Enemy.Escaped) then = { fail = { message = "unsupported_capability: live escape from captured action list" } } }
       if = { condition = pureCall(EnemyIsOnSide, enemy) then = {
-        if = { condition = and(not(pureCall(CombatIsEnding)), and(pureCall(EnemyIsActive, enemy), not(field(enemy, Enemy.SpawnedThisTurn)))) then = {
+        if = { condition = and(not(pureCall(CombatIsOverOrEnding)), and(pureCall(EnemyIsActive, enemy), not(field(enemy, Enemy.SpawnedThisTurn)))) then = {
           emit = { event = EnemyTurnStarted payload = { owner = owner target = enemy } }
         } }
       } }
     } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforeEnemySideTurnEndVeryEarly payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforeEnemySideTurnEndEarly payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforeEnemySideTurnEnd payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { call = { procedure = ResetCardTurnCosts } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterEnemySideTurnEnd payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BeforeEnemySideTurnEndVeryEarly payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BeforeEnemySideTurnEndEarly payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BeforeEnemySideTurnEnd payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { call = { procedure = ResetCardTurnCosts } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterEnemySideTurnEnd payload = { owner = owner } } } }
     set = { target = owner field = Player.EnemyPhase value = false }
     call = { procedure = NotifyCombatSideSwitch }
   }

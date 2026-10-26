@@ -27,7 +27,7 @@ namespace Differential;
 
 internal static class CombatBoundaryComparison
 {
-    private static readonly string[] Plans = ["turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "zero-card", "free-x", "repeat-card", "corruption"];
+    private static readonly string[] Plans = ["turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "zero-card", "free-x", "repeat-card", "corruption"];
     private static readonly string[] Seeds = ["777", "A😀B"];
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
     internal sealed record Point(string Phase, string Card, long Turn, long Energy, long Hp, long MaxHp, long Block,
@@ -64,7 +64,7 @@ internal static class CombatBoundaryComparison
             adapter_sha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(typeof(CombatBoundaryComparison).Assembly.Location))),
             status = differences == 0 ? "passed" : "diverged", executed = cases.Count, expected_case_ids = Seeds.SelectMany(s => Plans.Select(p => s + ":" + p)).ToArray(),
             complete = false, independent_verified = false, normal_run_verified = false, scope = "controlled-boundary-diagnostic",
-            controlled_setup = "Empty permanent decks, real FuzzyWurmCrawler and actual production commands; both HP set to 1000. Paid-card creates Strike; two-end-effects creates two Infection in hand. Its paused variant holds the first real move notification administratively (DSL decide/native incomplete Task), then resumes once, without game effects. Feed-ending uses Feed at enemy HP10 and holds DSL room settlement until after the outer card. The named native probe relic only observes real hooks; source declarations and raw notifications are retained, without claiming complete listener parity or full events.trace. Fixture card placement is outside action comparison; its DSL notifications remain in raw diagnostics. No missing normal turn is executed by the adapter. Initial HP sampling/niche and normal rooms are outside this probe. Duplicate labels preserve definition/order but do not certify instance identity. Enabled/disabled diagnostics compare the same-backend DSL full StateHash/RNG and native exact combat description/RNG.",
+            controlled_setup = "Empty permanent decks, real FuzzyWurmCrawler and actual production commands; both HP set to 1000. Paid-card creates Strike; two-end-effects creates two Infection in hand. Its paused variant holds the first real move notification administratively (DSL decide/native incomplete Task), then resumes once, without game effects. Ending-move uses a last-kill Strike followed by actual AddAsync to hand, distinguishing synchronous result placement from rejected async movement. Feed-ending uses Feed at enemy HP10 and holds DSL room settlement until after the outer card. The named native probe relic only observes real hooks; source declarations and raw notifications are retained, without claiming complete listener parity or full events.trace. Fixture card placement is outside action comparison; its DSL notifications remain in raw diagnostics. No missing normal turn is executed by the adapter. Initial HP sampling/niche and normal rooms are outside this probe. Duplicate labels preserve definition/order but do not certify instance identity. Enabled/disabled diagnostics compare the same-backend DSL full StateHash/RNG and native exact combat description/RNG.",
             hook_sources = HookSources(repository), cases };
         var text = JsonSerializer.Serialize(report, Json);
         if (args.Length != 0) { Directory.CreateDirectory(args[1]); File.WriteAllText(Path.Combine(args[1], "result.json"), text); }
@@ -170,18 +170,20 @@ internal static class CombatBoundaryComparison
             }
         }
         Submit("BeginDevelopmentCombat"); Submit("BeginDevelopmentTurn"); Flush(); Take("begin-return");
-        if (plan is "paid-card" or "feed-ending") Submit(plan == "paid-card" ? "Strike.AddToHand" : "Feed.AddToHand");
+        if (plan is "paid-card" or "feed-ending" or "ending-move") Submit(plan == "feed-ending" ? "Feed.AddToHand" : "Strike.AddToHand");
         else if (plan.StartsWith("two-end-effects", StringComparison.Ordinal)) { Submit("Infection.AddToHand"); Submit("Infection.AddToHand"); }
         else if (plan == "zero-card") Submit("Anger.AddToHand");
         else if (plan == "free-x") Submit("Whirlwind.AddToHand");
         else if (plan == "repeat-card") { Submit("Strike.AddToHand"); Submit("BoundaryRepeat"); }
         else if (plan == "corruption") { Submit("Defend.AddToHand"); Submit("BoundaryCorruption"); }
         if (plan == "feed-ending") Set(enemy, "Enemy", "Hp", 10);
+        if (plan == "ending-move") Set(enemy, "Enemy", "Hp", 6);
         Flush(fixture: true); Take("configured");
         if (plan == "two-end-effects-paused")
             Submit("BoundaryEnablePause");
         if (plan == "turn-return" || plan.StartsWith("two-end-effects", StringComparison.Ordinal)) Submit("EndTurn");
         else Submit(plan == "free-x" ? "BoundaryAuto" : "BoundaryPlay", All("Card").Single());
+        if (plan == "ending-move") Submit("BoundaryMove", All("Card").Single());
         if (plan == "two-end-effects-paused")
         {
             if (session.Status != SessionStatus.AwaitingDecision) throw new InvalidOperationException("First effect-card move did not pause.");
@@ -240,6 +242,7 @@ internal static class CombatBoundaryComparison
         CardModel? played = null;
         if (plan == "paid-card") played = Add(ModelDb.Card<StrikeIronclad>());
         else if (plan == "feed-ending") { played = Add(ModelDb.Card<Feed>()); enemy.SetCurrentHpInternal(10); }
+        else if (plan == "ending-move") { played = Add(ModelDb.Card<StrikeIronclad>()); enemy.SetCurrentHpInternal(6); }
         else if (plan.StartsWith("two-end-effects", StringComparison.Ordinal)) { Add(ModelDb.Card<Infection>()); Add(ModelDb.Card<Infection>()); }
         else if (plan == "zero-card") played = Add(ModelDb.Card<Anger>());
         else if (plan == "free-x") played = Add(ModelDb.Card<Whirlwind>());
@@ -259,6 +262,7 @@ internal static class CombatBoundaryComparison
             }
             turn.GetAwaiter().GetResult();
         }
+        if (plan == "ending-move") CardPileCmd.AddAsync(combat, played!, PileType.Hand).GetAwaiter().GetResult();
         points.Add(Take("action-return"));
         var description = new CombatStateDescriptionBuilder(); CombatStateDescription.AppendExactState(ref description, combat);
         var final = JsonSerializer.Serialize(new { point = Take("state"), side = combat.CurrentSide.ToString(), engine.IsInProgress, engine.Won,

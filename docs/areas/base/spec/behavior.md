@@ -34,7 +34,7 @@ base 声明正文分派，参数为 owner／card／target／play。每个已执�
 
 费用修正作为独立 CardCostModifier 保存 card、source、set／add、amount 和 turn／play／turn-or-play／combat 寿命，按插入顺序折叠；临时费用不再依靠三个覆盖开关。公开 Cost 是命令维护的缓存，读取和预览不写缓存。克隆复制独立修正，新战清除临时费用，永久基础费用与临时费用分开。
 
-MoveCombatCard 统一拥有者、永久／战斗资格、原区／目的区、插入位置、满手与移动通知；生成入手、回顶、Anger 复制和 PrimalForce 移除调用此操作。主动弃牌另发 CardDiscarded；回合末整批 flush 和打出结果区不冒充主动弃牌。FinishTurnHand 固定 Ethereal 批次，再处理 BeforeHandFlush、Retain／ShouldFlushHand 筛选、整批提交与通知。新抽到的牌不混入旧消耗批次。当前未接带独有回合末手牌正文的牌与完整有序多选消费者。
+MoveCombatCard 统一拥有者、永久／战斗资格、原区／目的区、插入位置、满手与移动通知；生成入手、回顶、Anger 复制和 PrimalForce 移除调用此操作。主动弃牌使用同步移牌并发CardDiscarded，不发异步CardMoved；回合末整批 flush 和打出结果区不冒充主动弃牌。FinishTurnHand 固定 Ethereal 批次，再处理 BeforeHandFlush、Retain／ShouldFlushHand 筛选、整批提交与通知。新抽到的牌不混入旧消耗批次。当前未接带独有回合末手牌正文的牌与完整有序多选消费者。
 
 重复的克隆后放置使用CloneCombatCardToPile：保留CloneCombatCard的实例复制与全部回调，再交给MoveCombatCard处理落点。Anger与Juggling分别传入弃牌／手牌及原移动原因；满手时克隆仍只进入弃牌堆，不丢失或重新创建。ClonePlayedCardEffect只包装当前牌的这一操作，不增加敌人资格限制；不能用CreateCombatCard替代已有实例的克隆。普通／升级常量选择由CardUpgradeValue纯计算，自身Power模板统一处理是否在回合末到期，均不新增事件或改变正文顺序。
 

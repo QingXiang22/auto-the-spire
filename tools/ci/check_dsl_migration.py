@@ -403,13 +403,13 @@ def main() -> int:
                 raise ValueError("Block comparison omitted per-play history, actual modifier callbacks or return values")
 
         damage = run("damage", ["damage-compare", "--output", str(args.output / "damage")], 0)
-        damage_names = ("plain", "retaliation-kills-attacker", "whirlwind-double-kill", "self-harm", "self-harm-reactions",
+        damage_names = ("plain", "retaliation-kills-attacker", "retaliation-mutual-death", "whirlwind-double-kill", "self-harm", "self-harm-reactions",
                         "lethal-self-harm", "negative-strength-vigor", "negative-total", "negative-strength-vigor-weak-vulnerable",
                         "fraction", "pen-nib-fraction-chain", "fraction-fully-blocked", "fraction-block-remaining", "fraction-broken",
                         "zero-blocked", "overkill", "body-slam-large", "body-slam-large-chain")
         damage_ids = [seed + ":" + name for seed in ("777", "A😀B") for name in damage_names]
         damage_row_fields = {"actor", "dealer", "move", "powered", "unblockable", "blocked", "unblocked", "overkill", "block_broken", "fully_blocked", "killed"}
-        damage_point_fields = {"actor", "stage", "amount_scaled", "hp", "block", "card", "dealer", "other_hp"}
+        damage_point_fields = {"actor", "stage", "amount_scaled", "hp", "block", "card", "dealer", "other_hp", "active", "ending", "outcome"}
         if (damage is None or damage["schema"] != "dsl-migration/damage@1" or damage["status"] != "passed"
                 or damage["independent_verified"] is not True or damage["normal_run_verified"] is not False
                 or damage["reference"]["commit"] != lock["commit"] or damage["executed"] != len(damage_ids)
@@ -465,7 +465,7 @@ def main() -> int:
 
         run("combat-boundary-self-test", ["combat-boundary-self-test"], 0)
         boundaries = run("combat-boundaries", ["combat-boundary-compare", "--output", str(args.output / "combat-boundaries")], (0, 1))
-        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "zero-card", "free-x", "repeat-card", "corruption")
+        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "zero-card", "free-x", "repeat-card", "corruption")
         boundary_ids = [seed + ":" + plan for seed in ("777", "A😀B") for plan in boundary_plans]
         point_fields = {"phase", "card", "turn", "energy", "hp", "max_hp", "block", "enemy_hp", "move", "ending", "piles", "spent"}
         if (boundaries is None or boundaries["schema"] != "dsl-migration/combat-boundaries@1"

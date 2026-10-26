@@ -7,10 +7,20 @@
 当前规则以[锁定参考](../../../../reference/README.md)的 `CreatureCmd.ResolveConfirmedDeath`、`PowerCmd.Apply`／`Remove` 和战斗胜负路径为依据。普通敌人确认死亡后发布通知并清理应失效的 Power；死亡或逃离后场内没有活动敌人时战斗胜利，玩家死亡时战斗失败。
 
 - **敌人死亡**：伤害结果在“受击前生命 > 0 且受击后为 0”时标记一次死亡；`PublishDamageDeath` 先发出 `EnemyDied`，等待通知完成，再将敌人标记为 `DeathResolved` 并逐个调用完整 `RemovePower`。死亡通知能看到死亡前持有的 Power；移除通知发生在退出 `Powers` 后、实例销毁前。已确认死亡的敌人不能再次接受 Power；重复伤害不重复发死亡或移除通知。
-- **玩家死亡**：战斗中真实伤害或失血使生命降至0时，`CheckCombatDefeat` 先写入失败状态并关闭战斗与回合门，再发布 `PlayerDied(owner)`。通知完成后，`RemovePowersOnDeath(player,enemy)` 快照该持有者在 `Powers` 中的候选，按集合顺序逐个调用 `RemovePower`，完成模块私有状态清理后才发 `CombatEnded` 并提交正常失败访问。玩家死亡通知能看到原有 Power，死亡后施加玩家 Power 返回 none；移除回调中的重复失败检查不重复死亡或结案。敌人死亡复用相同候选清理，存活敌人和其他玩家持有的 Power 不在候选内。
+- **玩家死亡**：战斗中真实伤害或失血使生命降至0时，`CheckCombatDefeat` 先关闭手动回合门，在保留活跃战斗上下文的潜在失败阶段发布 `PlayerDied(owner)`。通知完成后，`RemovePowersOnDeath(player,enemy)` 快照该持有者在 `Powers` 中的候选，按集合顺序逐个调用 `RemovePower`，完成模块私有状态清理；外层play／attack／damage／effect全部返回后才正式写defeat、关闭战斗并发 `CombatEnded(false)`，提交正常失败访问。玩家死亡通知能看到原有 Power，死亡后施加玩家 Power 返回 none；DeathResolving阻止清理中的重入，DeathResolved阻止重复死亡与清理。敌人死亡复用相同候选清理，存活敌人和其他玩家持有的 Power 不在候选内。
 - **战斗结束**：`Player.CombatOutcome` 从 `none` 变为 `victory` 或 `defeat`，同时关闭回合门与战斗活跃标记，并发 `CombatEnded`。胜利在**敌人死亡或逃离之后**评估（因此没有目标的开发战斗不会被误判为胜利）；失败在每次玩家掉血后评估（受到格挡伤害或失去生命都算）。
 
 当前加载的 Power 均采用来源的两项默认死亡移除规则。`DieForYou`、`Adaptable`、`SteamEruption`、`Minion`、`PainfulStabs` 的自身保留，以及 `Illusion`／`Reattach` 的移除否决尚未接入，不注册为空效果；接入这些内容前必须补齐对应查询与持有者脱离后的监听资格。当前不宣称支持复活、防死或完整死亡钩子。敌人实例作为伤害／出牌结果的引用仍保留至访问清理，`DeathResolved` 只表达普通敌人的已确认死亡，不作为逃离状态。
+
+## 潜在结束、命令门禁与提交
+
+`CombatIsEnding`表达活跃战斗中的潜在胜负；`CombatIsOverOrEnding`还包含已提交的victory／defeat。来源分别为CombatEngine.IsEnding与IsOverOrEnding。当前单玩家、无Minion／防死消费者的敌人都参与胜利资格；未支持的ShouldStopCombatFromEnding与额外资格不能注册空Hook。空开发场保持显式结束，不能自动判胜。
+
+同步CardPileCmd.Add仍执行普通牌的结果移牌；异步AddAsync在IsEnding时拒绝移动和通知，不能混用两个入口的门禁。Power的Remove保持独立。Draw、GainBlock与Exhaust按各自IsOverOrEnding检查；GainEnergy与Heal／Feed的额外生命和治疗按自身规则处理，不能一律停止末杀余效。玩家死亡立即关闭手动入口、确认死亡并清理Power，但保留父play／attack／damage引用直到所需余效完成；失败在外层边界优先于胜利。
+
+CombatEnded是base内部的结果提交信号，携带victory。胜利另发与原生Hook.AfterCombatEnd对应的AfterCombatEnd(owner)，完成其实际监听后清理正常战斗，再发胜利Early／普通通知并提出奖励。失败不调用这条胜利结束钩子、不清空game-over资源、不发胜利通知或奖励。CentennialPuzzle、ArtOfWar、Kunai／Shuriken／OrnamentalFan和StoneCalendar的结束重置按该来源站点维护，不能只靠下一次开始战斗掩盖结束时的错误状态。
+
+同一次动作中双方死亡时按真实命令与嵌套依赖处理，公开终点为失败；反击与原击分别属于各自DamageResult，不冒充任意混合目标批次已支持。所有结果提交、结束通知、清理和奖励均须恰好一次；重复检查不得重复发布，正在清理中的重入不得提前提交。正常访问与父事件控制访问分别核对，不恢复暂停的完整父事件入口。
 
 ## 非死亡逃离与靶人计时
 
@@ -34,11 +44,14 @@ BattleFriendV1／V2／V3 的固定 HP 为75／150／300，每次真实创建仍�
 | CB06 | 没有目标的开发战斗在掉血时不判胜利 | 只放失血牌、没有敌人的战斗保持 `none` 直到真正失败或结束 |
 | CB07 | 普通敌人先完成死亡通知，再标记确认死亡并移除其 Power；其他敌人和玩家的 Power 不受影响 | 真实首战 Bash→Strike 击杀 LeafSlimeS 后 Vulnerable 消失，战斗仍继续；通知可见旧 Power，移除时已出集合，重复通知无额外效果 |
 | CB08 | 已确认死亡的目标不接受后续 Power，外层卡牌余效与胜利保护保持原顺序 | 致死 Bash 不在尸体上重新施加 Vulnerable；末杀 Feed 等余效仍在正常结算前完成 |
-| CB09 | 玩家死亡通知完成后快照并移除该持有者的 Power；清理完成后才发布战斗结束 | Tracker真实轮转致死后Frail消失；多Power及模块状态清理、其他持有者隔离、嵌套移除、重复失败检查和正常失败无奖励 |
+| CB09 | 玩家死亡通知完成后快照并移除该持有者的 Power；清理与外层余效完成后才正式提交失败 | Tracker真实轮转致死后Frail消失；多Power及模块状态清理、其他持有者隔离、嵌套移除、重复失败检查和正常失败无奖励 |
+| CB10 | 潜在结束与已结束分别查询，同步Add与异步AddAsync按各自来源门禁执行，Remove保持独立 | 末杀Strike与Feed的实际Play／Discard／Exhaust中间态；结果移牌不因只看最终清理而被忽略 |
+| CB11 | 胜利结束钩子只在胜利执行，早于清理和胜利奖励；失败保持独立 | 六个已加载遗物结束重置、game-over资源、重复检查和重入 |
+| CB12 | 死亡清理可重入但不重复，公开结果在外层完成后提交 | PlayerDied与AfterCardPlayed读到正确潜在失败，Power移除后、CombatEnded前仍保留所需上下文 |
 
 ## 实施与验证顺序
 
 1. 将死亡事件、Power 清理与两个结束判定接在既有伤害／失血过程的准确时点，验证既有伤害与结束判别。
 2. 再补结束态字段、重置与公开观察。
 3. 在包外补胜利、失败、重置与“无目标不判胜”的判别，并通过真实 stdio 验证公开 `CombatOutcome`。
-4. 最后运行 solution 构建、包行为／覆盖、受影响 net 与文档检查；不改 Engine 语义。
+4. 本地运行本次改动的定向判别和文档检查；PR CI执行受影响公共检查并复用同一测试树的成功结果；不改Engine语义。

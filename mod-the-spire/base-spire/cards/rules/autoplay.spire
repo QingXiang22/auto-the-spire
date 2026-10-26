@@ -10,7 +10,7 @@ procedure AutoPlayFromDrawPile {
   parameters = { owner = Ref(Player) play = Binding count = Int forceExhaust = Bool }
   locals = { batch = Binding next = Binding entry = Binding }
   body = {
-    if = { condition = pureCall(CombatIsEnding) then = { return = {} } }
+    if = { condition = pureCall(CombatIsOverOrEnding) then = { return = {} } }
     create = { type = AutoPlayBatch scope = entityScope(owner) into = batch fields = { Owner = owner Play = play } }
     repeat = { count = maximum(0, count) body = {
       call = { procedure = ReshuffleDiscard args = { owner = owner } }
@@ -27,7 +27,7 @@ procedure AutoPlayFromDrawPile {
       if = { condition = greater(field(owner, Player.Hp), 0) then = {
         set = { target = next field = Card.ForceExhaust value = forceExhaust }
         # Source assigns the flag even when ending; preloaded cards then remain in Play.
-        if = { condition = not(pureCall(CombatIsEnding)) then = {
+        if = { condition = not(pureCall(CombatIsOverOrEnding)) then = {
           call = { procedure = ResolveAutoCard args = { owner = owner card = next forceExhaust = forceExhaust prepared = true } }
         } }
       } }
