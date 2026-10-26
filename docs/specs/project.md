@@ -16,7 +16,7 @@
 
 ## 当前可用性与交付目标
 
-可运行范围以 [base manifest](../../mod-the-spire/base-spire/package.json)及所审提交为准。当前开发 scope 提供部分战斗和内容机制，正常地图／Run、完整来源和独立比较尚待恢复。声明、加载、行为测试、独立比较和公开可用分别确认；实现数和测试数不能代替完整游戏能力。
+可运行范围以 [base manifest](../../mod-the-spire/base-spire/package.json)及所审提交为准。当前开发 scope 提供部分战斗和内容机制，另有含 Neow 的有限正常开局至首战奖励返回地图路径；完整 Run、完整来源覆盖和完整独立比较尚未验收。各项检查的实际范围见 [CI 说明](../../tools/ci/README.md)。声明、加载、行为测试、独立比较和公开可用分别确认；实现数和测试数不能代替完整游戏能力。
 
 当前任务和暂停条件见 [GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。环境完整行为要求与最终矩阵集中在 [环境验收规格](environment.md)，不在交接报告中维护。
 
