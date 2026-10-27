@@ -27,7 +27,8 @@ namespace Differential;
 
 internal static class CombatBoundaryComparison
 {
-    private static readonly string[] Plans = ["turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "anger-ending", "anger-upgraded", "zero-card", "free-x", "repeat-card", "corruption", "juggling", "juggling-full", "juggling-stomp"];
+    private static readonly string[] Plans = ["turn-return", "paid-card", "two-end-effects", "feed-ending", "ending-move", "anger-ending", "anger-upgraded", "zero-card", "free-x", "repeat-card", "corruption", "juggling", "juggling-full", "juggling-stomp"];
+    private static readonly string[] PausedPlans = ["two-end-effects-paused"];
     private static readonly string[] Seeds = ["777", "A😀B"];
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
     internal sealed record Point(string Phase, string Card, long Turn, long Energy, long Hp, long MaxHp, long Block,
@@ -39,13 +40,20 @@ internal static class CombatBoundaryComparison
 
     internal static int Run(string repository, string[] args)
     {
-        if (args.Length != 0 && (args.Length != 2 || args[0] != "--output")) throw new FormatException("Use combat-boundary-compare [--output DIRECTORY].");
+        string? output = null; var pausedSchedule = false;
+        for (var index = 0; index < args.Length; index++)
+        {
+            if (args[index] == "--output" && index + 1 < args.Length) output = args[++index];
+            else if (args[index] == "--paused-schedule") pausedSchedule = true;
+            else throw new FormatException("Use combat-boundary-compare [--output DIRECTORY] [--paused-schedule].");
+        }
+        var plans = pausedSchedule ? PausedPlans : Plans;
         var reference = Repository.VerifyReference(repository);
         using var probe = new Probe(repository);
         var package = DslPackage.Load(Path.Combine(probe.Root, "package.json"));
         var cases = new List<object>(); var differences = 0;
         foreach (var seed in Seeds)
-        foreach (var plan in Plans)
+        foreach (var plan in plans)
         {
             var left = Dsl(package, seed, plan, true); var leftQuiet = Dsl(package, seed, plan, false);
             var right = Native(seed, plan, true); var rightQuiet = Native(seed, plan, false);
@@ -62,12 +70,13 @@ internal static class CombatBoundaryComparison
         var report = new { schema = "dsl-migration/combat-boundaries@1", reference,
             package_digest = DslPackage.Load(Path.Combine(repository, "mod-the-spire/base-spire/package.json")).Digest, probe_digest = package.Digest,
             adapter_sha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(typeof(CombatBoundaryComparison).Assembly.Location))),
-            status = differences == 0 ? "passed" : "diverged", executed = cases.Count, expected_case_ids = Seeds.SelectMany(s => Plans.Select(p => s + ":" + p)).ToArray(),
+            status = differences == 0 ? "passed" : "diverged", executed = cases.Count, expected_case_ids = Seeds.SelectMany(s => plans.Select(p => s + ":" + p)).ToArray(),
+            paused_schedule = pausedSchedule, paused_schedule_plans = PausedPlans,
             complete = false, independent_verified = false, normal_run_verified = false, scope = "controlled-boundary-diagnostic",
             controlled_setup = "Empty permanent decks, real FuzzyWurmCrawler and actual production commands; both HP set to 1000. Paid-card creates Strike; two-end-effects creates two Infection in hand. Its paused variant holds the first real move notification administratively (DSL decide/native incomplete Task), then resumes once, without game effects. Ending-move uses a last-kill Strike followed by actual AddAsync to hand, distinguishing synchronous result placement from rejected async movement. Feed-ending uses Feed at enemy HP10 and holds DSL room settlement until after the outer card. Anger generation observes normal, upgraded and ending clones. Juggling executes two real prefix attacks before the third, including a full hand or Stomp cost snapshot. The named native probe relic only observes real hooks; source declarations and raw notifications are retained, without claiming complete listener parity or full events.trace. Fixture card placement is outside action comparison; its DSL notifications remain in raw diagnostics. No missing normal turn is executed by the adapter. Initial HP sampling/niche and normal rooms are outside this probe. Duplicate labels preserve definition/order but do not certify instance identity. Enabled/disabled diagnostics compare the same-backend DSL full StateHash/RNG and native exact combat description/RNG.",
             hook_sources = HookSources(repository), cases };
         var text = JsonSerializer.Serialize(report, Json);
-        if (args.Length != 0) { Directory.CreateDirectory(args[1]); File.WriteAllText(Path.Combine(args[1], "result.json"), text); }
+        if (output is not null) { Directory.CreateDirectory(output); File.WriteAllText(Path.Combine(output, "result.json"), text); }
         Console.WriteLine(text); return differences == 0 ? 0 : 1;
     }
 

@@ -3,14 +3,14 @@ using System.Text.Json;
 
 internal static partial class PackageChecks
 {
-    public static int RunNormalRunOnly(DslPackage package)
+    public static int RunNormalRunOnly(DslPackage package, bool includeDenseVegetation = true)
     {
         RunNormalOpeningGuardChecks(package);
         RunSourceOpeningChecks(package);
         RunMapGaussianChecks(package);
         RunSourceMapChecks(package);
         RunNormalOpeningChecks(package);
-        RunNormalReturnOnly(package);
+        RunNormalReturnOnly(package, includeDenseVegetation);
         RunUnsupportedNormalOpeningChecks(package);
         return 0;
     }

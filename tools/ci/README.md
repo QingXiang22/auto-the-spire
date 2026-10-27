@@ -4,7 +4,7 @@
 
 本页给出 [GitHub Actions](../../.github/workflows/core-base.yml) 的检查入口。在仓库根目录执行，需要 Python 3.12 和 Git；运行时检查另需根 `global.json` 指定的 .NET SDK，文档组另需 [Vale 3.24.0](../doc-check/README.md)。默认 Release，可用 `--configuration Debug`。
 
-功能分支由 PR 的创建／更新触发检查；[选择程序](select_checks.py)按完整 PR 差异选择受影响组，五个检查名称保持不变，未受影响的组说明跳过原因。Markdown、文档静态图片及文档检查工具只运行 docs；base 与 net 改动运行 base／net／migration／docs；差异比较工具、`check_dsl_migration.py` 与 `normal_report.py` 运行 migration／docs；两个 base 覆盖检查脚本运行 base／docs。选择任务始终执行报告读取器单元测试；多类改动取各自检查组的并集。通用核心、协议 JSON、其他 CI 配置及未识别路径保守运行全部。选择程序失败时检查失败，不报告跳过成功。尚未创建 PR 时，分支 push 不运行本工作流。
+功能分支由 PR 的创建／更新触发检查；[选择程序](select_checks.py)按完整 PR 差异选择受影响组，检查名称与 CI matrix 一致，未受影响的组说明跳过原因。Markdown、文档静态图片及文档检查工具只运行 docs；base 与 net 改动运行 base／net／migration／docs；差异比较工具、`check_dsl_migration.py` 与 `normal_report.py` 运行 migration／docs；两个 base 覆盖检查脚本运行 base／docs；包边界脚本运行 package；敌人图机制脚本运行 enemy-graph；`package.json` 变更另选 package，敌人图 schema／规则变更另选 enemy-graph。选择任务始终执行报告读取器单元测试；多类改动取各自检查组的并集。通用核心、协议 JSON、其他 CI 配置及未识别路径保守运行全部。选择程序失败时检查失败，不报告跳过成功。尚未创建 PR 时，分支 push 不运行本工作流。
 
 main 的 push 先核对最近成功 PR 工作流记录的实际测试 Git tree；只有整棵树完全一致且验证记录未过期，才引用该次成功结果。没有匹配、查询失败或主线包含额外变化时，按主线本次差异运行检查。手动触发始终运行全部组。
 
@@ -29,6 +29,8 @@ python tools/ci/check.py content --focus "relic:RL pickup " --focus relic:CLAY
 | rng | check --rng-only |
 
 focus可重复传入以运行多个组；前缀按已有检查名称不区分大小写匹配，保留尾部空格。不传focus、空前缀、不支持的组、重复选择或零匹配均失败。content须单独调用，不能与base等完整组混用；修改文档时另运行docs。默认Release，保留增量构建，不自动复用可能过时的工具二进制。
+
+包加载／登记与敌人图机制的边界输入不随每批内容重复执行：`python tools/ci/check.py package` 在最小包数据上检查可执行文件、JSON 程序、未知／重复字段、路径逃逸、预算配置／执行与内容模块限制，并核对未知／缺失登记映射；`python tools/ci/check.py enemy-graph` 检查非法图矩阵、无合法分支与转移预算。两者只在包结构、编译器／登记器、图 schema／规则或对应检查本身变化时由 CI 选择；正常内容批次仍加载并运行新增合法内容。`python tools/ci/check.py paused` 是 #147 的暂停调度专项，保留 `two-end-effects-paused` 两个已知差异探针，不进入日常 migration 或 CI。专项命令不能替代完整组或阶段验收。
 
 每个定向入口本身加载包并核对内容登记；只执行该组已有用例，新增内容必须加入相应参数化组或必要行为判别。该入口不运行正常整局、独立比较和全量覆盖检查，也不替代它们的验收。完整行为与覆盖报告由批次PR CI生成，CI矩阵不使用content代替base。
 
@@ -58,15 +60,19 @@ python tools/ci/check.py base net migration docs
 | --- | --- | --- |
 | core | 构建并执行通用 Engine 检查，包括同包文件组合 | 不等于原版玩法验收 |
 | base | 通用加载并启动纯 DSL 包、执行当前机制行为、正常开局及固定源地图／队列比较、核对 DSL 遗物及卡牌执行结果 | 机制 scope及部分正常开局；铁甲战士卡牌检查要求源池 85 张单人铁甲战士完整且有实际执行结果，保留90项新版来源及五项多人排除 |
+| package | 在最小包数据上检查加载／编译边界、预算与内容模块限制，并核对生产登记映射 | 只验证包工具输入与登记映射，不执行玩法内容 |
+| enemy-graph | 在受控敌人图副本上检查非法图、无合法分支与转移预算 | 图机制输入测试，不表示正常遭遇或完整战斗验收 |
 | net | 通用 wire／text-rules 检查和纯 DSL 公开路径，包含真实 stdio 子进程 | 含seed 777的真实Neow至首战奖励领取／跳过及地图返回；完整正常Run的snapshot／control／formal检查尚未迁移 |
 | docs | 检查 Git 文档（含共享 AGENTS.md）的链接、锚点、JSON 示例、需求引用、Vale 项目术语和差异格式 | CI 安装固定版本 Vale 并校验 SHA256；检查不读取本地原版源码或历史产物 |
 | migration | 准备锁定参考，校验构建依赖隔离、153 个固定版本的源代码组与 11 份原 suite；执行 Strike／重洗双侧、逐次随机诊断、正常开局预检、共同动作四路径及严格失败检查 | BattleFriend的13个及Wriggler／Infection的24个受控组件场景须通过；Strike 通过，重洗保留真实首差；正常领取／跳过及目标选择共四路径返回地图，完整公开语义快照和逐边界协议检查通过；逐次随机与适用事件仍缺，因此非零；其余原用例未支持，不代表完整差异测试验收 |
 
 首次非零使当前组失败。原始日志、退出码及 `result.json` 写入 `.artifacts/ci/<组名>/`，Actions 上传各组 artifact，保留 14 天。base 的行为报告标记 `independent_verified: false`；迁移清单中的原检查均标记未执行。固定版本的文本 SHA256 采用 UTF-8 与 LF，跨检出换行保持一致。
 
-base组的 `check --normal-run-only` 保留10组固定字符串seed，比较完整前置遗物袋、三幕房间队列、Neow候选、Gaussian拒绝抽样，以及首幕最终节点／房型／父子边和随机游标；源向量的[生成入口](../rng-oracle/README.md#重新生成)与生产规则隔离。公开正向路径从Neow实际获得遗物到首个真实战斗，不注入敌人、清场或奖励。未支持选项／遭遇保留在源池并验证失败无额外状态／随机消费；同组还验证正常首战领取／跳过返回地图、自然死亡与受控末杀／余效顺序；完整整局及逐步双侧比较仍不在本组验收范围。
+base组的 `check --normal-run-only` 保留10组固定字符串seed，比较完整前置遗物袋、三幕房间队列、Neow候选、Gaussian拒绝抽样，以及首幕最终节点／房型／父子边和随机游标；源向量的[生成入口](../rng-oracle/README.md#重新生成)与生产规则隔离。CI 先执行完整 `check --report`（含 DenseVegetation 的 event 行为报告），再以 `--normal-run-only --skip-dense-vegetation` 运行独立正常组，避免同一 job 重复执行该场景；单独运行 `--normal-run-only` 时仍包含 DenseVegetation。公开正向路径从Neow实际获得遗物到首个真实战斗，不注入敌人、清场或奖励。未支持选项／遭遇保留在源池并验证失败无额外状态／随机消费；同组还验证正常首战领取／跳过返回地图、自然死亡与受控末杀／余效顺序；完整整局及逐步双侧比较仍不在本组验收范围。
 
 migration另运行[七个固定轮转敌人组件比较](../differential/README.md#固定轮转敌人组件比较)，要求原50项全部一致，包括玩家致死时Frail清理与Vigor保留。另执行[Power改量组件](../differential/README.md#power改量组件比较)的96项，保留新建／叠加／直接Modify、Artifact、正负增量／零量、临时力量、实例模式及真实来源。另执行16项侧开始／清挡与80项双方格挡命令组件，保留28项回合组件并比较Power开始量。各组均实际返回0并核对完整边界；组件初态与部分时点为受控设置，不表示完整正常Run或全部内容验收。
+
+战斗动作边界默认执行28项共同动作并返回0；第一张移牌时暂停的两项效果牌差异已移到 `check.py paused` 专项，仍保留两例、原完整计划目录和 #147 未解决状态，不进入 migration 默认清单。专项返回0只表示按已知差异执行并核对诊断，不表示差异已消除或阶段通过。
 
 铁甲战士卡牌检查可单独复查：
 

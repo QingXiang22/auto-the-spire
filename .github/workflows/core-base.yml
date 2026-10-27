@@ -56,7 +56,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        suite: [core, base, net, migration, docs]
+        suite: [core, base, net, migration, docs, package, enemy-graph]
     env:
       RUN_SUITE: ${{ contains(fromJSON(needs.select.outputs.suites || '[]'), matrix.suite) }}
     steps:

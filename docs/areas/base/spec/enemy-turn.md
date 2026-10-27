@@ -90,8 +90,9 @@ StunEnemy保存当前已选真实节点，以公开STUNNED／stun替换下一行
 
 ```powershell
 dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only
+dotnet run --project tools/base-spire-dev -c Release -- check --enemy-graph-only
 ```
 
-定向检查包括两个真实消费者、Slimed执行、同定义双实例／双会话、跨战重置、查询只读、暂停续接及过期答案、非法图、无合法分支和迁移循环预算。固定源向量的生成入口见[随机神谕](../../../../tools/rng-oracle/README.md)。完整包检查另核对原来源条目、全部已声明卡牌及既有敌人行为。
+定向检查包括两个真实消费者、Slimed执行、同定义双实例／双会话、跨战重置、查询只读及暂停续接。非法图、无合法分支和迁移循环预算属于图机制输入，只在 `--enemy-graph-only` 或图 schema／规则变化时执行，新增敌人不重复全部损坏图变体。固定源向量的生成入口见[随机神谕](../../../../tools/rng-oracle/README.md)。完整包检查另核对原来源条目、全部已声明卡牌及既有敌人行为。
 
-公共CI检查core、base、net、migration及docs；正常Run和完整参考模拟器行为仍按各自工单验收。
+公共CI检查core、base、net、migration、docs及按影响选择的package／enemy-graph；正常Run和完整参考模拟器行为仍按各自工单验收。

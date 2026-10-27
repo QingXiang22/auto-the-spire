@@ -80,46 +80,6 @@ internal static partial class PackageChecks
             var variant = copy.Load(); var s = Start(variant); Submit(s, "ConfiguredProbe.Obtain"); Submit(s, "Draw");
             Equal(8L, Block(s), "configured amount"); True(variant.Rules.Identity != package.Rules.Identity, "new semantics change identity");
         });
-        Case("DB-A01/A09: package rejects executable files, JSON programs, unknown and duplicate fields", () =>
-        {
-            RejectCopy(package.Root, c => File.WriteAllText(c.Path("hidden.cs"), "class Hidden {}"));
-            RejectCopy(package.Root, c => c.EditJson("package.json", root => root["effects"] = new System.Text.Json.Nodes.JsonArray()));
-            RejectCopy(package.Root, c => c.EditJson("relics/catalog.json", root => root["unknown"] = 1));
-            RejectCopy(package.Root, c => File.WriteAllText(c.Path("package.json"), File.ReadAllText(c.Path("package.json")).Replace("{", "{\"format\":\"duplicate\",", StringComparison.Ordinal)));
-        });
-        Case("package instruction budget validates configuration and is enforced by its sessions", () =>
-        {
-            foreach (var invalid in new[] { "0", "-1", "1.5", "9223372036854775808", "true", "null", "\"100\"" })
-                RejectCopy(package.Root, c => c.EditJson("package.json", root => root["instruction_budget"] = System.Text.Json.Nodes.JsonNode.Parse(invalid)));
-            using var defaults = new Copy(package.Root);
-            defaults.EditJson("package.json", root => root.Remove("instruction_budget"));
-            Equal(SessionBudget.Default.MaxInstructions, defaults.Load().CreateSession(1, ["player"]).Budget.MaxInstructions, "omitted budget uses the engine default");
-            using var limited = new Copy(package.Root);
-            limited.EditJson("package.json", root => root["instruction_budget"] = 1);
-            var session = limited.Load().CreateSession(1, ["player"]);
-            Throws<EngineFaultException>(session.Start);
-            Equal(EngineFaultCode.BudgetExceeded, session.Fault!.Code, "configured limit is enforced during actual execution");
-        });
-        Case("DB-A03/A04: package rejects escaping references, missing and unreferenced DSL files", () =>
-        {
-            RejectCopy(package.Root, c => c.EditJson("package.json", root => root["entry"] = "../outside.spire"));
-            RejectCopy(package.Root, c => File.WriteAllText(c.Path("unused.spire"), "using namespace base-spire; dsl_version = \"core/0.3\""));
-            RejectCopy(package.Root, c => File.WriteAllText(c.Path("base.spire"), File.ReadAllText(c.Path("base.spire")).Replace("combat/index.spire", "../outside.spire", StringComparison.Ordinal)));
-        });
-        Case("DB-R05: content modules accept owned declarations and reject package properties, unknown arguments and executable expressions", () =>
-        {
-            const string content = "relics/shared/the-abacus.spire";
-            using var owned = new Copy(package.Root);
-            File.AppendAllText(owned.Path(content), "\nprocedure OwnedEffect { body = {} }");
-            Start(owned.Load());
-            RejectCopy(package.Root, c => File.AppendAllText(c.Path(content), "\nstart = []"));
-            using var unknown = new Copy(package.Root);
-            File.WriteAllText(unknown.Path(content), File.ReadAllText(unknown.Path(content)).Replace("amount = 6", "unlisted = 6", StringComparison.Ordinal));
-            Throws<DslSourceException>(() => unknown.Load());
-            using var expression = new Copy(package.Root);
-            File.WriteAllText(expression.Path(content), File.ReadAllText(expression.Path(content)).Replace("amount = 6", "amount = add(3, 3)", StringComparison.Ordinal));
-            Throws<DslSourceException>(() => expression.Load());
-        });
         Case("DB-A05/A10: old scopes are rejected and source definitions exactly match supported relics", () =>
         {
             Throws<NotSupportedException>(() => DslPackage.Load(manifest, "base-spire-singleplayer-dev-map-v1"));
