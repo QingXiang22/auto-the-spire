@@ -12,6 +12,10 @@ import urllib.request
 
 
 SUITES = ["core", "base", "net", "migration", "docs"]
+# These exact scripts are used only by their named suite in check.py. The select job
+# independently runs test_normal_report.py on every event.
+MIGRATION_CHECK_FILES = {"tools/ci/check_dsl_migration.py", "tools/ci/normal_report.py"}
+BASE_COVERAGE_FILES = {"tools/ci/check_relic_coverage.py", "tools/ci/check_card_coverage.py"}
 
 
 def affected(paths: list[str]) -> list[str]:
@@ -21,7 +25,11 @@ def affected(paths: list[str]) -> list[str]:
             continue
         if path.startswith("docs/") and not path.startswith("docs/examples/") and Path(path).suffix in {".svg", ".png", ".html", ".css"}:
             continue
-        if path.startswith(("mod-the-spire/base-spire/", "net-the-spire/", "tools/base-spire-dev/")):
+        if path in MIGRATION_CHECK_FILES:
+            selected.add("migration")
+        elif path in BASE_COVERAGE_FILES:
+            selected.add("base")
+        elif path.startswith(("mod-the-spire/base-spire/", "net-the-spire/", "tools/base-spire-dev/")):
             selected.update(("base", "net", "migration"))
         elif path.startswith(("tools/differential/", "tools/rng-oracle/")):
             selected.update(("migration", "base") if path.startswith("tools/rng-oracle/") else ("migration",))
