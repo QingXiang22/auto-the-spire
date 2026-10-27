@@ -60,7 +60,7 @@ procedure DrawNextCard {
             set = { target = owner field = Player.LastDrawn value = drawn }
             emit = {
               event = AfterCardDrawnEarly payload = { owner = owner card = drawn } }
-            if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterCardDrawn payload = { owner = owner card = drawn } } } }
+            if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterCardDrawn payload = { owner = owner card = drawn } } } }
             set = { target = owner field = Player.LastDrawn value = drawn }
           }
         }

@@ -43,7 +43,7 @@ procedure CalculateBlockAmount {
   pure = true parameters = { player = Binding enemy = Binding amount = Int unpowered = Bool move = Bool card = Binding play = Binding }
   locals = { total = Int } result = Int
   body = {
-    if = { condition = pureCall(CombatIsEnding) then = { return = { value = maximum(0, multiply(amount, 1000000)) } } }
+    if = { condition = pureCall(CombatIsOverOrEnding) then = { return = { value = maximum(0, multiply(amount, 1000000)) } } }
     let = { into = total value = foldEvent(ModifyBlockAdditive, multiply(amount, 1000000), player, enemy, unpowered, move, card, play) }
     let = { into = total value = foldEvent(ModifyBlockMultiplier, total, player, enemy, unpowered, move, card, play) }
     return = { value = maximum(0, total) }
@@ -87,7 +87,7 @@ procedure GainCombatBlock {
       let = { into = actor value = player }
       if = { condition = not(pureCall(CanExecuteCombatCommand, player)) then = { return = { value = 0 } } }
     } else = {
-      if = { condition = or(pureCall(CombatIsEnding), not(pureCall(EnemyIsActive, enemy))) then = { return = { value = 0 } } }
+      if = { condition = or(pureCall(CombatIsOverOrEnding), not(pureCall(EnemyIsActive, enemy))) then = { return = { value = 0 } } }
     } }
     set = { target = actor field = Player.EffectDepth value = add(field(actor, Player.EffectDepth), 1) }
     create = { type = BlockGain scope = entityScope(actor) into = gain fields = {
@@ -95,10 +95,10 @@ procedure GainCombatBlock {
       Unpowered = unpowered Move = move Card = card Play = play
     } }
     emit = { event = BeforeBlockGained payload = { gain = gain } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BlockAdding payload = { gain = gain } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BlockMultiplying payload = { gain = gain } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BlockAdding payload = { gain = gain } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BlockMultiplying payload = { gain = gain } } } }
     set = { target = gain field = BlockGain.AmountMicros value = maximum(0, field(gain, BlockGain.AmountMicros)) }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterModifyingBlockAmount payload = { gain = gain } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterModifyingBlockAmount payload = { gain = gain } } } }
     let = { into = total value = field(gain, BlockGain.AmountMicros) }
     # An entered source command commits even if a Before/AfterModifying callback caused ending.
     if = { condition = greater(total, 0) then = {
@@ -111,7 +111,7 @@ procedure GainCombatBlock {
         set = { target = play field = CardPlayRecord.PoweredBlocks value = add(field(play, CardPlayRecord.PoweredBlocks), 1) }
       } }
     } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterBlockGained payload = { gain = gain } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterBlockGained payload = { gain = gain } } } }
     forEach = { query = where(type(BlockAmountModifier), r, equal(field(r, BlockAmountModifier.Gain), gain)) item = record body = { destroy = { target = record } } }
     destroy = { target = gain }
     set = { target = actor field = Player.EffectDepth value = subtract(field(actor, Player.EffectDepth), 1) }

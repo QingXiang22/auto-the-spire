@@ -80,7 +80,7 @@ PaperPhrog由原VulnerablePower查询攻击者持有遗物后，将目标易伤�
 
 ToughBandages 在本持有者的卡牌主动弃置、且当前为己方行动阶段时，每张获得 3 点无加成格挡。CardDiscardBlockRelic 监听 CardDiscarded，按 Holder、DefinitionId、IsMelted 和库存顺序绑定有效实例；在 CombatActive 且非 EnemyPhase 时调用 GainUnpoweredBlock，不应用敏捷／脆弱，不消费随机，沿现有格挡上限 999。其他持有者、移除或熔化的实例不参与；同定义有效实例分别响应。开发获得按本持有者去重。
 
-DiscardCombatCard 先把本持有者手牌移入 DiscardPile，完成 CardMoved 通知，再发 CardDiscarded；多张主动弃牌逐张完成移动与监听，嵌套弃牌先完成子事件再继续父事件。普通出牌进入弃牌区、满手溢出及其他普通移动不发 CardDiscarded。源 CombatManager.FlushPlayerHand 直接批量移牌，因此回合末 FinishTurnHand 只发布清手移动通知，不触发 ToughBandages；不能把清手当作主动弃牌。
+DiscardCombatCard 按来源CardCmd.Discard的同步Add将本持有者手牌移入DiscardPile，再发CardDiscarded；不发AddAsync的CardMoved；多张主动弃牌逐张完成移动与监听，嵌套弃牌先完成子事件再继续父事件。普通出牌进入弃牌区、满手溢出及其他普通移动不发 CardDiscarded。源 CombatManager.FlushPlayerHand 直接批量移牌，因此回合末 FinishTurnHand 只发布清手移动通知，不触发 ToughBandages；不能把清手当作主动弃牌。
 
 判别需覆盖主动弃牌数值、非己方阶段、双向持有者隔离、失效与多实例、回合末清手和普通移动、逐张及嵌套通知顺序、无加成与上限，以及公开 Host 的获得→主动弃牌→格挡轨迹。当前开发 DiscardHand 可执行该消费者；其他角色卡牌、正常来源、正常 Run 和独立原版双侧另行验证。
 

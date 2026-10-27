@@ -273,7 +273,11 @@ procedure SettleNormalCombat {
   locals = { run = Binding visit = Binding }
   body = {
     let = { into = run value = field(owner, Player.CurrentRun) }
-    if = { condition = isNone(run) then = { call = { procedure = SettleDevelopmentEventCombat args = { owner = owner victory = victory } } return = {} } }
+    if = { condition = isNone(run) then = {
+      call = { procedure = WhenCombatEnded args = { owner = owner victory = victory } }
+      call = { procedure = SettleDevelopmentEventCombat args = { owner = owner victory = victory } }
+      return = {}
+    } }
     let = { into = visit value = field(run, Run.CurrentVisit) }
     if = { condition = or(isNone(visit), not(equal(field(run, Run.Phase), "combat"))) then = { fail = { message = "No normal combat visit is active" } } }
     if = { condition = or(field(visit, RunVisit.Committed), not(equal(field(visit, RunVisit.Phase), "combat"))) then = { fail = { message = "Normal combat visit was already committed" } } }

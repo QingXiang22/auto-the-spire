@@ -105,7 +105,7 @@ template NoAttackTurnEnergyRelic {
       }
     }
     procedure CombatFinished {
-      parameters = { owner = Ref(Player) victory = Bool listener = Ref(Relic) }
+      parameters = { owner = Ref(Player) listener = Ref(Relic) }
       body = {
         call = {
           procedure = Reset args = {
@@ -118,7 +118,7 @@ template NoAttackTurnEnergyRelic {
       event = BeforeCombatStart reaction = Reset instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = pureCall(RelicHookOrder, listener, false) priority = 0
     }
     subscription Finished {
-      event = CombatEnded reaction = CombatFinished instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = collectionIndex(Relics, listener) priority = 100
+      event = AfterCombatEnd reaction = CombatFinished instances = where(collection(Relics), candidate, and(equal(field(candidate, Relic.Holder), owner), and(not(field(candidate, Relic.IsMelted)), equal(field(candidate, Relic.DefinitionId), arg(definition))))) instance_order = pureCall(RelicHookOrder, listener, false) priority = 0
     }
     procedure Played {
       parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Relic) }

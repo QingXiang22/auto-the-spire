@@ -30,6 +30,7 @@ event EnemyEscaped { payload = { owner = Ref(Player) target = Ref(Enemy) } }
 event EnemyAddedToCombat { payload = { owner = Ref(Player) target = Ref(Enemy) } }
 event EnemyRemoving { payload = { target = Ref(Enemy) } }
 # The development combat finished: victory when no hittable enemy remains, defeat when the player reaches 0 HP.
+event AfterCombatEnd { payload = { owner = Ref(Player) } }
 event CombatEnded { payload = { owner = Ref(Player) victory = Bool } }
 event CombatVictory { payload = { owner = Ref(Player) victory = Bool } }
 event CombatVictoryEarly { payload = { owner = Ref(Player) victory = Bool } }
@@ -70,6 +71,7 @@ procedure EscapeEnemy {
 procedure CheckCombatVictory {
   parameters = { owner = Ref(Player) }
   body = {
+    call = { procedure = CheckCombatDefeat args = { owner = owner } }
     if = { condition = or(greater(field(owner, Player.DamageDepth), 0), greater(field(owner, Player.EffectDepth), 0)) then = { return = {} } }
     if = {
       condition = and(and(greater(field(owner, Player.Hp), 0), equal(field(owner, Player.AttackDepth), 0)), and(equal(field(owner, Player.PlayDepth), 0), and(field(owner, Player.CombatActive), equal(field(owner, Player.CombatOutcome), "none"))))
@@ -82,6 +84,7 @@ procedure CheckCombatVictory {
             set = { target = owner field = Player.CombatActive value = false }
             call = { procedure = RefreshDrawPermissions }
             emit = { event = CombatEnded payload = { owner = owner victory = true } }
+            emit = { event = AfterCombatEnd payload = { owner = owner } }
             call = { procedure = ClearNormalCombat args = { owner = owner } }
             emit = { event = CombatVictoryEarly payload = { owner = owner victory = true } }
             emit = { event = CombatVictory payload = { owner = owner victory = true } }
@@ -95,26 +98,26 @@ procedure CheckCombatVictory {
 procedure CheckCombatDefeat {
   parameters = { owner = Ref(Player) }
   body = {
-    if = {
-      condition = and(field(owner, Player.CombatActive), equal(field(owner, Player.CombatOutcome), "none"))
-      then = {
-        if = {
-          condition = equal(field(owner, Player.Hp), 0)
-          then = {
-            set = { target = owner field = Player.CombatOutcome value = "defeat" }
-            set = { target = owner field = Player.TurnOpen value = false }
-            set = { target = owner field = Player.CombatActive value = false }
-            call = { procedure = RefreshDrawPermissions }
-            set = { target = owner field = Player.Room value = "none" }
-            set = { target = owner field = Player.RoomUsed value = false }
-            emit = { event = PlayerDied payload = { owner = owner } }
-            call = { procedure = RemovePowersOnDeath args = { player = owner enemy = none } }
-            emit = { event = CombatEnded payload = { owner = owner victory = false } }
-            call = { procedure = SettleNormalCombat args = { owner = owner victory = false } }
-          }
-        }
-      }
-    }
+    if = { condition = or(not(field(owner, Player.CombatActive)), not(equal(field(owner, Player.CombatOutcome), "none"))) then = { return = {} } }
+    if = { condition = greater(field(owner, Player.Hp), 0) then = { return = {} } }
+    if = { condition = field(owner, Player.DeathResolving) then = { return = {} } }
+    if = { condition = not(field(owner, Player.DeathResolved)) then = {
+      set = { target = owner field = Player.DeathResolving value = true }
+      set = { target = owner field = Player.TurnOpen value = false }
+      emit = { event = PlayerDied payload = { owner = owner } }
+      call = { procedure = RemovePowersOnDeath args = { player = owner enemy = none } }
+      set = { target = owner field = Player.DeathResolved value = true }
+      set = { target = owner field = Player.DeathResolving value = false }
+    } }
+    # Death callbacks retain the combat and outer action references. Only the outer boundary commits.
+    if = { condition = or(greater(field(owner, Player.DamageDepth), 0), or(greater(field(owner, Player.EffectDepth), 0), or(greater(field(owner, Player.AttackDepth), 0), greater(field(owner, Player.PlayDepth), 0)))) then = { return = {} } }
+    set = { target = owner field = Player.CombatOutcome value = "defeat" }
+    set = { target = owner field = Player.CombatActive value = false }
+    call = { procedure = RefreshDrawPermissions }
+    set = { target = owner field = Player.Room value = "none" }
+    set = { target = owner field = Player.RoomUsed value = false }
+    emit = { event = CombatEnded payload = { owner = owner victory = false } }
+    call = { procedure = SettleNormalCombat args = { owner = owner victory = false } }
   }
 }
 
@@ -139,6 +142,8 @@ procedure BeginDevelopmentCombat {
     set = { target = owner field = Player.Energy value = 0 }
     set = { target = owner field = Player.TurnOpen value = false }
     set = { target = owner field = Player.CombatOutcome value = "none" }
+    set = { target = owner field = Player.DeathResolving value = false }
+    set = { target = owner field = Player.DeathResolved value = false }
     set = { target = owner field = Player.CombatTimedOut value = false }
     set = { target = owner field = Player.EnemyDiedInCombat value = false }
     set = { target = owner field = Player.Room value = "battle" }
@@ -186,8 +191,8 @@ procedure BeginDevelopmentTurn {
     set = { target = owner field = Player.LostHpThisTurn value = false }
     set = { target = owner field = Player.ExhaustedCardThisTurn value = false }
     call = { procedure = SnapshotPowerTurnStart args = { player = owner enemy = none } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforePlayerSideTurnStart payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = {
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BeforePlayerSideTurnStart payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = {
       forEach = { query = sort(where(type(Enemy), e, pureCall(EnemyIsActive, e)), e, field(e, Enemy.SpawnOrder)) item = enemy body = {
         call = { procedure = SelectNextEnemyMove args = { target = enemy } }
       } }
@@ -195,21 +200,21 @@ procedure BeginDevelopmentTurn {
     if = { condition = greater(field(owner, Player.TurnNumber), 0) then = {
       call = { procedure = ClearCombatantBlock args = { player = owner enemy = none } }
     } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterBlockCleared payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { call = { procedure = ResetTurnEnergy args = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterEnergyReset payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterBlockCleared payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { call = { procedure = ResetTurnEnergy args = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterEnergyReset payload = { owner = owner } } } }
     set = { target = owner field = Player.TurnNumber value = add(field(owner, Player.TurnNumber), 1) }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforeHandDraw payload = { owner = owner } } } }
-    if = { condition = and(not(pureCall(CombatIsEnding)), greater(field(owner, Player.AutoDrawPerTurn), 0)) then = {
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BeforeHandDraw payload = { owner = owner } } } }
+    if = { condition = and(not(pureCall(CombatIsOverOrEnding)), greater(field(owner, Player.AutoDrawPerTurn), 0)) then = {
       call = { procedure = DrawDevelopmentTurnHand args = { owner = owner } }
     } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterPlayerTurnStartEarly payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterPlayerTurnStart payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterPlayerTurnStartLate payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterPlayerSideTurnStart payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterPlayerTurnStartEarly payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterPlayerTurnStart payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterPlayerTurnStartLate payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterPlayerSideTurnStart payload = { owner = owner } } } }
     set = { target = owner field = Player.EffectDepth value = subtract(field(owner, Player.EffectDepth), 1) }
     call = { procedure = CheckCombatVictory args = { owner = owner } }
-    if = { condition = and(field(owner, Player.CombatActive), not(pureCall(CombatIsEnding))) then = {
+    if = { condition = and(field(owner, Player.CombatActive), not(pureCall(CombatIsOverOrEnding))) then = {
       set = { target = owner field = Player.TurnOpen value = true }
     } }
   }
@@ -223,14 +228,14 @@ procedure EndDevelopmentTurn {
     if = { condition = not(field(owner, Player.TurnOpen)) then = { fail = { message = "Development turn is not open" } } }
     set = { target = owner field = Player.TurnOpen value = false }
     set = { target = owner field = Player.EffectDepth value = add(field(owner, Player.EffectDepth), 1) }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterAutoPostPlayPhaseEntered payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforePlayerSideTurnEndVeryEarly payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforePlayerSideTurnEndEarly payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = BeforePlayerSideTurnEnd payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { call = { procedure = FinishTurnHand args = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { call = { procedure = ResetCardTurnCosts } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterPlayerSideTurnEnd payload = { owner = owner } } } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { call = { procedure = RunEnemyTurn args = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterAutoPostPlayPhaseEntered payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BeforePlayerSideTurnEndVeryEarly payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BeforePlayerSideTurnEndEarly payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BeforePlayerSideTurnEnd payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { call = { procedure = FinishTurnHand args = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { call = { procedure = ResetCardTurnCosts } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterPlayerSideTurnEnd payload = { owner = owner } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { call = { procedure = RunEnemyTurn args = { owner = owner } } } }
     set = { target = owner field = Player.EffectDepth value = subtract(field(owner, Player.EffectDepth), 1) }
     call = { procedure = CheckCombatVictory args = { owner = owner } }
   }
@@ -240,7 +245,7 @@ procedure EndTurn {
   parameters = { owner = Ref(Player) }
   body = {
     call = { procedure = EndDevelopmentTurn args = { owner = owner } }
-    if = { condition = and(field(owner, Player.CombatActive), and(not(pureCall(CombatIsEnding)), not(field(owner, Player.TurnOpen)))) then = {
+    if = { condition = and(field(owner, Player.CombatActive), and(not(pureCall(CombatIsOverOrEnding)), not(field(owner, Player.TurnOpen)))) then = {
       call = { procedure = BeginDevelopmentTurn args = { owner = owner } }
     } }
   }

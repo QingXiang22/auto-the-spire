@@ -55,7 +55,7 @@ procedure ExhaustCombatCard {
     call = { procedure = RemoveFromCombatPiles args = { card = card } }
     addToCollection = { collection = ExhaustPile item = card }
     emit = { event = CardMoved payload = { owner = owner card = card from = from to = "exhaust" reason = "exhaust" } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = CardExhausted payload = { owner = owner card = card causedByEthereal = causedByEthereal } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = CardExhausted payload = { owner = owner card = card causedByEthereal = causedByEthereal } } } }
   }
 }
 procedure SelectHandCard {

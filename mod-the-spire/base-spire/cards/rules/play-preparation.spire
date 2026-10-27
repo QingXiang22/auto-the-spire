@@ -106,7 +106,7 @@ procedure ClearCardPlayPreparation {
 procedure CheckForEmptyHand {
   parameters = { owner = Ref(Player) }
   body = {
-    if = { condition = and(field(owner, Player.CombatActive), and(greater(field(owner, Player.Hp), 0), and(not(pureCall(CombatIsEnding)), and(equal(field(owner, Player.EffectDepth), 0), equal(count(where(collection(Hand), c, equal(field(c, Card.Owner), field(owner, Player.Owner)))), 0))))) then = {
+    if = { condition = and(field(owner, Player.CombatActive), and(greater(field(owner, Player.Hp), 0), and(not(pureCall(CombatIsOverOrEnding)), and(equal(field(owner, Player.EffectDepth), 0), equal(count(where(collection(Hand), c, equal(field(c, Card.Owner), field(owner, Player.Owner)))), 0))))) then = {
       emit = { event = AfterHandEmptied payload = { owner = owner } }
     } }
   }

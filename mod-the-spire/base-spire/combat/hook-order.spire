@@ -64,7 +64,11 @@ procedure EnemyHookOrder {
 
 procedure CombatIsEnding {
  pure = true result = Bool
- body = { return = { value = exists(where(type(Player), owner, or(equal(field(owner, Player.CombatOutcome), "defeat"), and(field(owner, Player.CombatActive), or(lessOrEqual(field(owner, Player.Hp), 0), and(exists(type(Enemy)), not(exists(where(type(Enemy), e, pureCall(EnemyIsActive, e)))))))))) } }
+ body = { return = { value = exists(where(type(Player), owner, and(field(owner, Player.CombatActive), or(lessOrEqual(field(owner, Player.Hp), 0), and(exists(type(Enemy)), not(exists(where(type(Enemy), e, pureCall(EnemyIsActive, e))))))))) } }
+}
+procedure CombatIsOverOrEnding {
+ pure = true result = Bool
+ body = { return = { value = or(pureCall(CombatIsEnding), exists(where(type(Player), owner, not(equal(field(owner, Player.CombatOutcome), "none"))))) } }
 }
 procedure CanExecuteCombatCommand {
  pure = true parameters = { owner = Ref(Player) } result = Bool
