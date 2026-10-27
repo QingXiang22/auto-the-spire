@@ -10,6 +10,34 @@ main 的 push 先核对最近成功 PR 工作流记录的实际测试 Git tree�
 
 本地先运行与本次修改相符的定向检查，最终提交交给 PR CI；相同代码和输入已有适用结果时，无须再按“初验／终验／合并前”重复运行整批。需要新增验证时，在 PR 写明由哪项变化触发。
 
+## 本地内容批次检查
+
+稳定机制上的内容扩展遵循[批次交付规则](../../CONTRIBUTING.md#base-内容按批次交付)。整批编辑完成后，显式选择相关行为组，入口构建一次再执行所选组。例如同批涉及拾取生命上限遗物和SelfFormingClay：
+
+```powershell
+python tools/ci/check.py content --focus "relic:RL pickup " --focus relic:CLAY
+```
+
+| focus | 实际入口 |
+| --- | --- |
+| relic或relic:前缀 | check --relic-content-only，可选--filter |
+| card或card:前缀 | check --card-behavior-only，可选--filter；组合行为和生命周期，不等于全部卡牌 |
+| ironclad | check --ironclad-only |
+| enemy | check --enemy-moves-only |
+| model | check --content-model-only |
+| rewards | check --card-rewards-only |
+| rng | check --rng-only |
+
+focus可重复传入以运行多个组；前缀按已有检查名称不区分大小写匹配，保留尾部空格。不传focus、空前缀、不支持的组、重复选择或零匹配均失败。content须单独调用，不能与base等完整组混用；修改文档时另运行docs。默认Release，保留增量构建，不自动复用可能过时的工具二进制。
+
+每个定向入口本身加载包并核对内容登记；只执行该组已有用例，新增内容必须加入相应参数化组或必要行为判别。该入口不运行正常整局、独立比较和全量覆盖检查，也不替代它们的验收。完整行为与覆盖报告由批次PR CI生成，CI矩阵不使用content代替base。
+
+终端只显示每步命令、退出码、耗时与日志位置；失败显示最后30行并停止后续步骤。完整日志与result.json保存在`.artifacts/ci/content/`，记录所选范围且不声明全量覆盖／独立比较通过。默认复用同一输出目录，不复制逐内容报告。需要排障时先读失败步骤日志，不反复读取所有成功输出。
+
+## 完整检查入口
+
+下列命令用于CI、共享变更的必要回归或阶段验收，不是每个新增内容的本地前置步骤：
+
 ```powershell
 python tools/ci/check.py core
 python tools/ci/check.py base

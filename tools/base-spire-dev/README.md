@@ -2,7 +2,7 @@
 
 本工具在仓库根目录加载 Engine 的纯文本包，不调用旧 C# 玩法。需要根 `global.json` 指定的 .NET SDK。省略 manifest 时加载 `mod-the-spire/base-spire/package.json`。
 
-内容开发默认整批修改完成后调用一次`python tools/ci/check.py base docs`，需要公开／独立比较检查时追加net／migration组，入口自动执行构建、加载、行为、正常流程与覆盖检查并汇总。下面的单项命令用于查看包或失败排障，无需每张牌逐条调用。重复正文使用[卡牌模板](../../docs/areas/base/reference/card-behavior.md#定义正文与纯值)，组合正文保留显式顺序。
+内容开发按[批次规则](../../CONTRIBUTING.md#base-内容按批次交付)连续完成一组内容，本地用`python tools/ci/check.py content --focus <相关组>`一次构建并运行相关行为组，完整回归与覆盖报告交给批次PR CI。[focus参数](../ci/README.md#本地内容批次检查)可重复传入；新增内容要加入对应实际用例，旧组不自动验证新内容。共享机制或接口变化时按影响补验，修改文档另运行docs。下面的直接命令用于查看包、定向检查或排障，无需逐内容重复执行。重复正文使用[卡牌模板](../../docs/areas/base/reference/card-behavior.md#定义正文与纯值)，组合正文保留显式顺序。
 
 ```powershell
 dotnet run --project tools/base-spire-dev -- validate
@@ -11,7 +11,7 @@ dotnet run --project tools/base-spire-dev -- sync-content
 dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/behavior
 ```
 
-`validate` 检查文件边界、引用、严格静态数据与公开元数据，并实际启动 DSL Session。`describe` 输出包摘要、规则标识、scope 和已加载 DSL 定义计数。`check` 执行当前 base 的代表性行为、边界与非法输入检查；它是包外的 C# 检查脚手架，不提供玩法实现。`--report` 写入实际通过场景及卡牌／遗物等行为执行结果，供 [DSL 遗物覆盖检查](../ci/check_relic_coverage.py)与[卡牌完整覆盖检查](../ci/check_card_coverage.py)消费。正常开局及10组源池／地图独立向量使用 `check --normal-run-only`，CI base 组单独执行该命令；它不生成整包覆盖报告。内容模型定向验证可用 `check --content-model-only`；铁甲战士定向调试可用 `check --ironclad-only`，卡牌及普通完整奖励（含药水、有序源向量与暂停续接）可用 `check --card-rewards-only`，原版随机源向量可用 `check --rng-only`，它不生成整包覆盖报告；最终仍运行完整 `check --report`。
+`validate` 检查文件边界、引用、严格静态数据与公开元数据，并实际启动 DSL Session。`describe` 输出包摘要、规则标识、scope 和已加载 DSL 定义计数。`check` 执行当前 base 的代表性行为、边界与非法输入检查；它是包外的 C# 检查脚手架，不提供玩法实现。`--report` 写入实际通过场景及卡牌／遗物等行为执行结果，供 [DSL 遗物覆盖检查](../ci/check_relic_coverage.py)与[卡牌完整覆盖检查](../ci/check_card_coverage.py)消费。正常开局及10组源池／地图独立向量使用 `check --normal-run-only`，CI base 组单独执行该命令；它不生成整包覆盖报告。内容模型定向验证可用 `check --content-model-only`；铁甲战士定向调试可用 `check --ironclad-only`，卡牌及普通完整奖励（含药水、有序源向量与暂停续接）可用 `check --card-rewards-only`，原版随机源向量可用 `check --rng-only`，它不生成整包覆盖报告；完整 `check --report` 由批次PR CI执行。
 
 `sync-content`从实际CardLibrary／PowerLibrary及显式启动实例确定性派生这两类公开ID，只写public/metadata.json相应content_ids；公开可见性政策、生产定义目录及工具固定来源的池顺序继续显式维护。validate／check同时核对可执行ID、来源文件映射及公开列表，缺登记、错误映射和重复分别失败。该审计针对当前base的定义库形状，不是通用包的内容推断器。
 
@@ -21,7 +21,7 @@ dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/
 
 可在命令后传入其他 manifest 路径，再使用 `--scope <id>`。本版 `check` 用于当前 base 开发范围；`validate`同样核对当前base定义库，不把加载成功记作行为通过。退出码 0 为当前命令完成，2 为格式／加载失败，3 为未支持。旧 `play`、`probe` 和直接传卡牌 `.spire` 的入口明确返回 3。
 
-遗物内容接续组可用 `check --relic-content-only` 定向验证拾取资源、动态抽牌／营火治疗、出牌计数和首次受损抽牌。该命令不生成覆盖报告；形成逐件验证记录时仍运行完整 `check --report`，再由 `tools/ci/check_relic_coverage.py` 核对实际定义与执行结果。工具固定数据中的遗物来源保持297项，不能把局部通过写成全遗物完成。
+遗物内容接续组可用 `check --relic-content-only` 定向验证拾取资源、动态抽牌／营火治疗、出牌计数和首次受损抽牌。该命令不生成覆盖报告；批次PR CI运行完整 `check --report`，再由 `tools/ci/check_relic_coverage.py` 核对各内容的实际定义与执行结果，本地无需为此逐件重跑。工具固定数据中的遗物来源保持297项，不能把局部通过写成全遗物完成。
 
 调试单个遗物机制时，可按检查名称筛选：先运行一次`dotnet build tools/base-spire-dev`，随后用`dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-only --filter "AM "`只执行攻击修正组。`--filter`按不区分大小写的名称前缀匹配，不能与其他定向参数或`--report`混用；空白筛选、零匹配返回2。每项输出实际耗时，末尾列执行数、跳过数和检查总耗时；总耗时不包含入口加载，进程总耗时应另计。完整覆盖报告由批次最终CI生成，本地已有相同包摘要的报告时复用，不因补文档重跑。
 

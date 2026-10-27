@@ -4,15 +4,22 @@
 
 ## 选择能证明本次结果的检查
 
-默认完成整批编辑后一次检查，例如`python tools/ci/check.py base net migration docs`；按下表选择实际受影响的组。入口自动执行各组内部步骤，保留各组日志／报告，结束时生成batch-result.json并汇总退出码；某组失败仍继续其他组，该组内部依赖失败则停止后续步骤。AI无需按构建、加载、行为、覆盖逐条调用并反复读取结果。下面的定向命令用于失败排查或明确的局部实验。
+内容扩展默认整批编辑后运行定向检查，完整回归和覆盖报告交给批次PR CI。按[批次规则](../../../../CONTRIBUTING.md#base-内容按批次交付)确定本批依赖和实际用例，不能只运行无关的旧内容检查。以下命令一次构建并执行拾取生命上限遗物与SelfFormingClay两组；仅作选择示例，不是每批必跑组合：
+
+```powershell
+python tools/ci/check.py content --focus "relic:RL pickup " --focus relic:CLAY
+```
+
+focus支持遗物／卡牌的检查名前缀以及敌人、内容模型等已有组，准确参数见[本地内容入口](../../../../tools/ci/README.md#本地内容批次检查)。默认输出每步退出码、耗时与日志位置；失败显示末尾日志。未选组、空前缀或零匹配均失败，不生成全量覆盖报告。本地不默认运行base／net／migration全套；共享机制、公共接口或比较适配变化时按影响扩大验证，并在PR说明触发原因。
 
 先构建一次开发工具；仅修改DSL时可复用已构建入口。不要在公开Host轨迹运行期间继续改包文件：包摘要包含文本和静态元数据，父进程与子进程读到不同版本会造成expected_identity不匹配。
 
 | 修改范围 | 先运行 | 结论边界 |
 | --- | --- | --- |
-| 文档／导航／skill 路由 | 文档检查、skill 校验、实际查找演练 | 不能证明玩法 |
+| 文档／导航／skill 路由 | docs；改变脚本或路由时再核对相应入口 | 不能证明玩法 |
 | 已有正式包／纯文本边界 | 开发工具 validate | 解析、绑定、元数据与启动；不穷举行为 |
-| 当前正式 base 机制（遗物触发、战斗／回合资源、伤害与修正参与者、组合式出牌链、离场分流与胜负判定） | 开发工具 check | 执行工具明确列出的内容行为、永久牌组与角色初态场景；不能通用验证任意新增内容，需检查实际报告执行结果 |
+| 已有机制的内容扩展／数值调整 | content加相关focus；复用参数化用例 | 只证明实际执行的内容；完整报告交给批次PR CI |
+| base共享机制变化 | 受影响的机制组与代表性消费者 | 核对顺序、实例、随机和失败边界，不逐内容复制全套 |
 | 教程配置／教学模板 | 教程真实 stdio 驱动，传明确期望 | 实际公开结果，非原版独立参考 |
 | 共享 DSL／通用编译／事件 | 相关机制与 Engine 检查、必要消费者 | 原型通过不等于完整游戏 |
 | 公开 schema／投影／候选 | 相关 net 检查与真实公开流程 | 隐藏信息、合法候选和协议标识 |
@@ -28,15 +35,14 @@ dotnet run --project tools/base-spire-dev -- describe
 dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-spire-check
 ```
 
-第三条只适用于该工具当前承诺的 base 机制。新增正式内容的行为执行结果必须实际执行，不能将旧报告、教学报告或仅定义存在的数量算作覆盖。最终集成与 Actions 的各组入口见[CI 指南](../../../../tools/ci/README.md)。
+第三条是CI或完整报告排障入口，不是每批本地必跑步骤，只适用于工具当前承诺的base机制。新增正式内容的行为执行结果必须实际执行，不能将旧报告、教学报告或仅定义存在的数量算作覆盖。最终集成与Actions的各组入口见[CI指南](../../../../tools/ci/README.md)。
 
 遗物调试先构建受影响工具，再运行`dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-only --filter "AM "`。筛选按检查名称的不区分大小写前缀匹配；`AM `为攻击修正组，其他组先从实际检查名称确认。输出逐项耗时、执行数与跳过数；零匹配失败，不能用该命令生成整包报告。完整check和覆盖验收条件在批次最终CI执行，参考[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
 文档检查使用以下命令：
 
 ```powershell
-python -X utf8 tools/doc-check/check_docs.py
-git diff --check
+python tools/ci/check.py docs
 ```
 
 ## 从最小错误定位
