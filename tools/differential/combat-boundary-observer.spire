@@ -89,7 +89,11 @@ subscription BoundaryGeneratedForCombat { event = AfterCardGeneratedForCombat re
 # Hold settlement at the same pre-room boundary as the native engine. This does not execute a missing rule.
 action BoundaryPlay { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } body = {
   set = { target = first(type(Player)) field = Player.EffectDepth value = add(field(first(type(Player)), Player.EffectDepth), 1) }
-  call = { procedure = PlayAttackCard args = { owner = first(type(Player)) card = card } }
+  if = { condition = field(card, Card.Targeted) then = {
+    call = { procedure = PlayAttackCard args = { owner = first(type(Player)) card = card } }
+  } else = {
+    call = { procedure = PlayCard args = { owner = first(type(Player)) card = card } }
+  } }
   set = { target = first(type(Player)) field = Player.EffectDepth value = subtract(field(first(type(Player)), Player.EffectDepth), 1) }
 } }
 
