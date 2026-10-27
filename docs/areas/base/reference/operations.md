@@ -217,7 +217,7 @@ call = { procedure = GainUnpoweredBlock args = { owner = owner amount = 6 } }
 | 效果模板 | 参数 | 正文显式调用后的行为 | 当前内容 |
 | --- | --- | --- | --- |
 | AttackEffect | definition: String(64)、hits: Int(1..9) | 读取CardBaseDamage并创建一个hits段的CardAttack | Strike（6／9）、TwinStrike（5／7×2）、PommelStrike（9／10）、IronWave（5／7）、Anger（6／8）、Bludgeon（32／42） |
-| ClonePlayedCardEffect | definition、destination（默认discard） | 克隆当前牌并通过CloneCombatCardToPile放置，以clone记录移动原因 | Anger；Juggling从监听中调用同一放置过程 |
+| ClonePlayedCardEffect | definition、destination（默认discard） | 克隆当前牌并通过CloneGeneratedCombatCard执行来源生成 | Anger；Juggling在出牌前使用同一生成入口 |
 | AttackAllEnemiesEffect | definition: String(64)、hits／upgradedHits: Int(1..9) | 创建一个all目标策略的CardAttack，按击次再按目标结算 | Thunderclap（4／7，1 段）、HowlFromBeyond（16／21，1 段）、Breakthrough（9／13，1 段）、Conflagration（2／2，4／5 段） |
 | BlockEffect | block、upgradedBlock | 按 `Upgraded` 取值后 GainBlock | Defend（5／8）、ShrugItOff（8／11）、IronWave（5／7）、Impervious（30／40）、Taunt（7／8）、BloodWall（16／20） |
 | DrawEffect | cards、upgradedCards | 按 `Upgraded` 取值后 DrawCards | PommelStrike（1／2）、ShrugItOff（1／1）、Offering（3／5） |

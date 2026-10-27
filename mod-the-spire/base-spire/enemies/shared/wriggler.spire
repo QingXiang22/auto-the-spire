@@ -36,8 +36,8 @@ template WrigglerContent { body = {
       call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 6 } }
     } }
     if = { condition = equal(field(node, EnemyMoveNode.Id), "WRIGGLE_MOVE") then = {
-      call = { procedure = CreateCombatCard args = { owner = owner definition = "base-spire:infection" } into = card }
-      call = { procedure = MoveCombatCard args = { owner = owner card = card to = "discard" reason = "generate" } }
+      call = { procedure = CreateCardInstance args = { owner = owner definition = "base-spire:infection" } into = card }
+      call = { procedure = GenerateCardIntoCombat args = { owner = owner card = card creator = none to = "discard" clone = false } }
       call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 2 } }
     } }
   } }

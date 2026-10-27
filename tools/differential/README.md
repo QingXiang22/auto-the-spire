@@ -2,21 +2,21 @@
 
 ## 伤害数值与反应边界
 
-`dotnet run --project tools/differential -c Release -- damage-compare --output .artifacts/differential/damage`执行两个seed的36项组件：负力量与Vigor、分数全挡／破挡／零伤／超杀、大值BodySlam、真实PenNib第十次乘法链、Hemokinesis自伤与Inferno／Rupture反应、致死自伤、Whirlwind同击双杀和Thorns反击致死后中止后续击。PenNib通过九次真实付费Strike准备；场景初值由工具设置，不能当作正常Run。
+`dotnet run --project tools/differential -c Release -- damage-compare --output .artifacts/differential/damage`执行两个seed的38项组件：负力量与Vigor、分数全挡／破挡／零伤／超杀、大值BodySlam、真实PenNib第十次乘法链、Hemokinesis自伤与Inferno／Rupture反应、致死自伤、Whirlwind同击双杀和Thorns反击致死后中止后续击及双方嵌套死亡。PenNib通过九次真实付费Strike准备；场景初值由工具设置，不能当作正常Run。
 
 报告保留每条结果的实际承受者／dealer、Move／Powered／Unblockable、格挡、实际失血、超杀和致死事实，以及伤害提交前、破挡、HP损失、给予、接收与死亡前的顺序；分数金额以10000为单位，群体回调同时观察另一目标HP。双方均实际执行同一场景，诊断开关核对各自完整状态及随机状态不变；只读probe不执行游戏效果。缺源、缺用例、截断和异常非零，差异返回1。成功仅证明所列组件维度与锁定实现一致，normal_run_verified始终为false，不替代11份原suite或完整M01；任意HP修正／转移／防死仍未支持。
 
 ## 战斗动作边界诊断
 
-运行 `dotnet run --project tools/differential -c Release -- combat-boundary-compare --output .artifacts/differential/combat-boundaries`，从两个固定 seed 分别执行开场及完整`EndTurn`（含下一普通玩家开始）、付费 Strike、两张 Infection、第一张移牌时暂停的两张 Infection，以及 Feed 末杀；另覆盖零费Anger、免费自动Whirlwind、真实OneTwoPunch重复Strike与Corruption技能，共18项。`combat-boundary-self-test` 检查比较器拒绝缺通知、错阶段、错牌区、错支付、错招式、错 ending、零执行和重复动作返回。
+运行 `dotnet run --project tools/differential -c Release -- combat-boundary-compare --output .artifacts/differential/combat-boundaries`，从两个固定 seed 分别执行开场及完整`EndTurn`（含下一普通玩家开始）、付费 Strike、两张 Infection、第一张移牌时暂停的两张 Infection，以及 Feed 末杀；另覆盖末杀同步／异步移牌、普通／升级及末杀Anger、免费自动Whirlwind、OneTwoPunch重复Strike、Corruption和Juggling普通／满手／Stomp克隆，共30项。`combat-boundary-self-test` 检查比较器拒绝缺通知、错阶段、错牌区、错支付、错招式、错 ending、零执行和重复动作返回。
 
-这些是人工设置的组件：空永久牌组、真实 FuzzyWurmCrawler、双方生命设为1000，Feed 的敌人设为10HP。只读通知记录实际回合号、能量、当前通知实付量spent、生命、格挡、招式、ending 和五个有序牌区；暂停例分别使用 DSL 的行政选择与参考既有异步通知的未完成 Task，观察后各续接一次，不加入游戏效果或动画等待。Feed 停在房间结算前。报告同时保存双方原始事件／监听信息，以及锁定 Hook 的准确源码、行号、摘要、迭代入口、名单固定和资格检查位置，供逐通知核查；这些源码片段和局部观察不证明全部监听已对齐。
+这些是人工设置的组件：空永久牌组、真实 FuzzyWurmCrawler、双方生命设为1000，Feed 的敌人设为10HP。只读通知记录实际回合号、能量、当前通知实付量spent、生命、格挡、招式、ending、生成数、Stomp手牌费用、Anger克隆升级状态和五个有序牌区；暂停例分别使用 DSL 的行政选择与参考既有异步通知的未完成 Task，观察后各续接一次，不加入游戏效果或动画等待。Feed 停在房间结算前。报告同时保存双方原始事件／监听信息，以及锁定 Hook 的准确源码、行号、摘要、迭代入口、名单固定和资格检查位置，供逐通知核查；这些源码片段和局部观察不证明全部监听已对齐。
 
 `first_difference` 保留从开场起的首差；`action_difference` 从已经配置好的动作初态比较，`return_difference` 单独比较真实返回值。这样开场的选招差异不会掩盖后续付款或回合末差异。配置牌区期间的 DSL 通知另保留在 raw 中；初始 HP 抽样与 niche、正常房间、重复定义牌的实例标识和完整事件比较不属于本探针。适配器不补执行额外的开始回合动作。
 
 每例另跑关闭诊断的相同初态：DSL 核对完整 StateHash 和随机状态，参考核对自身精确战斗描述和随机状态；观察与候选查询也不得改变 DSL 状态。缺场景／字段、截断、缺参考和异常返回3；实际差异返回1，所比较边界全部一致才返回0。报告的 complete、independent_verified 与 normal_run_verified 始终为 false，不代替原 suites 或 M01 验收。
 
-手动出牌的源入口使用同步 `CardPileCmd.Add` 移入 Play，它不发异步 `AfterCardChangedPiles`；扣费后才在正支付量时发 `AfterEnergySpent`。普通 `AddAsync` 则在整批移牌后通知。零费Anger保留生成克隆时额外 `pile:none:discard` 的实际首差，由 #165 处理；暂停批次由 #147 处理，不过滤这些事件以制造全轨迹通过。诊断分别记录这些实际站点，不能为了统一事件名给参考添加不存在的回调。
+手动出牌的源入口使用同步 `CardPileCmd.Add` 移入 Play，它不发异步 `AfterCardChangedPiles`；扣费后才在正支付量时发 `AfterEnergySpent`。普通 `AddAsync` 则在整批移牌后通知。Anger和Juggling记录实际入场与两个生成通知；暂停批次的调度差异由 #147 处理，不过滤该事件以制造全轨迹通过。诊断分别记录这些实际站点，不能为了统一事件名给参考添加不存在的回调。
 
 [锁定 sts2-sim](../../reference/README.md) 同时作为当前规则依据和独立执行的比较后端。生产随机派生与开局向量使用同一锁定基线，旧source-catalogs仅保留原迁移清单；一致只表示与该模拟器实现一致，不能单独证明客户端保真。
 
@@ -98,7 +98,7 @@ BattlewornDummy开发升级档由独立原生 `battleworn-continuation-vector.js
 
 ## Wriggler与Infection受控组件比较
 
-运行`dotnet run --project tools/differential -c Release -- wriggler-compare --output .artifacts/differential/wriggler`。两侧使用空永久牌组及真实战斗开始、抽牌／重洗和回合命令，验证四槽三回合、StartStunned、HP候选耗尽，以及Infection格挡、无加成、致死、Retain／Ethereal、非手牌、费用修改与自动尝试。niche比较实际参数、结果、游标及完整状态，并核对run／怪物AI消费和shuffle消费。参考的StatusCard意图名称显式映射为DSL的status，保留buff,status顺序。
+运行`dotnet run --project tools/differential -c Release -- wriggler-compare --output .artifacts/differential/wriggler`。两侧使用空永久牌组及真实战斗开始、抽牌／重洗和回合命令，验证四槽三回合、StartStunned、HP候选耗尽，以及Infection格挡、无加成、致死、Retain／Ethereal、非手牌、费用修改与自动尝试。niche比较实际参数、结果、游标及完整状态，并核对run／怪物AI消费、shuffle消费，以及状态牌入场／生成顺序、空creator和玩家生成数。参考侧增加不改玩法的观察遗物。参考的StatusCard意图名称显式映射为DSL的status，保留buff,status顺序。
 
 工具只在受控初态设置HP、格挡和效果牌；测试附加DSL入口调用相同生产过程，参考使用真实CombatEngine及AutoPlayCmd.FromCards。致死场景保留原生牌区守卫结果：致死牌在Play，后一张效果牌在Hand。两个seed共24个组件场景必须全部通过，migration保留原11份suite与严格失败；normal_run_verified和parent_event_verified保持false，不关闭DenseVegetation父事件或完整Run。
 

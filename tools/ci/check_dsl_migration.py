@@ -152,6 +152,15 @@ def main() -> int:
                 or wriggler["normal_run_verified"] is not False or wriggler["parent_event_verified"] is not False
                 or [c["id"] for c in wriggler["cases"]] != wriggler_cases or any(c["status"] != "passed" for c in wriggler["cases"])):
             raise ValueError("Wriggler/Infection controlled component comparison did not execute all required cases")
+        for case in wriggler["cases"]:
+            if case["left"] != case["right"]:
+                raise ValueError("Wriggler component results disagree despite passed status")
+            mode = case["id"].split(":", 1)[1]
+            expected_count = {"four": 6, "stunned": 4, "hp-exhausted": 12}.get(mode, 0)
+            expected = [{"phase": phase, "creator": "none", "pile": "discard", "generated": 0}
+                        for _ in range(expected_count) for phase in ("entered", "generated", "generated-combat")]
+            if case["left"]["generation"] != expected:
+                raise ValueError("Wriggler generation must preserve null creator, count, pile and all notifications")
 
         unknown = run("unknown-rooms", ["unknown-room-compare", "--output", str(args.output / "unknown-rooms")], 0)
         unknown_cases = [seed + ":" + mode for seed in ("777", "A😀B")
@@ -465,9 +474,9 @@ def main() -> int:
 
         run("combat-boundary-self-test", ["combat-boundary-self-test"], 0)
         boundaries = run("combat-boundaries", ["combat-boundary-compare", "--output", str(args.output / "combat-boundaries")], (0, 1))
-        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "anger-ending", "zero-card", "free-x", "repeat-card", "corruption")
+        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "anger-ending", "anger-upgraded", "zero-card", "free-x", "repeat-card", "corruption", "juggling", "juggling-full", "juggling-stomp")
         boundary_ids = [seed + ":" + plan for seed in ("777", "A😀B") for plan in boundary_plans]
-        point_fields = {"phase", "card", "turn", "energy", "hp", "max_hp", "block", "enemy_hp", "move", "ending", "piles", "spent"}
+        point_fields = {"phase", "card", "turn", "energy", "hp", "max_hp", "block", "enemy_hp", "move", "ending", "piles", "spent", "generated", "stomp_hand_cost", "anger_discard_upgraded"}
         if (boundaries is None or boundaries["schema"] != "dsl-migration/combat-boundaries@1"
                 or boundaries["executed"] != len(boundary_ids) or boundaries["expected_case_ids"] != boundary_ids
                 or [c["id"] for c in boundaries["cases"]] != boundary_ids
@@ -487,17 +496,44 @@ def main() -> int:
                 raise ValueError("Complete combat actions must return the same stable state without adapter continuation")
             # #146 requires actual payment/draw/play boundaries to agree; the independently
             # scoped paused effect-card batch remains #147's measured difference.
-            if not case["id"].endswith((":two-end-effects-paused", ":zero-card")) and case["status"] != "passed":
+            if not case["id"].endswith(":two-end-effects-paused") and case["status"] != "passed":
                 raise ValueError("Ordinary and card-play boundaries must match the locked reference")
-            if case["id"].endswith(":zero-card"):
-                # Anger's generated-clone notification belongs to #165. Preserve the new
-                # full trace and exact extra notification rather than dropping this case.
-                if (case["status"] != "diverged" or case["first_difference"] != {
-                        "index": 7, "field": "phase", "left": "pile:none:discard", "right": "card-after"}):
-                    raise ValueError("Anger generation discrepancy must remain explicit until #165 fixes it")
+            if case["id"].endswith((":zero-card", ":anger-upgraded")):
+                for side in ("left", "right"):
+                    phases = [p["phase"] for p in case[side]["points"]]
+                    for expected in ("card-entered", "generated-player", "generated-combat-player"):
+                        if phases.count(expected) != 1:
+                            raise ValueError("Anger must expose each actual generation notification exactly once")
+                    if case[side]["points"][-1]["generated"] != 1:
+                        raise ValueError("Anger must record one generated card")
                 for side in ("left", "right"):
                     if any(p["phase"] == "energy-spent" or p["spent"] != 0 for p in case[side]["points"]):
                         raise ValueError("Zero-cost Anger must not emit an energy payment")
+            if case["id"].endswith(":anger-upgraded"):
+                for side in ("left", "right"):
+                    if case[side]["points"][-1]["anger_discard_upgraded"] != 1:
+                        raise ValueError("Anger clone must preserve the upgraded instance")
+            if case["id"].endswith((":juggling", ":juggling-full", ":juggling-stomp")):
+                count = 2 if case["id"].endswith(":juggling-full") else 1
+                for side in ("left", "right"):
+                    points = case[side]["points"]
+                    generated = [p["phase"] for p in points if p["phase"] in ("card-entered", "generated-player", "generated-combat-player")]
+                    if generated != ["card-entered", "generated-player", "generated-combat-player"] * count or points[-1]["generated"] != count:
+                        raise ValueError("Juggling must enter and notify each clone, recording the real count")
+                    phases = [p["phase"] for p in points]
+                    if not phases.index("card-before") < phases.index("card-entered") < phases.index("card-after"):
+                        raise ValueError("Juggling generation must happen inside BeforeCardPlayed before the attack completes")
+                    if count == 2 and len([c for c in points[-1]["piles"][0].split(",") if c]) != 10:
+                        raise ValueError("Full-hand Juggling must retain its hand limit")
+            if case["id"].endswith(":juggling-stomp"):
+                for side in ("left", "right"):
+                    if case[side]["points"][-1]["stomp_hand_cost"] != 1:
+                        raise ValueError("A newly generated Stomp must not receive the current BeforeCardPlayed discount")
+            if case["id"].endswith(":anger-ending"):
+                for side in ("left", "right"):
+                    points = case[side]["points"]
+                    if points[-1]["generated"] != 1 or any(p["phase"] in ("card-entered", "generated-player", "generated-combat-player") for p in points):
+                        raise ValueError("Ending Anger records its generated clone without entry or callbacks")
             for side in ("left", "right"):
                 trace = case[side]
                 if (not trace["final_state"] or not trace["raw"] or not trace["points"]

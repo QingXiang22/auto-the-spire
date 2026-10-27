@@ -62,7 +62,10 @@
 | `ExhaustNonAttackCardsForBlock` | owner、block: Int | 捕获非攻击手牌，每张先消耗再GainBlock；不能改成末尾合计，否则反应顺序不同 |
 | `TransformHandCards` | owner、kind: String(16)、replacementDefinition: String(64)、upgraded: Bool | 匹配kind的手牌逐张创建／升级新牌、移除原牌、放置新牌；不继承原附魔，不发消耗事件 |
 | `GenerateCardsToHand` | owner、count: Int、attacksOnly／upgraded: Bool | 依原池逐张随机生成，可升级后入手；满手走弃牌，无候选跳过；不是候选展示／选择操作 |
-| `GenerateCombatCardWithCost` | owner、attacksOnly: Bool、cost: Int、source: String(64)、lifetime: String(16) → Binding | 生成并附加set费用修正，返回尚未放置的实例或none；调用方再AddGeneratedToHand，保证改费早于移动通知；资格、费用及寿命沿用底层检查 |
+| `GenerateCardIntoCombat` | owner、card: Ref、creator: Binding、to: String(16)、clone: Bool | 校验新牌与战斗，按来源处理满手和潜在结束；非空生成者本场计数加一，入场及生成通知依各自门禁派发，不发布异步移牌或耗尽通知 |
+| `CloneGeneratedCombatCard` | owner、source: Ref、creator: Binding、to: String(16) → Binding | 复制已有实例及其费用／附着，再执行来源的正常生成路径；支持结束中创建但不入堆，入场异常补偿尚未支持 |
+| `AfterCardGenerated`／`AfterCardGeneratedForCombat` | owner、card、creator: Binding | 对应来源两次通知；creator 可为none，每次在战斗结束时独立停止派发 |
+| `GenerateCombatCardWithCost` | owner、attacksOnly: Bool、cost: Int、source: String(64)、lifetime: String(16) → Binding | 生成并附加set费用修正，返回尚未放置的实例或none；调用方再以GenerateCardIntoCombat入场，保证改费早于生成通知；资格、费用及寿命沿用底层检查 |
 | `DrawUntilCardKindChanges` | owner、kind: String(16)、limit: Int | 至多抽limit张，抽到不同kind或DrawOne未抽到牌即停止；保留抽牌限制和LastDrawn语义 |
 | `AbsorbRandomHandAttack` | owner、card | 随机选一张手牌攻击，读取无目标修正伤害，加到card成长再消耗所选牌；空域不抽样、不成长 |
 
@@ -126,7 +129,7 @@ Vigor 按 Attack 保存开始层数并在对应 AfterAttack 消耗；PenNib 按�
 
 `CloneCombatCardToPile(owner: Ref(Player), source: Ref(Card), to: String(16), reason: String(32)) → Binding`组合完整战斗克隆与移动。先通过CloneCombatCard复制实例值、费用修正及附属能力，依次完成CardCloned、CardEnteredCombat，再调用MoveCombatCard处理目的区、满手回退和CardMoved，返回实际新实例。该操作只移动新实例，自身不抽样，回调仍按原顺序执行；特殊流程需要在克隆与移动之间插入操作时，继续分别调用底层过程。
 
-卡牌正文可使用`ClonePlayedCardEffect(definition,destination="discard")`，生成的WhenPlayed只接收play／owner／card，不依赖敌人目标；它以reason="clone"复制本次牌。Anger显式先攻击后调用该效果。Juggling直接复用CloneCombatCardToPile，目的区为hand、reason为generate；克隆与新生成同定义牌继续分别使用CloneCombatCard与CreateCombatCard，不混用初始化或复制通知。
+卡牌正文可使用`ClonePlayedCardEffect(definition,destination="discard")`，生成的WhenPlayed只接收play／owner／card，不依赖敌人目标；它调用CloneGeneratedCombatCard，先复制本次牌，再按来源生成入口进入目的区。Anger先攻击后生成到弃牌堆；Juggling在BeforeCardPlayed的第三次攻击生成到手牌。通用CloneCombatCardToPile保留带移动通知的独立用途，不用来代表来源Generate。
 
 `CardCloned(owner,source,card)` 复制战斗实例；`CardCombatCopied(owner,source,card)` 从永久实例建立战斗副本；`CardRemoving(card)` 在销毁前让所属能力清理。共享 Card 仍复制共有事实，私有状态由所属模块消费生命周期通知，不再扩专属 Bool 或两份复制字段清单。
 

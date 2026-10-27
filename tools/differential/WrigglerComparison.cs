@@ -10,6 +10,7 @@ using Sts2Sim.Core.Demo;
 using Sts2Sim.Core.Entities.Cards;
 using Sts2Sim.Core.Entities.Creatures;
 using Sts2Sim.Core.Entities.Players;
+using Sts2Sim.Core.Entities.Relics;
 using Sts2Sim.Core.Models;
 using Sts2Sim.Core.Models.Cards;
 using Sts2Sim.Core.Models.Characters;
@@ -30,7 +31,8 @@ internal static class WrigglerComparison
     private sealed record Boundary(string At, Monster[] Monsters, long Hp, long Block, long Energy, long Plays,
         bool Active, string Outcome, Card[] Hand, Card[] Draw, Card[] Discard, Card[] Exhaust, Card[] Play,
         long HpDraws, ulong[] HpState, long AiDraws, long ShuffleDraws);
-    private sealed record Trace(Boundary[] States, HpCall[] Calls);
+    private sealed record GenerationPoint(string Phase, string Creator, string Pile, long Generated);
+    private sealed record Trace(Boundary[] States, HpCall[] Calls, GenerationPoint[] Generation);
 
     internal static int Run(string repository, string[] args)
     {
@@ -46,7 +48,7 @@ internal static class WrigglerComparison
             foreach (var mode in new[] { "four", "stunned", "hp-exhausted" }) Compare(seed, mode);
             foreach (var mode in new[] { "block", "unpowered", "death", "retain", "ethereal", "auto", "force-auto", "cost", "nonhand" }) Compare(seed, mode);
         }
-        var report = new { schema = "dsl-migration/wriggler@1", scope = "controlled-component", reference,
+        var report = new { schema = "dsl-migration/wriggler@1", scope = "controlled-component-with-inert-generation-probe", reference,
             package_digest = original.Digest, fixture_digest = package.Digest, status = passed ? "passed" : "diverged",
             independent_verified = passed, normal_run_verified = false, parent_event_verified = false,
             controlled_setup = "Empty permanent decks on both sides; real combat start, draw/shuffle, turns and autoplay commands. Wriggler cases start at 1000 HP; Infection cases add real cards after combat start and explicitly set block, death HP or keywords/cost modifiers. Test-only DSL actions call the unchanged production procedures. No RNG reseed, compensation draw, forced move, injected outcome or parent-event certification.",
@@ -70,7 +72,7 @@ internal static class WrigglerComparison
     private static bool IsWriggler(string mode) => mode is "four" or "stunned" or "hp-exhausted";
     private static Trace Dsl(DslPackage package, string seed, string mode)
     {
-        var s = package.CreateSession(1, ["player"], seed, new SessionDebugOptions(MaxRecords: 100_000)); s.Start();
+        var s = package.CreateSession(1, ["player"], seed, new SessionDebugOptions(MaxRecords: 100_000, CaptureValues: true)); s.Start();
         InstanceId[] Instances(string type) => s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:" + type).Id).ToArray();
         Value Field(InstanceId id, string type, string name) => s.State.GetField(id, s.RuleSet.TypeByQualifiedId("base-spire:" + type).FieldIndex(name));
         void Set(InstanceId id, string type, string name, Value value) => s.State.RunAtomic(() => s.State.SetField(id, s.RuleSet.TypeByQualifiedId("base-spire:" + type).FieldIndex(name), value));
@@ -99,6 +101,7 @@ internal static class WrigglerComparison
             if (mode == "cost") Submit("FixtureCosts");
             if (mode == "nonhand") Submit("FixtureDiscard");
         }
+        var generationCursor = s.Debug!.Capture().LastOrDefault()?.Sequence ?? 0;
         var states = new List<Boundary> { Snapshot("start") };
         if (mode is "auto" or "force-auto") Submit(mode == "auto" ? "FixtureAuto" : "FixtureForceAuto");
         else
@@ -117,7 +120,12 @@ internal static class WrigglerComparison
             if (c.Operation != "int" || c.CandidatesTruncated) throw new InvalidOperationException("Unexpected HP operation.");
             return new HpCall(long.Parse(c.Minimum, CultureInfo.InvariantCulture), long.Parse(c.Maximum, CultureInfo.InvariantCulture), long.Parse(c.Result, CultureInfo.InvariantCulture), c.Before, c.After);
         }).ToArray();
-        return new(states.ToArray(), calls);
+        var generation = s.Debug.Capture().Where(r => r.Sequence > generationCursor && r.Kind == SessionDebugKind.EventEmit && r.Subject == "base-spire:WrigglerGenerationPoint").Select(r => {
+            if (r.Snapshot is not { Complete: true } snapshot || snapshot.Values.Count != 4) throw new InvalidOperationException("Incomplete generated-card diagnostics.");
+            string S(int index) => snapshot.Values[index].Scalar ?? throw new InvalidOperationException("Missing generation field.");
+            return new GenerationPoint(S(0), S(1), S(2), long.Parse(S(3), CultureInfo.InvariantCulture));
+        }).ToArray();
+        return new(states.ToArray(), calls, generation);
 
         Boundary Snapshot(string at)
         {
@@ -180,6 +188,9 @@ internal static class WrigglerComparison
                 if (mode == "cost") { infection.SetTemporaryCostOverrideThisCombat(0); infection.AddEnergyCostThisTurn(2); }
                 if (mode == "nonhand") CardPileCmd.Add(infection, PileType.Discard);
             }
+            var generation = new List<GenerationPoint>();
+            var probe = (WrigglerGenerationProbe)new WrigglerGenerationProbe().MutableClone(); probe.AssignOwner(player); player.AddRelicInternal(probe);
+            probe.Capture = (phase, card, creator) => generation.Add(new(phase, creator is null ? "none" : "player", card.Pile?.Type.ToString().ToLowerInvariant() ?? "none", player.PlayerCombatState!.CardsGeneratedThisCombat));
             var states = new List<Boundary> { Snapshot("start") };
             if (mode is "auto" or "force-auto")
             {
@@ -191,7 +202,7 @@ internal static class WrigglerComparison
             {
                 engine.EndPlayerTurnAsync().GetAwaiter().GetResult(); states.Add(Snapshot("turn:" + turn));
             }
-            return new(states.ToArray(), calls.ToArray());
+            return new(states.ToArray(), calls.ToArray(), generation.ToArray());
 
             CardModel Add<T>() where T : CardModel
             {
@@ -234,6 +245,21 @@ internal static class WrigglerComparison
                   call = { procedure = Wriggler.Create args = { slot = "wriggler3" startStunned = true } into = enemy }
                   call = { procedure = Wriggler.Create args = { slot = "wriggler4" startStunned = true } into = enemy }
                 } }
+                event WrigglerGenerationPoint { payload = { phase = String(length = 32) creator = String(length = 16) pile = String(length = 16) generated = Int } }
+                procedure WrigglerEnter { parameters = { owner = Ref(Player) card = Ref(Card) clone = Bool } body = {
+                  emit = { event = WrigglerGenerationPoint payload = { phase = "entered" creator = "none" pile = pureCall(CombatCardPile, card) generated = field(owner, Player.CardsGeneratedThisCombat) } }
+                } }
+                subscription WrigglerEnter { event = CardEnteredCombat reaction = WrigglerEnter priority = -1000000 }
+                procedure WrigglerGenerated { parameters = { owner = Ref(Player) card = Ref(Card) creator = Binding } locals = { name = String(length = 16) } body = {
+                  let = { into = name value = "player" } if = { condition = isNone(creator) then = { let = { into = name value = "none" } } }
+                  emit = { event = WrigglerGenerationPoint payload = { phase = "generated" creator = name pile = pureCall(CombatCardPile, card) generated = field(owner, Player.CardsGeneratedThisCombat) } }
+                } }
+                subscription WrigglerGenerated { event = AfterCardGenerated reaction = WrigglerGenerated priority = -1000000 }
+                procedure WrigglerGeneratedCombat { parameters = { owner = Ref(Player) card = Ref(Card) creator = Binding } locals = { name = String(length = 16) } body = {
+                  let = { into = name value = "player" } if = { condition = isNone(creator) then = { let = { into = name value = "none" } } }
+                  emit = { event = WrigglerGenerationPoint payload = { phase = "generated-combat" creator = name pile = pureCall(CombatCardPile, card) generated = field(owner, Player.CardsGeneratedThisCombat) } }
+                } }
+                subscription WrigglerGeneratedCombat { event = AfterCardGeneratedForCombat reaction = WrigglerGeneratedCombat priority = -1000000 }
                 action FixtureAuto { role = player body = { call = { procedure = AutoPlayCard args = { owner = first(type(Player)) card = first(collection(Hand)) forceExhaust = false } } } }
                 action FixtureForceAuto { role = player body = { call = { procedure = AutoPlayCard args = { owner = first(type(Player)) card = first(collection(Hand)) forceExhaust = true } } } }
                 action FixtureDiscard { role = player body = { call = { procedure = DiscardCombatCard args = { owner = first(type(Player)) card = first(collection(Hand)) } } } }
@@ -255,3 +281,14 @@ internal static class WrigglerComparison
         public void Dispose() => Directory.Delete(Root, true);
     }
 }
+
+#if REFERENCE_SIM
+internal sealed class WrigglerGenerationProbe : RelicModel
+{
+    public override RelicRarity Rarity => RelicRarity.Event;
+    internal Action<string, CardModel, Player?> Capture { get; set; } = (_, _, _) => { };
+    public override Task AfterCardEnteredCombat(CardModel card) { Capture("entered", card, null); return Task.CompletedTask; }
+    public override Task AfterCardGenerated(CardModel card, Player? creator) { Capture("generated", card, creator); return Task.CompletedTask; }
+    public override Task AfterCardGeneratedForCombat(CardModel card, Player? creator) { Capture("generated-combat", card, creator); return Task.CompletedTask; }
+}
+#endif

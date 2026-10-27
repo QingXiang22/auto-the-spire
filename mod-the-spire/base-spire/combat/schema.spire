@@ -43,6 +43,7 @@ entity Player {
     EffectDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     EnemyDiedInCombat = { type = Bool default = false visibility = Hidden }
     PlayDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
+    CardsGeneratedThisCombat = { type = Int(min = 0) default = 0 visibility = Hidden }
     PlaySequence = { type = Int default = 0 }
     CardActionNumber = { type = Int default = 0 visibility = Hidden }
     CurrentPlay = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
