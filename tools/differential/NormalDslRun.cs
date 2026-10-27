@@ -55,6 +55,7 @@ internal sealed class NormalDslRun : IDisposable
         log = new StreamWriter(path, false, new UTF8Encoding(false));
     }
     internal string RandomState => NormalPreflight.Json(Engine.Random.Capture());
+    internal RandomSnapshot RandomSnapshot => Engine.Random.Capture();
     internal string PublicState => WireCanonical.Text(Snapshot.ToWire());
     internal bool HasCompleteDebug => Engine.Debug is { DroppedRecords: 0 };
     internal IReadOnlyList<SessionDebugRecord> DebugRecords => Engine.Debug?.Capture() ?? [];
@@ -263,8 +264,13 @@ internal sealed class NormalDslRun : IDisposable
         if (trace is not null) Put("events.observed_order", ObservedEvents());
         if (trace is not null) Put("lifecycle.settlement", Settlement());
         if (trace is not null) Put("random.float32_calls", NormalFloat32Trace.Dsl(trace.Capture(), trace.DroppedRecords));
-        if (trace is not null) Put("random.stream_states", Engine.Random.Capture().Streams.OrderBy(s => s.Name, StringComparer.Ordinal)
-            .Select(s => new { stream = s.Name, draws = s.Draws, words = new[] { s.S0, s.S1, s.S2, s.S3 }.Select(w => w.ToString("x16")).ToArray() }).ToArray());
+        if (trace is not null)
+        {
+            var randomState = Engine.Random.Capture();
+            Put("random.step_states", NormalRandomStateTrace.Dsl(trace.Capture(), trace.DroppedRecords, randomState));
+            Put("random.stream_states", randomState.Streams.OrderBy(s => s.Name, StringComparer.Ordinal)
+                .Select(s => new { stream = s.Name, draws = s.Draws, words = new[] { s.S0, s.S1, s.S2, s.S3 }.Select(w => w.ToString("x16")).ToArray() }).ToArray());
+        }
         NormalPublicSnapshot.ValidateEnvelope(Snapshot, identity ?? throw new InvalidOperationException("No actual Host handshake."), sessionId);
         var unmappedFields = NormalPublicObservation.UnmappedFields(Snapshot);
         var publicComplete = NormalPublicSnapshot.Add(v, unmappedFields, Snapshot.Status);

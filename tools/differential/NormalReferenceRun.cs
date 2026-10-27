@@ -423,7 +423,7 @@ internal sealed class NormalReferenceRun : IDisposable
             NormalOpeningQueues.Validate(random.WeightedCalls(), attempts, queues);
             Put("random.weighted_attempts", attempts); Put("random.opening_queues", queues);
         }
-        if (diagnostics) { Put("random.stream_states", random.ConsumedStates()); Put("random.float32_calls", random.Float32Calls()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
+        if (diagnostics) { Put("random.step_states", random.StepStates()); Put("random.stream_states", random.ConsumedStates()); Put("random.float32_calls", random.Float32Calls()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
         Put("decisions.current", targetedCard is not null ? new { min = 1, max = 1,
             candidates = CombatTargetCandidates.ForCard(combat!.Engine.State, player, targetedCard.TargetType).Select(Creature).ToArray() }
             : Phase == "neow" ? Neow.IsFinished ? new { min = 0, max = 0, candidates = new[] { "true" } } :
@@ -555,6 +555,19 @@ internal sealed class NormalReferenceRandom : IDisposable
         opening_commits = opening?.Commits(),
         calls = calls.Select(c => new { stream = Name(c.Rng), c.Operation, c.Result, c.Before, c.After, c.Parameters, c.StateAfter }).ToArray(),
         streams = names.Keys.Concat(attached).Distinct().Select(r => new { name = Name(r), state = r.ToSerializable() }).ToArray() };
+    internal NormalRandomStateStep[] StepStates()
+    {
+        if (dropped != 0 || pending.Count != 0) throw new NotSupportedException("missing_dimension: incomplete native per-call states");
+        return NormalRandomStateTrace.Canonical(calls.Select(c =>
+        {
+            var before = c.Parameters.State; var after = c.StateAfter;
+            if (before.counter != c.Before || after.counter != c.After)
+                throw new NotSupportedException("missing_dimension: native per-call state cursor");
+            return new NormalRandomStateStep(Name(c.Rng), c.Before, c.After,
+                NormalRandomStateTrace.Words(before.state0, before.state1, before.state2, before.state3),
+                NormalRandomStateTrace.Words(after.state0, after.state1, after.state2, after.state3));
+        }));
+    }
     internal NormalFloat32Call[] Float32Calls()
     {
         if (dropped != 0 || pending.Count != 0) throw new NotSupportedException("missing_dimension: incomplete native random diagnostics");

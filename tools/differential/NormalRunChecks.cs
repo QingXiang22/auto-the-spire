@@ -128,6 +128,7 @@ internal static class NormalRunChecks
             }
         }
         NormalScalarChecks.Run(left.DebugRecords, victory, right.Capture("victory"));
+        NormalRandomStateChecks.Run(left.DebugRecords, left.RandomSnapshot, victory, right.Capture("victory"));
         NormalWeightedChecks.Run(left.DebugRecords, victory);
         NormalOpeningAttemptChecks.Run(left.DebugRecords, victory);
         CheckNativeEventCoverage(right.Capture("victory"));
