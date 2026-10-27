@@ -134,7 +134,10 @@ internal static partial class PackageChecks
         check("IC lethal post-effects: final hit still completes hand choice and resulting copy/exhaust callbacks", () =>
         {
             var s = Combat(); Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(6L)); IcPlay(s, IcAdd(s, "Anger")); Equal("victory", Outcome(s), "victory");
-            Equal(2, Members(s, "DiscardPile").Count, "lethal Anger still creates its copy before settlement");
+            // Locked Generate still creates and records the clone, but EnterCombatInternal rejects ending placement.
+            // Independent anger-ending boundaries exercise both sides; do not confuse creation with pile entry.
+            Equal(1, Members(s, "DiscardPile").Count, "lethal Anger moves the played card, not its ending-rejected clone");
+            Equal(2, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Card").Id).Count, "lethal Anger still creates its copy before settlement");
             var t = Combat(); IcPlay(t, IcAdd(t, "DarkEmbrace")); Set(t, FirstTarget(t), "Enemy", "Hp", Value.Of(7L)); var fire = IcAdd(t, "FiendFire"); IcAdd(t, "DefendIronclad"); IcMove(t, IcAdd(t, "Anger"), "Hand", "DrawPile"); IcMove(t, IcAdd(t, "Anger"), "Hand", "DrawPile"); IcPlay(t, fire);
             Equal("victory", Outcome(t), "settlement follows source self-exhaust"); Equal(1, Hand(t).Count, "hand exhaust draws before damage, then final-kill self-exhaust Draw refuses ending");
         });

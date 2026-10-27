@@ -117,8 +117,9 @@ procedure FinishTurnHand {
       destroy = { target = selected }
     } }
     destroy = { target = batch }
-    if = { condition = field(owner, Player.CombatActive) then = {
+    if = { condition = and(field(owner, Player.CombatActive), not(pureCall(CombatIsOverOrEnding))) then = {
       emit = { event = BeforeHandFlush payload = { owner = owner } }
+      if = { condition = pureCall(CombatIsOverOrEnding) then = { return = {} } }
       let = { into = flush value = foldEvent(ShouldFlushHand, true, owner) }
       create = { type = HandFlushBatch scope = entityScope(owner) into = batch fields = { Owner = owner } }
       forEach = { query = where(collection(Hand), c, and(flush, not(pureCall(CardHasKeyword, c, "retain")))) item = card body = {

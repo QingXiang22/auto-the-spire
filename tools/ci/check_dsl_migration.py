@@ -465,7 +465,7 @@ def main() -> int:
 
         run("combat-boundary-self-test", ["combat-boundary-self-test"], 0)
         boundaries = run("combat-boundaries", ["combat-boundary-compare", "--output", str(args.output / "combat-boundaries")], (0, 1))
-        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "zero-card", "free-x", "repeat-card", "corruption")
+        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "anger-ending", "zero-card", "free-x", "repeat-card", "corruption")
         boundary_ids = [seed + ":" + plan for seed in ("777", "A😀B") for plan in boundary_plans]
         point_fields = {"phase", "card", "turn", "energy", "hp", "max_hp", "block", "enemy_hp", "move", "ending", "piles", "spent"}
         if (boundaries is None or boundaries["schema"] != "dsl-migration/combat-boundaries@1"

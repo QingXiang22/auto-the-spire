@@ -27,7 +27,7 @@ namespace Differential;
 
 internal static class CombatBoundaryComparison
 {
-    private static readonly string[] Plans = ["turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "zero-card", "free-x", "repeat-card", "corruption"];
+    private static readonly string[] Plans = ["turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "anger-ending", "zero-card", "free-x", "repeat-card", "corruption"];
     private static readonly string[] Seeds = ["777", "A😀B"];
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
     internal sealed record Point(string Phase, string Card, long Turn, long Energy, long Hp, long MaxHp, long Block,
@@ -172,12 +172,12 @@ internal static class CombatBoundaryComparison
         Submit("BeginDevelopmentCombat"); Submit("BeginDevelopmentTurn"); Flush(); Take("begin-return");
         if (plan is "paid-card" or "feed-ending" or "ending-move") Submit(plan == "feed-ending" ? "Feed.AddToHand" : "Strike.AddToHand");
         else if (plan.StartsWith("two-end-effects", StringComparison.Ordinal)) { Submit("Infection.AddToHand"); Submit("Infection.AddToHand"); }
-        else if (plan == "zero-card") Submit("Anger.AddToHand");
+        else if (plan is "zero-card" or "anger-ending") Submit("Anger.AddToHand");
         else if (plan == "free-x") Submit("Whirlwind.AddToHand");
         else if (plan == "repeat-card") { Submit("Strike.AddToHand"); Submit("BoundaryRepeat"); }
         else if (plan == "corruption") { Submit("Defend.AddToHand"); Submit("BoundaryCorruption"); }
         if (plan == "feed-ending") Set(enemy, "Enemy", "Hp", 10);
-        if (plan == "ending-move") Set(enemy, "Enemy", "Hp", 6);
+        if (plan is "ending-move" or "anger-ending") Set(enemy, "Enemy", "Hp", 6);
         Flush(fixture: true); Take("configured");
         if (plan == "two-end-effects-paused")
             Submit("BoundaryEnablePause");
@@ -244,7 +244,7 @@ internal static class CombatBoundaryComparison
         else if (plan == "feed-ending") { played = Add(ModelDb.Card<Feed>()); enemy.SetCurrentHpInternal(10); }
         else if (plan == "ending-move") { played = Add(ModelDb.Card<StrikeIronclad>()); enemy.SetCurrentHpInternal(6); }
         else if (plan.StartsWith("two-end-effects", StringComparison.Ordinal)) { Add(ModelDb.Card<Infection>()); Add(ModelDb.Card<Infection>()); }
-        else if (plan == "zero-card") played = Add(ModelDb.Card<Anger>());
+        else if (plan is "zero-card" or "anger-ending") { played = Add(ModelDb.Card<Anger>()); if (plan == "anger-ending") enemy.SetCurrentHpInternal(6); }
         else if (plan == "free-x") played = Add(ModelDb.Card<Whirlwind>());
         else if (plan == "repeat-card") { played = Add(ModelDb.Card<StrikeIronclad>()); PowerCmd.Apply<OneTwoPunchPower>(combat, player.Creature, 1, null, null).GetAwaiter().GetResult(); }
         else if (plan == "corruption") { played = Add(ModelDb.Card<DefendIronclad>()); PowerCmd.Apply<CorruptionPower>(combat, player.Creature, 1, null, null).GetAwaiter().GetResult(); }
