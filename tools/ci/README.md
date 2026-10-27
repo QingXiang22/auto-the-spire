@@ -4,7 +4,7 @@
 
 本页给出 [GitHub Actions](../../.github/workflows/core-base.yml) 的检查入口。在仓库根目录执行，需要 Python 3.12 和 Git；运行时检查另需根 `global.json` 指定的 .NET SDK，文档组另需 [Vale 3.24.0](../doc-check/README.md)。默认 Release，可用 `--configuration Debug`。
 
-功能分支由 PR 的创建／更新触发检查；[选择程序](select_checks.py)按完整 PR 差异选择受影响组，五个检查名称保持不变，未受影响的组说明跳过原因。Markdown、文档静态图片及文档检查工具只运行 docs；base 与 net 改动运行 base／net／migration／docs；差异比较工具运行 migration／docs；通用核心、协议 JSON、CI 配置及未识别路径保守运行全部。选择程序失败时检查失败，不报告跳过成功。尚未创建 PR 时，分支 push 不运行本工作流。
+功能分支由 PR 的创建／更新触发检查；[选择程序](select_checks.py)按完整 PR 差异选择受影响组，五个检查名称保持不变，未受影响的组说明跳过原因。Markdown、文档静态图片及文档检查工具只运行 docs；base 与 net 改动运行 base／net／migration／docs；差异比较工具、`check_dsl_migration.py` 与 `normal_report.py` 运行 migration／docs；两个 base 覆盖检查脚本运行 base／docs。选择任务始终执行报告读取器单元测试；多类改动取各自检查组的并集。通用核心、协议 JSON、其他 CI 配置及未识别路径保守运行全部。选择程序失败时检查失败，不报告跳过成功。尚未创建 PR 时，分支 push 不运行本工作流。
 
 main 的 push 先核对最近成功 PR 工作流记录的实际测试 Git tree；只有整棵树完全一致且验证记录未过期，才引用该次成功结果。没有匹配、查询失败或主线包含额外变化时，按主线本次差异运行检查。手动触发始终运行全部组。
 
