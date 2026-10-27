@@ -12,7 +12,7 @@ internal static partial class PackageChecks
                 action EndInitialize { role = player locals = { audit = Binding } body = { create = { type = EndAudit scope = frameScope() into = audit } } }
                 procedure SourceEnd { parameters = { owner = Ref(Player) } body = {
                   set = { target = first(type(EndAudit)) field = EndAudit.Ends value = add(field(first(type(EndAudit)), EndAudit.Ends), 1) }
-                  if = { condition = not(isNone(field(owner, Player.CurrentRewardSet))) then = { fail = { message = "End hooks precede rewards" } } }
+                  if = { condition = or(field(owner, Player.GoldRewardPending), not(isNone(field(owner, Player.CurrentRewardSet)))) then = { fail = { message = "End hooks precede rewards" } } }
                   call = { procedure = CheckCombatVictory args = { owner = owner } }
                   call = { procedure = CheckCombatDefeat args = { owner = owner } }
                 } }
@@ -20,6 +20,7 @@ internal static partial class PackageChecks
                 procedure Committed { parameters = { owner = Ref(Player) victory = Bool } body = { set = { target = first(type(EndAudit)) field = EndAudit.Commits value = add(field(first(type(EndAudit)), EndAudit.Commits), 1) } } }
                 subscription Committed { event = CombatEnded reaction = Committed }
                 procedure Victory { parameters = { owner = Ref(Player) victory = Bool } body = {
+                  if = { condition = or(field(owner, Player.GoldRewardPending), not(isNone(field(owner, Player.CurrentRewardSet)))) then = { fail = { message = "Rewards must follow all victory hooks, including standalone development" } } }
                   if = { condition = not(equal(field(first(type(EndAudit)), EndAudit.Ends), 1)) then = { fail = { message = "Source end must finish before victory" } } }
                   set = { target = first(type(EndAudit)) field = EndAudit.Victories value = add(field(first(type(EndAudit)), EndAudit.Victories), 1) }
                 } }
@@ -50,6 +51,7 @@ internal static partial class PackageChecks
                 if (win) { Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(6L)); IcPlay(s, IcAdd(s, "StrikeIronclad")); }
                 else Submit(s, "EndLose");
                 Equal(win ? "victory" : "defeat", Outcome(s), "real outcome");
+                Equal(win, s.State.GetField(Player(s), s.RuleSet.TypeByQualifiedId("base-spire:Player").FieldIndex("GoldRewardPending")).AsBool(), "only victory offers standalone rewards after its hooks");
                 foreach (var id in new[] { "kunai", "shuriken", "ornamental-fan" }) Equal(win ? 0L : 1L, Counter(id), "source victory-only end resets");
                 Equal(!win, Flag("ArtOfWar.State", "ThisTurn"), "ArtOfWar end reset"); Equal(!win, Flag("StoneCalendar.State", "Armed"), "StoneCalendar end reset");
                 Equal(!win, s.State.GetField(Relic("centennial-puzzle"), s.RuleSet.TypeByQualifiedId("base-spire:Relic").FieldIndex("UsedThisCombat")).AsBool(), "Puzzle resets at victory, not next start");

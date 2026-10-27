@@ -42,7 +42,7 @@ procedure WhenCombatEnded {
     }
   }
 }
-subscription OnCombatEnded { event = CombatEnded reaction = WhenCombatEnded }
+
 
 procedure ClaimDevelopmentGoldReward {
   parameters = { owner = Ref(Player) }
