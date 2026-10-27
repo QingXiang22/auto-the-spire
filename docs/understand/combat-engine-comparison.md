@@ -4,7 +4,7 @@
 
 当前判断是保留通用 Session 与 DSL 领域规则的分工，优先改善正常 Run 的批量内容接入。普通回合选招、EndTurn 自动换回玩家、出牌支付与修正顺序已在当前代码中实现，不再列为待建框架。尚未实现的异步交错、异常补偿和其他内容族分别说明，不作为所有内容扩充的前置条件。
 
-本文比较[锁定sts2-sim](../../reference/README.md)的提交`611cea2b498ee1eba3743d185c210c6b2a4624a6`（声明版本v0.111.0），以及base-spire提交`ca18b97a92d322a861f1a0f4614316ce4247e63b`（包版本`0.7.0-dsl.81`）。这是源码审阅，不是本次运行的符合性报告；文中的组件数值仅说明已有判别场景。具体接口仍查[操作参考](../areas/base/reference/operations.md)和[Power参考](../areas/base/reference/powers.md)。
+本文比较[锁定sts2-sim](../../reference/README.md)的提交`611cea2b498ee1eba3743d185c210c6b2a4624a6`（声明版本v0.111.0），以及base-spire提交`ca18b97a92d322a861f1a0f4614316ce4247e63b`（包版本`0.7.0-dsl.81`）。具体接口见[操作参考](../areas/base/reference/operations.md)和[Power参考](../areas/base/reference/powers.md)。
 
 [交互图文](combat-engine-comparison.html)按六个主题提供源码节点、差异显示和SVG导出。图只展示主要路径；完整判断以下文及领域规格为准。
 
@@ -28,7 +28,7 @@ flowchart TD
     Enemy -->|胜负确定| Result
 ```
 
-图中的胜负节点概括不同收尾路径，不表示各个命令共享同一种结束中资格。额外回合、复活和未加载内容也不能从主路径推出支持。
+胜利与失败分别收尾，各命令的结束中资格见下文。
 
 ## 两侧的职责与状态
 
@@ -139,22 +139,22 @@ Orichalcum在Early按每个遗物实例记录零格挡资格，允许Plating增�
 
 怪物招式图与单次多击见[#126](https://github.com/QingXiang22/auto-the-spire/issues/126)，出生、槽位与选招顺序见[#127](https://github.com/QingXiang22/auto-the-spire/issues/127)。遗物／Power的后续工作由[#128](https://github.com/QingXiang22/auto-the-spire/issues/128)组织。这里解释当前机制与复用边界，任务状态以Issue为准。
 
-结构扫描、定义登记、组件比较与正常Run可达性是不同判断。本地`no-energy-gain`没有按当前源类直接对应，需单独说明来源与用途；不能把名称对应或条目数量当成行为完成度。人工构造的组合可以发现真实缺陷，但不能替代正常Run比较，也不能据主路径图推导额外回合、复活、角色专属流程或全部遗物／Power都已支持。
+本地`no-energy-gain`没有对应的当前源类，引用时需说明其来源与用途。
 
 ## 架构调整的范围与触发条件
 
-下表是架构判断，不是新增排期。工作顺序与范围仍由[固定计划](https://github.com/QingXiang22/auto-the-spire/issues/28)控制，只能由人类项目管理者明确提出修改；agent可以记录阻塞和建议，不能据本页重排或加设前置验收。
+下表列出调整建议及适用条件，执行安排见[任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。
 
 | 对照发现 | 调整建议 | 实施边界 |
 | --- | --- | --- |
-| 参考RoomFactory按房间类型取队列中的遭遇，再由遭遇定义创建怪物；当前EnterNormalMapPoint同时包含队列、两种遭遇白名单和具体生成 | 批量接入遭遇时用内容模块绑定生成过程，Run只保留房间／访问编排；复用现有dispatch与招式图、攻击操作 | 不修改完整来源池或重抽成已实现内容；不引入Host游戏ID分支或JSON效果程序 |
-| 正常与开发入口已有共同战斗过程，但命名仍带Development | 保留共同实现，明确公开动作和分步开发入口的返回位置；随相关修改再整理命名 | 不复制第二套生命周期，不把全局改名设为内容前置任务 |
-| 遗物Obtain／Remove已有公共入口，来源袋、堆叠、Replace／Melt仍不完整 | 宝箱／商店等真实调用方需要时补对应库存操作，私有计数留在内容模块 | 不因为存在IsMelted字段就声称熔化完成，也不提前补齐所有遗物生命周期 |
-| 参考CardPileCmd入战监听失败会移除新牌、回滚生成计数并通知已执行监听者中止；DSL失败终止Session | 保留明确未支持边界；出现获准消费者后再讨论局部补偿能力 | 这是特定命令的补偿，不是整局事务；不添加吞异常、默认成功或全状态快照回滚 |
-| Task交错与任意decimal语义超出当前已核对消费者 | 保持单一续接栈与当前已证明适用的数值表示，按真实语义缺口扩展 | 人工挂起案例或无消费者的混合伤害批次不自动阻塞日常批量内容 |
+| 参考RoomFactory按房间类型取队列中的遭遇，再由遭遇定义创建怪物；当前EnterNormalMapPoint同时包含队列、两种遭遇白名单和具体生成 | 批量接入遭遇时用内容模块绑定生成过程，Run只保留房间／访问编排；复用现有dispatch与招式图、攻击操作 | 保留完整来源池和随机顺序，玩法分派留在base DSL |
+| 正常与开发入口已有共同战斗过程，但命名仍带Development | 明确公开动作和分步开发入口的返回位置；随相关修改整理命名 | 两类入口共用生命周期 |
+| 遗物Obtain／Remove已有公共入口，来源袋、堆叠、Replace／Melt仍不完整 | 随宝箱／商店等调用方补对应库存操作，私有计数留在内容模块 | 由实际库存操作需求触发 |
+| 参考CardPileCmd入战监听失败会移除新牌、回滚生成计数并通知已执行监听者中止；DSL失败终止Session | 出现获准消费者后再补局部补偿能力 | 补偿范围限于该命令的状态变化与监听者 |
+| Task交错与任意decimal语义超出当前已核对消费者 | 保持单一续接栈与当前数值表示，按真实语义缺口扩展 | 由具体内容需要的执行交错或数值精度触发 |
 
 房间和遭遇依据：[参考RoomFactory](https://github.com/iRyougi/sts2-sim/blob/611cea2b498ee1eba3743d185c210c6b2a4624a6/src/Sts2Sim.Core/Rooms/RoomFactory.cs)、[正常Run入口](../../mod-the-spire/base-spire/run/normal.spire)。局部补偿依据：[参考CardPileCmd](https://github.com/iRyougi/sts2-sim/blob/611cea2b498ee1eba3743d185c210c6b2a4624a6/src/Sts2Sim.Core/Commands/CardPileCmd.cs)的`EnterCombatInternal`；当前失败含义见[运行时状态模型](runtime-state-model.md)。
 
-未知房间的类型可能要先消费来源随机才能确定是否支持；此时失败会保留已发生的消费，不能承诺“所有unsupported_capability都无副作用”。提交前的非法输入拒绝与执行中的未支持内容分别按[Run指南](../areas/base/how-to/run-and-rooms.md)处理，不增加隐式回滚或重试。
+未知房间可能先消费来源随机再确定支持性，执行失败时保留已发生的消费。提交前拒绝与执行中失败的区别见[Run指南](../areas/base/how-to/run-and-rooms.md)。
 
-验证以本次改变的共享机制或内容批次为单位。复用既有判别场景，不为每张同构卡／每个遗物重复运行完整比较；无关诊断按[测试精简工单](https://github.com/QingXiang22/auto-the-spire/issues/174)处理，保留差异记录与专门运行方式。只有实际改动、失败或新消费者暴露问题时才扩大检查；本页文档修正只运行文档检查，不声称重新通过玩法或完整Run验收。
+验证以改变的共享机制或内容批次为单位，复用已有判别场景。实际改动、失败或新消费者暴露问题时再扩大检查，命令见[验证指南](../areas/base/how-to/verify-and-debug.md)。
