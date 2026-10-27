@@ -32,11 +32,11 @@ event ModifyIncomingAttackMultiplier {
 }
 
 event ModifyBlockAdditive {
-  payload = { value = Int owner = Ref(Player) }
+  payload = { value = Int player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding }
 }
 
 event ModifyBlockMultiplier {
-  payload = { value = Int owner = Ref(Player) }
+  payload = { value = Int player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding }
 }
 
 event ModifyCardCost {
@@ -64,7 +64,7 @@ event ShouldResetEnergy {
 }
 
 event ShouldClearBlock {
-  payload = { value = Bool owner = Ref(Player) }
+  payload = { value = Bool player = Binding enemy = Binding }
 }
 
 event ShouldGainEnergy {
@@ -75,26 +75,12 @@ event ShouldDraw {
   payload = { value = Bool owner = Ref(Player) fromHandDraw = Bool }
 }
 
-event ShouldExhaustSkill {
-  payload = { value = Bool owner = Ref(Player) card = Ref(Card) }
-}
 
-event ModifyPlayCount {
-  payload = { value = Int owner = Ref(Player) card = Ref(Card) }
-}
 
 event AfterAutoPostPlayPhaseEntered {
   payload = { owner = Ref(Player) }
 }
 
 event AfterCardDrawnEarly {
-  payload = { owner = Ref(Player) card = Ref(Card) }
-}
-
-event BeforePlayerAttacked {
-  payload = { owner = Ref(Player) attacker = Ref(Enemy) }
-}
-
-event BeforeCardPlaySequence {
   payload = { owner = Ref(Player) card = Ref(Card) }
 }

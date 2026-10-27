@@ -13,13 +13,15 @@ entity Player {
     TurnNumber = { type = Int(min = 0, max = 999) default = 0 }
     # Development turn gate. Vanilla tracks PlayerTurnPhase instead; that lifecycle is not migrated.
     TurnOpen = { type = Bool default = false }
-    Block = { type = Int(min = 0, max = 999) default = 0 }
+    Block = { type = Int(min = 0, max = 999999999) default = 0 }
     # Published result of the effect-draw permission query; not an independent switch.
     DrawBlocked = { type = Bool default = false }
     CombatActive = { type = Bool default = false }
     # Development combat outcome: none while it runs, then victory or defeat. Run settlement, rewards and
     # the true engine terminal are not migrated.
     CombatOutcome = { type = String(length = 16) default = "none" }
+    DeathResolving = { type = Bool default = false visibility = Hidden }
+    DeathResolved = { type = Bool default = false visibility = Hidden }
     CombatTimedOut = { type = Bool default = false }
     # Development stand-ins for the source's per-turn combat history (Spite, EvilEye). Both reset at turn start.
     LostHpThisTurn = { type = Bool default = false }
@@ -34,12 +36,14 @@ entity Player {
     UsesRunDeck = { type = Bool default = false }
     CharacterId = { type = String(length = 64) default = "none" }
     CurrentRun = { type = Ref(Run) optional = true }
+    NextEnemyBirthOrder = { type = Int(min = 0) default = 0 visibility = Hidden }
     AutoDrawPerTurn = { type = Int(min = 0, max = 10) default = 0 }
     AttackDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     DamageDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     EffectDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
     EnemyDiedInCombat = { type = Bool default = false visibility = Hidden }
     PlayDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }
+    CardsGeneratedThisCombat = { type = Int(min = 0) default = 0 visibility = Hidden }
     PlaySequence = { type = Int default = 0 }
     CardActionNumber = { type = Int default = 0 visibility = Hidden }
     CurrentPlay = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
@@ -69,12 +73,17 @@ entity Enemy {
     DefinitionId = { type = String(length = 64) }
     Hp = { type = Int(min = 0, max = 999999) default = 0 }
     MaxHp = { type = Int(min = 0, max = 999999) default = 0 }
-    Block = { type = Int(min = 0, max = 999) default = 0 }
+    Block = { type = Int(min = 0, max = 999999999) default = 0 }
     # Ordinary confirmed death detaches the source creature before Power removal callbacks.
     # Keep the instance for damage/play references; non-death escape has its own flag.
     DeathResolved = { type = Bool default = false visibility = Hidden }
     Escaped = { type = Bool default = false }
+    BirthOrder = { type = Int(min = 0) default = 0 visibility = Hidden }
+    CombatId = { type = Int(min = 1) default = 1 visibility = Hidden }
+    MonsterSeed = { type = Int default = 0 visibility = Hidden }
+    SlotIndex = { type = Int(min = -1) default = -1 visibility = Hidden }
     SpawnOrder = { type = Int(min = 0) default = 0 visibility = Hidden }
+    SpawnedThisTurn = { type = Bool default = true visibility = Hidden }
     # Development move position inside the enemy's own rotation; the enemy content template owns the meaning.
     MoveIndex = { type = Int(min = 0, max = 9) default = 0 }
     # Saved source node for migrated move graphs; observations never roll another move.
@@ -96,6 +105,7 @@ entity Power {
     HolderPlayer = { type = Ref(Player) optional = true }
     HolderEnemy = { type = Ref(Enemy) optional = true }
     Stacks = { type = Int(min = -999, max = 999) default = 0 }
+    AmountAtTurnStart = { type = Int(min = -999, max = 999) default = 0 visibility = Hidden }
     ApplierPlayer = { type = Ref(Player) optional = true visibility = Hidden }
     ApplierEnemy = { type = Ref(Enemy) optional = true visibility = Hidden }
     SourceCard = { type = Ref(Card) optional = true visibility = Hidden }

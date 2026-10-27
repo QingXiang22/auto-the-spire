@@ -56,11 +56,11 @@ procedure DrawNextCard {
         if = {
           condition = not(isNone(drawn))
           then = {
-            call = { procedure = MoveCombatCard args = { owner = owner card = drawn to = "hand" reason = "draw" } }
+            call = { procedure = MoveCombatCardWithoutNotification args = { owner = owner card = drawn to = "hand" } }
             set = { target = owner field = Player.LastDrawn value = drawn }
             emit = {
               event = AfterCardDrawnEarly payload = { owner = owner card = drawn } }
-            if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = AfterCardDrawn payload = { owner = owner card = drawn } } } }
+            if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterCardDrawn payload = { owner = owner card = drawn } } } }
             set = { target = owner field = Player.LastDrawn value = drawn }
           }
         }

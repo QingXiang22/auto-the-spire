@@ -1,0 +1,116 @@
+entity BlockProbeState { fields = {
+  Enemy = { type = Bool default = false } Unpowered = { type = Bool default = false } Move = { type = Bool default = true }
+  Amount = { type = Int default = 7 } Card = { type = Ref(Card) optional = true } Play = { type = Ref(CardPlayRecord) optional = true }
+  Before = { type = String(length = 16) default = "none" } Nested = { type = Bool default = false }
+  Returned = { type = Int default = 0 } Preview = { type = Int default = 0 } CallbackCount = { type = Int default = 0 }
+} }
+entity BlockProbeRow { fields = {
+  At = { type = String(length = 16) } Amount = { type = Int } PlayerBlock = { type = Int } EnemyBlock = { type = Int }
+  Card = { type = String(length = 64) } HasPlay = { type = Bool } Enemy = { type = Bool } Unpowered = { type = Bool } Move = { type = Bool }
+} }
+entity BlockProbeChanged { fields = { Row = { type = Ref(BlockProbeRow) } Definition = { type = String(length = 64) } } }
+action BlockProbeSetup { role = player locals = { state = Binding } body = { create = { type = BlockProbeState scope = frameScope() into = state } } }
+action BlockProbePower { role = player parameters = { enemy = Bool definition = String(length = 64) stacks = Int } locals = { power = Binding } body = {
+  if = { condition = enemy then = { call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = definition stacks = stacks } } }
+    else = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = definition stacks = stacks } } } }
+} }
+procedure BlockProbeCapture { parameters = { gain = Ref(BlockGain) after = Bool } locals = { row = Binding changed = Binding tag = String(length = 16) amount = Int card = String(length = 64) } body = {
+  let = { into = tag value = "before" }
+  let = { into = amount value = field(gain, BlockGain.RequestedMicros) }
+  let = { into = card value = "none" }
+  if = { condition = after then = { let = { into = tag value = "after" } let = { into = amount value = field(gain, BlockGain.AmountMicros) } } }
+  if = { condition = not(isNone(field(gain, BlockGain.Card))) then = { let = { into = card value = field(field(gain, BlockGain.Card), Card.SourceEntry) } } }
+  create = { type = BlockProbeRow scope = frameScope() into = row fields = {
+    At = tag Amount = amount PlayerBlock = field(first(type(Player)), Player.Block) EnemyBlock = field(first(type(Enemy)), Enemy.Block)
+    Card = card HasPlay = not(isNone(field(gain, BlockGain.Play))) Enemy = not(isNone(field(gain, BlockGain.Enemy))) Unpowered = field(gain, BlockGain.Unpowered) Move = field(gain, BlockGain.Move)
+  } }
+  if = { condition = after then = {
+    forEach = { query = sort(where(type(BlockAmountModifier), r, and(equal(field(r, BlockAmountModifier.Gain), gain), not(isNone(field(r, BlockAmountModifier.Power))))), r, pureCall(PowerHookOrder, field(r, BlockAmountModifier.Power), false)) item = record body = {
+      create = { type = BlockProbeChanged scope = frameScope() into = changed fields = { Row = row Definition = field(field(record, BlockAmountModifier.Power), Power.DefinitionId) } }
+    } }
+  } }
+} }
+procedure BlockProbeBefore { parameters = { gain = Ref(BlockGain) } locals = { ignored = Int answer = Bool } body = {
+  call = { procedure = BlockProbeCapture args = { gain = gain after = false } }
+  if = { condition = not(field(first(type(BlockProbeState)), BlockProbeState.Nested)) then = {
+    if = { condition = equal(field(first(type(BlockProbeState)), BlockProbeState.Before), "remove") then = {
+      forEach = { query = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:dexterity-power")) item = p body = { call = { procedure = RemovePower args = { power = p } } } }
+    } }
+    if = { condition = equal(field(first(type(BlockProbeState)), BlockProbeState.Before), "nested") then = {
+      set = { target = first(type(BlockProbeState)) field = BlockProbeState.Nested value = true }
+      call = { procedure = GainCombatBlock args = { player = first(type(Player)) enemy = none amount = 2 unpowered = true move = false card = none play = none } into = ignored }
+      set = { target = first(type(BlockProbeState)) field = BlockProbeState.Nested value = false }
+    } }
+    if = { condition = equal(field(first(type(BlockProbeState)), BlockProbeState.Before), "pause") then = {
+      decide = { participant = field(first(type(Player)), Player.Owner) kind = Bool prompt = "block command probe" into = answer }
+    } }
+    if = { condition = equal(field(first(type(BlockProbeState)), BlockProbeState.Before), "ending") then = {
+      forEach = { query = type(Enemy) item = e body = { call = { procedure = DamageEnemy args = { target = e amount = field(e, Enemy.Hp) } } } }
+    } }
+  } }
+} }
+procedure BlockProbeAfter { parameters = { gain = Ref(BlockGain) } body = { call = { procedure = BlockProbeCapture args = { gain = gain after = true } } } }
+subscription BlockProbeBefore { event = BeforeBlockGained reaction = BlockProbeBefore priority = -100 }
+subscription BlockProbeAfter { event = AfterBlockGained reaction = BlockProbeAfter priority = -100 }
+procedure BlockProbePreviewValue { pure = true result = Int locals = { player = Binding enemy = Binding } body = {
+  let = { into = player value = first(type(Player)) }
+  if = { condition = field(first(type(BlockProbeState)), BlockProbeState.Enemy) then = { let = { into = player value = none } let = { into = enemy value = first(type(Enemy)) } } }
+  return = { value = pureCall(CalculateBlockAmount, player, enemy, field(first(type(BlockProbeState)), BlockProbeState.Amount), field(first(type(BlockProbeState)), BlockProbeState.Unpowered), field(first(type(BlockProbeState)), BlockProbeState.Move), field(first(type(BlockProbeState)), BlockProbeState.Card), field(first(type(BlockProbeState)), BlockProbeState.Play)) }
+} }
+action BlockProbePreview { role = player body = { set = { target = first(type(BlockProbeState)) field = BlockProbeState.Preview value = pureCall(BlockProbePreviewValue) } } }
+action BlockProbeReadOnly { role = player requires = greaterOrEqual(pureCall(BlockProbePreviewValue), 0) body = { } }
+action BlockProbeGain { role = player locals = { player = Binding enemy = Binding amount = Int } body = {
+  let = { into = player value = first(type(Player)) }
+  if = { condition = field(first(type(BlockProbeState)), BlockProbeState.Enemy) then = { let = { into = player value = none } let = { into = enemy value = first(type(Enemy)) } } }
+  call = { procedure = GainCombatBlock args = { player = player enemy = enemy amount = field(first(type(BlockProbeState)), BlockProbeState.Amount) unpowered = field(first(type(BlockProbeState)), BlockProbeState.Unpowered) move = field(first(type(BlockProbeState)), BlockProbeState.Move) card = field(first(type(BlockProbeState)), BlockProbeState.Card) play = field(first(type(BlockProbeState)), BlockProbeState.Play) } into = amount }
+  set = { target = first(type(BlockProbeState)) field = BlockProbeState.Returned value = amount }
+} }
+use BlockProbeEntrench { template = CardDefinition args = { definition = "probe:block-entrench" sourceEntry = "ENTRENCH" rarity = "event" cost = 2 upgradedCost = 1 targeted = false exhausts = false leavesPlay = false } }
+procedure BlockProbeEntrenchBody { parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) } locals = { amount = Int } body = {
+  call = { procedure = GainCombatBlock args = { player = owner enemy = none amount = field(owner, Player.Block) unpowered = true move = true card = card play = play } into = amount }
+} }
+dispatchCase BlockProbeEntrenchBody { dispatch = ExecuteCardBody key = "probe:block-entrench" procedure = BlockProbeEntrenchBody }
+use BlockProbeEntrenchDamage { template = StaticCardDamage args = { definition = "probe:block-entrench" } }
+action BlockProbeAddEntrench { role = player locals = { card = Binding } body = {
+  call = { procedure = CreateCombatCard args = { owner = first(type(Player)) definition = "probe:block-entrench" } into = card }
+  call = { procedure = AddGeneratedToHand args = { card = card } }
+} }
+action BlockProbeExhaust { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } body = { call = { procedure = ExhaustCombatCard args = { owner = first(type(Player)) card = card causedByEthereal = false } } } }
+# Synthetic modifier exercises both phases and the selected-participant callback once.
+use BlockProbeCallback { template = PowerDefinition args = { definition = "probe:block-callback" } }
+procedure BlockProbeDelta { pure = true parameters = { gain = Ref(BlockGain) listener = Ref(Power) } result = Int body = {
+  if = { condition = and(pureCall(BlockTargetMatchesPower, field(gain, BlockGain.Player), field(gain, BlockGain.Enemy), listener), not(field(gain, BlockGain.Unpowered))) then = {
+    if = { condition = equal(field(listener, Power.Stacks), 1) then = { return = { value = 1000000 } } }
+  } }
+  return = { value = 0 }
+} }
+procedure BlockProbeFactor { pure = true parameters = { gain = Ref(BlockGain) listener = Ref(Power) } result = Int body = {
+  if = { condition = and(pureCall(BlockTargetMatchesPower, field(gain, BlockGain.Player), field(gain, BlockGain.Enemy), listener), and(not(field(gain, BlockGain.Unpowered)), less(field(listener, Power.Stacks), 3))) then = { return = { value = 2000000 } } }
+  return = { value = 1000000 }
+} }
+procedure BlockProbeAdd { parameters = { gain = Ref(BlockGain) listener = Ref(Power) } body = { call = { procedure = AddBlockAmount args = { gain = gain power = listener deltaMicros = pureCall(BlockProbeDelta, gain, listener) } } } }
+procedure BlockProbeMultiply { parameters = { gain = Ref(BlockGain) listener = Ref(Power) } body = { call = { procedure = MultiplyBlockAmount args = { gain = gain power = listener factorMicros = pureCall(BlockProbeFactor, gain, listener) } } } }
+subscription BlockProbeAdd { event = BlockAdding reaction = BlockProbeAdd instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "probe:block-callback")) instance_order = pureCall(PowerHookOrder, listener, false) }
+subscription BlockProbeMultiply { event = BlockMultiplying reaction = BlockProbeMultiply instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "probe:block-callback")) instance_order = pureCall(PowerHookOrder, listener, false) }
+# Pure preview uses the identical deltas/factors with explicit parameters, without a context entity.
+procedure BlockProbeQueryAdd { pure = true parameters = { value = Int player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding listener = Ref(Power) } result = Int body = {
+  if = { condition = and(pureCall(BlockTargetMatchesPower, player, enemy, listener), and(not(unpowered), equal(field(listener, Power.Stacks), 1))) then = { return = { value = add(value, 1000000) } } }
+  return = { value = value }
+} }
+procedure BlockProbeQueryMultiply { pure = true parameters = { value = Int player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding listener = Ref(Power) } result = Int body = {
+  if = { condition = and(pureCall(BlockTargetMatchesPower, player, enemy, listener), and(not(unpowered), less(field(listener, Power.Stacks), 3))) then = { return = { value = multiply(value, 2) } } }
+  return = { value = value }
+} }
+subscription BlockProbeQueryAdd { event = ModifyBlockAdditive reaction = BlockProbeQueryAdd instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "probe:block-callback")) instance_order = pureCall(PowerHookOrder, listener, false) }
+subscription BlockProbeQueryMultiply { event = ModifyBlockMultiplier reaction = BlockProbeQueryMultiply instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "probe:block-callback")) instance_order = pureCall(PowerHookOrder, listener, false) }
+procedure BlockProbeModified { parameters = { gain = Ref(BlockGain) listener = Ref(Power) } body = { set = { target = first(type(BlockProbeState)) field = BlockProbeState.CallbackCount value = add(field(first(type(BlockProbeState)), BlockProbeState.CallbackCount), 1) } } }
+subscription BlockProbeModified { event = AfterModifyingBlockAmount reaction = BlockProbeModified instances = where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), "probe:block-callback"), exists(where(type(BlockAmountModifier), r, and(equal(field(r, BlockAmountModifier.Gain), gain), equal(field(r, BlockAmountModifier.Power), p)))))) instance_order = pureCall(PowerHookOrder, listener, false) }
+
+procedure BlockProbeInitialPlating { parameters = { owner = Ref(Player) } body = {
+  if = { condition = equal(field(first(type(BlockProbeState)), BlockProbeState.Before), "plating-init") then = {
+    call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:plating-power" stacks = 5 } }
+    call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:dexterity-power" stacks = 3 } }
+    call = { procedure = ApplyEnemyPower args = { target = first(type(Enemy)) definition = "base-spire:frail-power" stacks = 3 } }
+  } }
+} }
+subscription BlockProbeInitialPlating { event = BeforeCombatStart reaction = BlockProbeInitialPlating }

@@ -5,7 +5,7 @@ namespace NetTheSpire.Projection;
 /// <summary>
 /// 受控切片 <c>base-spire:combat-slice-v1</c> 的公开映射声明（N-02 的首个训练配置，H-01/H-02 收口）。
 ///
-/// 依据：<c>docs/design/net-the-spire/design.md</c> 第 45/53 行（“公开机制 → 当前字段/位置 → 提供方来源”的映射
+/// 依据：<c>docs/understand/net-design.md</c> 第 45/53 行（“公开机制 → 当前字段/位置 → 提供方来源”的映射
 /// 必须显式登记；wire 的 piles 是 STS 适配结构，其种类由目录声明）与第 63 行（当前内容先用显式映射注册）。
 /// 这里登记的是**引擎声明 ID → 公开声明 ID**，不是从内部字段反射生成目录。
 ///

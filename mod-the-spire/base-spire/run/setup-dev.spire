@@ -20,10 +20,7 @@ procedure AddDevelopmentTarget {
   parameters = { owner = Ref(Player) }
   locals = { target = Binding }
   body = {
-    create = {
-      type = Enemy scope = entityScope(owner) into = target
-      fields = { Owner = field(owner, Player.Owner) DefinitionId = "base-spire:development-target" SpawnOrder = count(type(Enemy)) Hp = 40 MaxHp = 40 }
-    }
+    call = { procedure = CreateEncounterEnemy args = { definition = "base-spire:development-target" hp = 40 } into = target }
   }
 }
 action AddDevelopmentTarget {

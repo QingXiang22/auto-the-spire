@@ -7,8 +7,9 @@ template RupturePowerModule { body = {
 
 entity Pending { fields = { Power = { type = Ref(Power) visibility = Hidden } Play = { type = Ref(CardPlayRecord) visibility = Hidden } Amount = { type = Int default = 0 visibility = Hidden } } }
 procedure LostHp {
- parameters = { owner = Ref(Player) result = Ref(DamageResult) listener = Ref(Power) } locals = { pending = Binding sourcePlay = Binding }
- body = { if = { condition = and(not(field(owner, Player.EnemyPhase)), and(greater(field(result, DamageResult.Unblocked), 0), greater(field(listener, Power.Stacks), 0))) then = {
+ parameters = { result = Ref(DamageResult) listener = Ref(Power) } locals = { owner = Binding pending = Binding sourcePlay = Binding }
+ body = { let = { into = owner value = field(result, DamageResult.Player) }
+ if = { condition = and(not(field(owner, Player.EnemyPhase)), and(greater(field(result, DamageResult.Unblocked), 0), greater(field(listener, Power.Stacks), 0))) then = {
   let = { into = sourcePlay value = field(result, DamageResult.Play) }
   if = { condition = isNone(sourcePlay) then = {
    call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:strength-power" stacks = field(listener, Power.Stacks) } }
@@ -19,7 +20,7 @@ procedure LostHp {
   } }
  } } }
 }
-subscription LostHp { event = PlayerDamaged reaction = LostHp instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:rupture-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+subscription LostHp { event = AfterDamageReceived reaction = LostHp instances = where(collection(Powers), p, and(not(isNone(field(result, DamageResult.Player))), and(equal(field(p, Power.HolderPlayer), field(result, DamageResult.Player)), equal(field(p, Power.DefinitionId), "base-spire:rupture-power")))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
 procedure Completed {
  parameters = { owner = Ref(Player) card = Ref(Card) play = Ref(CardPlayRecord) listener = Ref(Power) }
  body = { forEach = { query = where(type(Pending), s, and(equal(field(s, Pending.Power), listener), equal(field(s, Pending.Play), play))) item = pending body = {

@@ -21,7 +21,7 @@ procedure SetupStrike {
           condition = equal(field(first(where(type(State), s, equal(field(s, State.Power), listener))), State.Value), 3) then = {
             repeat = {
               count = field(listener, Power.Stacks) body = {
-                call = { procedure = CloneCombatCardToPile args = { owner = owner source = card to = "hand" reason = "generate" } into = copy }
+                call = { procedure = CloneGeneratedCombatCard args = { owner = owner source = card creator = owner to = "hand" } into = copy }
               }
             }
           }
@@ -32,7 +32,7 @@ procedure SetupStrike {
 }
 
 subscription SetupStrike {
-  event = AfterCardPlayed reaction = SetupStrike instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:juggling-power"))) instance_order = pureCall(PowerHookOrder, listener, true) priority = 0
+  event = BeforeCardPlayed reaction = SetupStrike instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:juggling-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
 }
 
 procedure SetupReset {

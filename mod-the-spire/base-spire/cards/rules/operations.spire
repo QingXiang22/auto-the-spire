@@ -55,7 +55,7 @@ procedure ExhaustCombatCard {
     call = { procedure = RemoveFromCombatPiles args = { card = card } }
     addToCollection = { collection = ExhaustPile item = card }
     emit = { event = CardMoved payload = { owner = owner card = card from = from to = "exhaust" reason = "exhaust" } }
-    if = { condition = not(pureCall(CombatIsEnding)) then = { emit = { event = CardExhausted payload = { owner = owner card = card causedByEthereal = causedByEthereal } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = CardExhausted payload = { owner = owner card = card causedByEthereal = causedByEthereal } } } }
   }
 }
 procedure SelectHandCard {
@@ -116,7 +116,7 @@ procedure CreateCombatCard {
     return = { value = card }
   }
 }
-procedure CloneCombatCard {
+procedure CloneCardInstance {
   parameters = { owner = Ref(Player) source = Ref(Card) }
   locals = { copy = Binding } result = Binding
   body = {
@@ -135,7 +135,48 @@ procedure CloneCombatCard {
       Upgraded = field(source, Card.Upgraded) CanUpgrade = field(source, Card.CanUpgrade)
     } }
     emit = { event = CardCloned payload = { owner = owner source = source card = copy } }
+    return = { value = copy }
+  }
+}
+# The existing generic cloning operation retains its original entry and move semantics.
+procedure CloneCombatCard {
+  parameters = { owner = Ref(Player) source = Ref(Card) } locals = { copy = Binding } result = Binding
+  body = {
+    call = { procedure = CloneCardInstance args = { owner = owner source = source } into = copy }
     emit = { event = CardEnteredCombat payload = { owner = owner card = copy clone = true } }
+    return = { value = copy }
+  }
+}
+# Source Generate enters an already created card without an asynchronous pile-change notification.
+procedure GenerateCardIntoCombat {
+  parameters = { owner = Ref(Player) card = Ref(Card) creator = Binding to = String(length = 16) clone = Bool }
+  locals = { ending = Bool }
+  body = {
+    if = { condition = or(not(field(owner, Player.CombatActive)), not(equal(field(card, Card.Owner), field(owner, Player.Owner)))) then = { fail = { message = "Generated card requires its owner in active combat" } } }
+    if = { condition = or(not(equal(pureCall(CombatCardPile, card), "none")), greaterOrEqual(collectionIndex(RunDeck, card), 0)) then = { fail = { message = "Generated card must not already occupy a pile" } } }
+    if = { condition = not(or(equal(to, "hand"), or(equal(to, "draw"), or(equal(to, "discard"), or(equal(to, "play"), equal(to, "exhaust")))))) then = { fail = { message = "Generated card requires a combat pile" } } }
+    if = { condition = not(isNone(creator)) then = {
+      if = { condition = not(field(creator, Player.CombatActive)) then = { fail = { message = "Generated card creator requires active combat" } } }
+    } }
+    let = { into = ending value = pureCall(CombatIsEnding) }
+    if = { condition = not(ending) then = {
+      if = { condition = equal(to, "exhaust") then = { addToCollection = { collection = ExhaustPile item = card } } else = {
+        call = { procedure = MoveCombatCardWithoutNotification args = { owner = owner card = card to = to } }
+      } }
+    } }
+    if = { condition = not(isNone(creator)) then = { set = { target = creator field = Player.CardsGeneratedThisCombat value = add(field(creator, Player.CardsGeneratedThisCombat), 1) } } }
+    if = { condition = not(ending) then = { emit = { event = CardEnteredCombat payload = { owner = owner card = card clone = clone } } } }
+    # Both source notification iterators independently stop when combat is over or ending.
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterCardGenerated payload = { owner = owner card = card creator = creator } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterCardGeneratedForCombat payload = { owner = owner card = card creator = creator } } } }
+  }
+}
+procedure CloneGeneratedCombatCard {
+  parameters = { owner = Ref(Player) source = Ref(Card) creator = Binding to = String(length = 16) }
+  locals = { copy = Binding } result = Binding
+  body = {
+    call = { procedure = CloneCardInstance args = { owner = owner source = source } into = copy }
+    call = { procedure = GenerateCardIntoCombat args = { owner = owner card = copy creator = creator to = to clone = true } }
     return = { value = copy }
   }
 }
@@ -188,7 +229,7 @@ procedure RandomLivingEnemy {
   body = {
     let = { into = target value = none }
     if = { condition = exists(where(type(Enemy), e, pureCall(EnemyIsActive, e))) then = {
-      samplePick = { stream = "base-spire:run:combat_targets" candidates = where(type(Enemy), e, pureCall(EnemyIsActive, e)) into = target }
+      samplePick = { stream = "base-spire:run:combat_targets" candidates = sort(where(type(Enemy), e, pureCall(EnemyIsActive, e)), e, field(e, Enemy.SpawnOrder)) into = target }
     } }
     return = { value = target }
   }

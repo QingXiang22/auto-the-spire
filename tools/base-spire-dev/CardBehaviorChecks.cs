@@ -10,6 +10,8 @@ internal static partial class PackageChecks
             if (filter is not null && !name.StartsWith(filter, StringComparison.OrdinalIgnoreCase)) return;
             body(); count++; Console.WriteLine("ok   " + name);
         }
+        RunCombatEndChecks(package, Check);
+        Check("END normal settlement order: source end before cleanup, victory and rewards", () => RunNormalSettlementOrderChecks(package));
         RunCardBehaviorChecks(package, Check);
         RunAttackBehaviorChecks(package, Check);
         RunCardLifecycleChecks(package, Check);
@@ -22,6 +24,7 @@ internal static partial class PackageChecks
 
     private static void RunCardBehaviorChecks(DslPackage package, Action<string, Action> check)
     {
+        RunCardPlayPreparationChecks(package, check);
         RunTurnPhaseChecks(package, check);
         RunExhaustCauseChecks(package, check);
         check("BEHAVIOR owned body order changes actual damage without changing shared dispatch or notifications", () =>
@@ -53,11 +56,9 @@ internal static partial class PackageChecks
         {
             using var copy = new Copy(package.Root);
             copy.Include("nested-context.spire", """
-                procedure Twice { pure = true parameters = { count = Int owner = Ref(Player) card = Ref(Card) } result = Int body = {
-                  if = { condition = equal(field(card, Card.DefinitionId), "base-spire:strike-ironclad") then = { return = { value = 2 } } }
-                  return = { value = count }
+                action GrantRepeat { role = player body = {
+                  call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:one-two-punch-power" stacks = 1 } }
                 } }
-                subscription Twice { event = ModifyPlayCount reaction = Twice }
                 procedure Nested { parameters = { owner = Ref(Player) card = Ref(Card) play = Ref(CardPlayRecord) } locals = { next = Binding } body = {
                   if = { condition = equal(field(card, Card.DefinitionId), "base-spire:strike-ironclad") then = {
                     if = { condition = not(equal(pureCall(AttacksPlayedThisTurn, owner), field(play, CardPlayRecord.PlayIndex))) then = { fail = { message = "Before execution counted its not-yet-started attack" } } }
@@ -68,6 +69,7 @@ internal static partial class PackageChecks
                 subscription Nested { event = BeforeCardExecution reaction = Nested }
                 """);
             var s = Start(copy.Load()); Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
+            Submit(s, "GrantRepeat");
             Set(s, Player(s), "Player", "Energy", Value.Of(10L));
             var child = IcAdd(s, "DefendIronclad"); var card = IcAdd(s, "StrikeIronclad"); IcPlay(s, card);
             var records = Members(s, "CardPlays"); Equal(3, records.Count, "two parent executions and one nested child");

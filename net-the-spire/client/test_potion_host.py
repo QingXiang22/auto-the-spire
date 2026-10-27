@@ -102,7 +102,7 @@ class Case:
 
     def open(self, author=False):
         version = '0.1' if author else '0.2'
-        self.schema = json.loads((ROOT / f'docs/contracts/net/{version}/wire.schema.json').read_text(encoding='utf8'))
+        self.schema = json.loads((ROOT / f'docs/specs/net/{version}/wire.schema.json').read_text(encoding='utf8'))
         args = ['--author-content'] if author else ['--scenario', 'formal-dev', '--scope', 'dev-map']
         self.client = EvidenceClient(['dotnet', str(self.dll)] + args,
                                      recorder=self.record, schema=self.schema)

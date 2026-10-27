@@ -101,6 +101,19 @@ procedure NotifyNormalRoomEntered {
     emit = { event = NormalRoomEntered payload = { owner = owner visit = visit } }
   }
 }
+# Combat setup calls this after every graph exists and before monster entry effects.
+procedure NotifyCurrentCombatRoomEntered {
+  parameters = { owner = Ref(Player) } locals = { run = Binding visit = Binding }
+  body = {
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    if = { condition = isNone(run) then = { return = {} } }
+    let = { into = visit value = field(run, Run.CurrentVisit) }
+    if = { condition = isNone(visit) then = { return = {} } }
+    if = { condition = equal(field(visit, RunVisit.Phase), "combat") then = {
+      call = { procedure = NotifyNormalRoomEntered args = { owner = owner visit = visit } }
+    } }
+  }
+}
 procedure NotifyNormalEventRoomEntered {
   parameters = { owner = Ref(Player) visit = Ref(EventVisit) } body = {
     if = { condition = not(isNone(field(visit, EventVisit.RunVisit))) then = { call = { procedure = NotifyNormalRoomEntered args = { owner = owner visit = field(visit, EventVisit.RunVisit) } } } }
@@ -208,7 +221,7 @@ procedure BeginNormalMapVisit {
 }
 procedure EnterNormalMapPoint {
   parameters = { owner = Ref(Player) run = Ref(Run) node = Ref(MapNode) }
-  locals = { visit = Binding plan = Binding encounter = String(length = 64) hp = Int room = String(length = 16) }
+  locals = { visit = Binding plan = Binding encounter = String(length = 64) target = Binding room = String(length = 16) }
   body = {
     if = { condition = not(equal(field(node, MapNode.Run), run)) then = { fail = { message = "Map point belongs to another Run" } } }
     if = { condition = not(and(equal(field(run, Run.Phase), "map"), pureCall(CanTravelToNormalMapPoint, owner, run, node))) then = { fail = { message = "Map point is not currently travelable from this Run" } } }
@@ -235,14 +248,13 @@ procedure EnterNormalMapPoint {
     set = { target = run field = Run.NormalEncounterIndex value = add(field(run, Run.NormalEncounterIndex), 1) }
     set = { target = run field = Run.Phase value = "combat" }
     set = { target = owner field = Player.Room value = "none" }
+    call = { procedure = PrepareEnemyBirthContext }
     if = { condition = equal(encounter, "base-spire:slimes-weak") then = {
       call = { procedure = SpawnSourceSlimesWeak args = { totalFloor = field(run, Run.TotalFloor) } }
     } else = {
-      sampleInt = { stream = "base-spire:run:niche" min = 55 max = 58 into = hp }
-      call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" hp = hp } }
+      call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" min = 55 max = 57 } into = target }
     } }
     call = { procedure = BeginDevelopmentCombat args = { owner = owner } }
-    call = { procedure = NotifyNormalRoomEntered args = { owner = owner visit = visit } }
     call = { procedure = BeginDevelopmentTurn args = { owner = owner } }
   }
 }
@@ -261,7 +273,11 @@ procedure SettleNormalCombat {
   locals = { run = Binding visit = Binding }
   body = {
     let = { into = run value = field(owner, Player.CurrentRun) }
-    if = { condition = isNone(run) then = { call = { procedure = SettleDevelopmentEventCombat args = { owner = owner victory = victory } } return = {} } }
+    if = { condition = isNone(run) then = {
+      call = { procedure = WhenCombatEnded args = { owner = owner victory = victory } }
+      call = { procedure = SettleDevelopmentEventCombat args = { owner = owner victory = victory } }
+      return = {}
+    } }
     let = { into = visit value = field(run, Run.CurrentVisit) }
     if = { condition = or(isNone(visit), not(equal(field(run, Run.Phase), "combat"))) then = { fail = { message = "No normal combat visit is active" } } }
     if = { condition = or(field(visit, RunVisit.Committed), not(equal(field(visit, RunVisit.Phase), "combat"))) then = { fail = { message = "Normal combat visit was already committed" } } }

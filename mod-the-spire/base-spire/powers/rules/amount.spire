@@ -26,7 +26,7 @@ procedure ExecutePowerAmountChange {
  result = Binding
  body = {
   let = { into = power value = initial }
-  if = { condition = pureCall(CombatIsEnding) then = { return = { value = none } } }
+  if = { condition = pureCall(CombatIsOverOrEnding) then = { return = { value = none } } }
   if = { condition = not(isNone(enemy)) then = {
    if = { condition = or(field(enemy, Enemy.DeathResolved), field(enemy, Enemy.Escaped)) then = { return = { value = none } } }
   } }

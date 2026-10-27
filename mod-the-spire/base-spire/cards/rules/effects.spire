@@ -84,7 +84,7 @@ template ClonePlayedCardEffect {
       locals = { copy = Binding }
       body = {
         if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-          call = { procedure = CloneCombatCardToPile args = { owner = owner source = card to = arg(destination) reason = "clone" } into = copy }
+          call = { procedure = CloneGeneratedCombatCard args = { owner = owner source = card creator = owner to = arg(destination) } into = copy }
         } }
       }
     }
@@ -185,7 +185,7 @@ template ApplyAllEnemiesPowerEffect {
           then = {
             let = { into = amount value = pureCall(CardUpgradeValue, card, arg(stacks), arg(upgradedStacks)) }
             forEach = {
-              query = where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy)) item = enemy
+              query = sort(where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy)), e, field(e, Enemy.SpawnOrder)) item = enemy
               body = { call = { procedure = ApplyEnemyPowerFromCard args = { card = card play = play owner = owner  target = enemy definition = arg(power) stacks = amount } } }
             }
           }

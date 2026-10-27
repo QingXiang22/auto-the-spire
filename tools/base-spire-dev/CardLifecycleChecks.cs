@@ -216,12 +216,43 @@ internal static partial class PackageChecks
         check("LIFECYCLE public generation applies caller cost policy before placement notifications", () =>
         {
             using var copy = new Copy(package.Root); copy.Include("generation-operation-probe.spire", """
+                entity GenerationAudit { fields = { Stage = { type = Int default = 0 } } }
+                procedure SourceEntry { parameters = { owner = Ref(Player) card = Ref(Card) clone = Bool } body = {
+                  if = { condition = exists(type(GenerationAudit)) then = {
+                    if = { condition = or(not(equal(field(card, Card.Cost), 2)), or(less(collectionIndex(Hand, card), 0), not(equal(field(owner, Player.CardsGeneratedThisCombat), 1)))) then = { fail = { message = "Generated card must have its cost, pile and count before entry" } } }
+                    set = { target = first(type(GenerationAudit)) field = GenerationAudit.Stage value = 1 }
+                  } }
+                } }
+                subscription SourceEntry { event = CardEnteredCombat reaction = SourceEntry }
+                procedure SourceGenerated { parameters = { owner = Ref(Player) card = Ref(Card) creator = Binding } body = {
+                  if = { condition = exists(type(GenerationAudit)) then = {
+                    if = { condition = or(not(equal(creator, owner)), not(equal(field(first(type(GenerationAudit)), GenerationAudit.Stage), 1))) then = { fail = { message = "Generated notification must follow entry and preserve creator" } } }
+                    set = { target = first(type(GenerationAudit)) field = GenerationAudit.Stage value = 2 }
+                  } }
+                } }
+                subscription SourceGenerated { event = AfterCardGenerated reaction = SourceGenerated }
+                procedure SourceGeneratedCombat { parameters = { owner = Ref(Player) card = Ref(Card) creator = Binding } body = {
+                  if = { condition = exists(type(GenerationAudit)) then = {
+                    if = { condition = not(equal(field(first(type(GenerationAudit)), GenerationAudit.Stage), 2)) then = { fail = { message = "Combat generation notification must be last" } } }
+                    set = { target = first(type(GenerationAudit)) field = GenerationAudit.Stage value = 3 }
+                  } }
+                } }
+                subscription SourceGeneratedCombat { event = AfterCardGeneratedForCombat reaction = SourceGeneratedCombat }
                 procedure CheckCost { parameters = { owner = Ref(Player) card = Ref(Card) from = String(length = 16) to = String(length = 16) reason = String(length = 32) } body = {
                   if = { condition = equal(reason, "generate") then = {
                     if = { condition = not(equal(field(card, Card.Cost), 2)) then = { fail = { message = "cost applied after placement" } } }
                   } }
                 } }
                 subscription CheckCost { event = CardMoved reaction = CheckCost }
+                procedure NoSourceMove { parameters = { owner = Ref(Player) card = Ref(Card) from = String(length = 16) to = String(length = 16) reason = String(length = 32) } body = {
+                  if = { condition = exists(type(GenerationAudit)) then = { fail = { message = "Source Generate cannot emit an asynchronous move" } } }
+                } }
+                subscription NoSourceMove { event = CardMoved reaction = NoSourceMove }
+                action GenerateSource { role = player locals = { generated = Binding audit = Binding } body = {
+                  create = { type = GenerationAudit scope = frameScope() into = audit }
+                  call = { procedure = GenerateCombatCardWithCost args = { owner = first(type(Player)) attacksOnly = true cost = 2 source = "probe:generator" lifetime = "combat" } into = generated }
+                  if = { condition = not(isNone(generated)) then = { call = { procedure = GenerateCardIntoCombat args = { owner = first(type(Player)) card = generated creator = first(type(Player)) to = "hand" clone = false } } } }
+                } }
                 action Generate { role = player locals = { generated = Binding } body = {
                   call = { procedure = GenerateCombatCardWithCost args = { owner = first(type(Player)) attacksOnly = true cost = 2 source = "probe:generator" lifetime = "combat" } into = generated }
                   if = { condition = not(isNone(generated)) then = { call = { procedure = AddGeneratedToHand args = { card = generated } } } }
@@ -232,6 +263,9 @@ internal static partial class PackageChecks
             IcNextTurn(s); Equal(2L, CardCost(s, card), "custom combat lifetime survives turn boundary");
             var modifier = Members(s, "CardCostModifiers").Single();
             Equal("probe:generator", s.State.GetField(modifier, s.RuleSet.TypeByQualifiedId("base-spire:CardCostModifier").FieldIndex("Source")).AsString(), "caller source retained");
+            var actual = Start(copy.Load()); Submit(actual, "AddDevelopmentTarget"); Submit(actual, "BeginDevelopmentCombat"); Submit(actual, "BeginDevelopmentTurn"); Submit(actual, "GenerateSource");
+            var audit = actual.State.AllInstances(actual.RuleSet.TypeByQualifiedId("base-spire:GenerationAudit").Id).Single();
+            Equal(3L, IntField(actual, audit, "GenerationAudit", "Stage"), "actual source generation completes all three notifications in order");
         });
         check("LIFECYCLE public attack result and Power operations compose outside their original card definitions", () =>
         {

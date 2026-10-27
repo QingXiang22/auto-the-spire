@@ -59,7 +59,7 @@ internal static class DslBackend
             var boundaries = new List<Boundary> { start };
             for (var step = 0; step < 3; step++)
             {
-                Submit("EndDevelopmentTurn"); Submit("BeginDevelopmentTurn");
+                Submit("EndTurn");
                 boundaries.Add(Snapshot($"step:{step}:end_turn", []));
             }
             return new("dsl:base-spire", package.Digest + ":" + package.Rules.Identity,
@@ -132,7 +132,7 @@ internal static class DslBackend
                 .Select(pair => "card:hand:" + pair.index).ToArray();
             var actions = new List<ActionOption>();
             if (playable.Length > 0) actions.Add(new("base-spire:PlayCard", playable, playable.Length));
-            if (legal.Any(a => a.Definition.QualifiedId == "base-spire:EndDevelopmentTurn")) actions.Add(new("base-spire:EndTurn", [], 1));
+            if (legal.Any(a => a.Definition.QualifiedId == "base-spire:EndTurn")) actions.Add(new("base-spire:EndTurn", [], 1));
             return new(kind, actions.ToArray(), decisions, facts) { Random = fixture.Reshuffle ? RandomSnapshot() : null };
 
             void Powers(InstanceId holder, string field, string prefix)

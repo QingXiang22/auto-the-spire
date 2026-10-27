@@ -24,7 +24,7 @@ internal static class NormalScalarTrace
                 continue; // Independently compared in random.float32_calls.
             }
             if (stream == "base-spire:run:niche" && !(value.Operation == "int"
-                && record.Source?.Source.Replace('\\', '/').EndsWith("/encounters/shared/slimes-weak.spire", StringComparison.Ordinal) == true))
+                && record.Source?.Source.Replace('\\', '/').EndsWith("/encounters/rules/single-enemy-encounter.spire", StringComparison.Ordinal) == true))
                 throw Missing("unclassified niche random source");
             if (value.Operation is not ("int" or "pick" or "shuffle")) throw Missing("scalar operation " + value.Operation);
             if (value.Operation == "pick" && stream == "base-spire:run:up_front")

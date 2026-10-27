@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""生成并核对 `docs/contracts/net/0.2/invariants.json`（C-01 的"带稳定 ID 的跨结构检查清单"）。
+"""生成并核对 `docs/specs/net/0.2/invariants.json`（C-01 的"带稳定 ID 的跨结构检查清单"）。
 
 出处与职责：
-- `docs/design/net-the-spire/contract-artifacts.md:11` 要求在该目录交付 `invariants.json`。
+- `docs/areas/net/spec/contract-artifacts.md:11` 要求在该目录交付 `invariants.json`。
 - `tools/contract-check/wire_layers.py:8` 声称"规则 ID 与该文件一一对应"，因此本生成器把
   **代码里实际使用的规则 ID**（`wire_layers.py` 的 `_f(id, layer, …)`；`wire_json.py` 的
   `ParseError(id, …)` 即 L0）与 `invariants.md` 的 ID 表合成该文件，并报告两侧漂移。
@@ -22,7 +22,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parent
 REPO = ROOT.parent.parent
-CONTRACTS = REPO / "docs" / "contracts" / "net" / "0.2"
+CONTRACTS = REPO / "docs" / "specs" / "net" / "0.2"
 TARGET = CONTRACTS / "invariants.json"
 INVARIANTS_MD = CONTRACTS / "invariants.md"
 

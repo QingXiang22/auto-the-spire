@@ -12,8 +12,12 @@ use EvilEye {
 # The definition owns this ordered body; lifecycle notifications do not dispatch card effects.
 procedure EvilEyeBody {
   parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) }
+  locals = { gains = Int }
   body = {
-    call = { procedure = GainBlock args = { owner = owner amount = pureCall(PlayerCombatFlagValue, owner, "exhausted-card", pureCall(CardUpgradeValue, card, 8, 11), multiply(pureCall(CardUpgradeValue, card, 8, 11), 2)) } }
+    let = { into = gains value = pureCall(PlayerCombatFlagValue, owner, "exhausted-card", 1, 2) }
+    repeat = { count = gains body = {
+      call = { procedure = GainBlock args = { owner = owner amount = pureCall(CardUpgradeValue, card, 8, 11) } }
+    } }
   }
 }
 dispatchCase EvilEyeBody { dispatch = ExecuteCardBody key = "base-spire:evil-eye" procedure = EvilEyeBody }

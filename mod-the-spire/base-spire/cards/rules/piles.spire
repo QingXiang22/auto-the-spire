@@ -48,13 +48,12 @@ procedure CombatCardPile {
   }
 }
 # Exhaust has its own command; ordinary movement never fires CardExhausted or CardDiscarded.
-procedure MoveCombatCard {
-  parameters = { owner = Ref(Player) card = Ref(Card) to = String(length = 16) reason = String(length = 32) }
-  locals = { from = String(length = 16) destination = String(length = 16) }
+procedure MoveCombatCardWithoutNotification {
+  parameters = { owner = Ref(Player) card = Ref(Card) to = String(length = 16) }
+  locals = { destination = String(length = 16) }
   body = {
     if = { condition = or(not(equal(field(card, Card.Owner), field(owner, Player.Owner))), greaterOrEqual(collectionIndex(RunDeck, card), 0)) then = { fail = { message = "Combat movement requires an owned combat instance" } } }
     if = { condition = not(or(equal(to, "hand"), or(equal(to, "draw-top"), or(equal(to, "draw"), or(equal(to, "discard"), or(equal(to, "play"), equal(to, "removed"))))))) then = { fail = { message = "Unknown combat destination; exhaust requires ExhaustCombatCard" } } }
-    let = { into = from value = pureCall(CombatCardPile, card) }
     let = { into = destination value = to }
     if = { condition = and(equal(to, "hand"), and(less(collectionIndex(Hand, card), 0), greaterOrEqual(count(collection(Hand)), 10))) then = { let = { into = destination value = "discard" } } }
     call = { procedure = RemoveFromCombatPiles args = { card = card } }
@@ -64,6 +63,16 @@ procedure MoveCombatCard {
     if = { condition = equal(destination, "discard") then = { addToCollection = { collection = DiscardPile item = card } } }
     if = { condition = equal(destination, "play") then = { addToCollection = { collection = InPlay item = card } } }
     if = { condition = equal(destination, "removed") then = { addToCollection = { collection = RemovedFromCombat item = card } } }
+  }
+}
+procedure MoveCombatCard {
+  parameters = { owner = Ref(Player) card = Ref(Card) to = String(length = 16) reason = String(length = 32) }
+  locals = { from = String(length = 16) }
+  body = {
+    # AddAsync rejects pending ending and does not publish a successful move; Remove is separate.
+    if = { condition = and(not(equal(to, "removed")), pureCall(CombatIsOverOrEnding)) then = { return = {} } }
+    let = { into = from value = pureCall(CombatCardPile, card) }
+    call = { procedure = MoveCombatCardWithoutNotification args = { owner = owner card = card to = to } }
     emit = { event = CardMoved payload = { owner = owner card = card from = from to = pureCall(CombatCardPile, card) reason = reason } }
   }
 }
@@ -71,7 +80,8 @@ procedure DiscardCombatCard {
   parameters = { owner = Ref(Player) card = Ref(Card) }
   body = {
     if = { condition = less(collectionIndex(Hand, card), 0) then = { fail = { message = "Active discard requires a hand card" } } }
-    call = { procedure = MoveCombatCard args = { owner = owner card = card to = "discard" reason = "discard" } }
+    # CardCmd.Discard uses synchronous Add and its own discard hook, not AddAsync.
+    call = { procedure = MoveCombatCardWithoutNotification args = { owner = owner card = card to = "discard" } }
     emit = { event = CardDiscarded payload = { owner = owner card = card } }
   }
 }
@@ -107,8 +117,9 @@ procedure FinishTurnHand {
       destroy = { target = selected }
     } }
     destroy = { target = batch }
-    if = { condition = field(owner, Player.CombatActive) then = {
+    if = { condition = and(field(owner, Player.CombatActive), not(pureCall(CombatIsOverOrEnding))) then = {
       emit = { event = BeforeHandFlush payload = { owner = owner } }
+      if = { condition = pureCall(CombatIsOverOrEnding) then = { return = {} } }
       let = { into = flush value = foldEvent(ShouldFlushHand, true, owner) }
       create = { type = HandFlushBatch scope = entityScope(owner) into = batch fields = { Owner = owner } }
       forEach = { query = where(collection(Hand), c, and(flush, not(pureCall(CardHasKeyword, c, "retain")))) item = card body = {

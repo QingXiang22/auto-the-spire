@@ -94,7 +94,7 @@ internal static partial class PackageChecks
             Submit(s, "EndDevelopmentCombat"); Submit(s, "RemoveEnemies");
             foreach (var type in new[] { "Enemy", "EnemyMoveState", "EnemyMoveHistory", "Wriggler.State", "Power" })
                 Equal(0, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:" + type).Id).Count(), "full removal: " + type);
-            Submit(s, "Wriggler.Spawn"); Submit(s, "BeginDevelopmentCombat"); Equal("NASTY_BITE_MOVE", MoveText(s, FirstTarget(s), "Enemy", "MoveId"), "new instance has fresh slot state");
+            Submit(s, "Wriggler.Spawn"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Equal("NASTY_BITE_MOVE", MoveText(s, FirstTarget(s), "Enemy", "MoveId"), "new instance has fresh slot state");
         });
         Case("WRIGGLER exhausted HP range still consumes once and invalid slot draws nothing", () =>
         {
@@ -125,8 +125,9 @@ internal static partial class PackageChecks
                 }
                 else
                 {
-                    s.Start(); Throws<EngineFaultException>(() => Submit(s, "Wriggler.Spawn"));
-                    Equal(1L, s.Random.DrawCount("base-spire:run:niche"), "only the actual first HP draw"); Equal(0L, s.Random.DrawCount(MonsterAi), "no conditional fallback draw");
+                    s.Start(); Submit(s, "Wriggler.Spawn"); Submit(s, "BeginDevelopmentCombat");
+                    Throws<EngineFaultException>(() => Submit(s, "BeginDevelopmentTurn"));
+                    Equal(4L, s.Random.DrawCount("base-spire:run:niche"), "all births complete before the first condition"); Equal(0L, s.Random.DrawCount(MonsterAi), "no conditional fallback draw");
                     if (mode == "loop") Equal(EngineFaultCode.BudgetExceeded, s.Fault!.Code, "conditional recursion uses existing budget");
                     else True(s.Fault!.Message.Contains("no legal condition", StringComparison.Ordinal), "named no-match failure");
                 }

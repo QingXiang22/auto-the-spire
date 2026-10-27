@@ -6,11 +6,17 @@ using Differential;
 var jsonOptions = new JsonSerializerOptions { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
 try
 {
+    if (args.FirstOrDefault() == "damage-compare") return DamageComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "enemy-birth-compare") return EnemyBirthComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "combat-boundary-compare") return CombatBoundaryComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.SequenceEqual(new[] { "combat-boundary-self-test" })) { CombatBoundaryComparison.SelfTest(); return 0; }
     if (args.FirstOrDefault() == "battle-friend-compare") return BattleFriendComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "wriggler-compare") return WrigglerComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "whistle-compare") return WhistleComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "enemy-rotation-compare") return EnemyRotationComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "power-amount-compare") return PowerAmountComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "block-compare") return BlockComparison.Run(Repository.Find(), args.Skip(1).ToArray());
+    if (args.FirstOrDefault() == "turn-start-compare") return TurnStartComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "turn-phase-compare") return TurnPhaseComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "exhaust-cause-compare") return ExhaustCauseComparison.Run(Repository.Find(), args.Skip(1).ToArray());
     if (args.FirstOrDefault() == "unknown-room-compare") return UnknownRoomComparison.Run(Repository.Find(), args.Skip(1).ToArray());

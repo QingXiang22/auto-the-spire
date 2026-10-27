@@ -1,3 +1,3 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-includes = ["schema.spire", "modifier-hooks.spire", "hook-order.spire", "block.spire", "damage.spire", "card-damage.spire", "attacks.spire", "damage-results.spire", "resources.spire", "lifecycle.spire", "enemy-turn.spire", "../powers/index.spire"]
+includes = ["schema.spire", "modifier-hooks.spire", "hook-order.spire", "block.spire", "damage.spire", "card-damage.spire", "attacks.spire", "damage-results.spire", "resources.spire", "turn-start.spire", "lifecycle.spire", "enemy-turn.spire", "../powers/index.spire"]

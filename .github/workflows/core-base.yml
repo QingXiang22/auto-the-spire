@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: core-base-${{ github.event_name }}-${{ github.ref }}
@@ -19,7 +20,36 @@ env:
   PYTHONUTF8: '1'
 
 jobs:
+  select:
+    runs-on: windows-latest
+    outputs:
+      suites: ${{ steps.plan.outputs.suites }}
+      reused_run: ${{ steps.plan.outputs.reused_run }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - name: Verify CI selection and report reader
+        run: python -X utf8 -m unittest discover -s tools/ci -p "test_*.py"
+      - name: Select affected checks
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python -X utf8 tools/ci/select_checks.py
+      - name: Record tested tree
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: verified-tree-${{ steps.plan.outputs.tree }}
+          path: .artifacts/ci/verification.json
+          retention-days: 14
   checks:
+    needs: select
+    if: ${{ !cancelled() }}
     name: ${{ matrix.suite }}
     runs-on: windows-latest
     timeout-minutes: 25
@@ -27,28 +57,37 @@ jobs:
       fail-fast: false
       matrix:
         suite: [core, base, net, migration, docs]
+    env:
+      RUN_SUITE: ${{ contains(fromJSON(needs.select.outputs.suites || '[]'), matrix.suite) }}
     steps:
+      - name: Require a valid check plan
+        if: needs.select.result != 'success'
+        shell: pwsh
+        run: throw 'Check selection failed; refusing to report unaffected checks.'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: env.RUN_SUITE == 'true'
         with:
           persist-credentials: false
       - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
-        if: matrix.suite != 'docs'
+        if: env.RUN_SUITE == 'true' && matrix.suite != 'docs'
         with:
           global-json-file: global.json
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        if: env.RUN_SUITE == 'true'
         with:
           python-version: '3.12'
       - name: Install pinned Vale
-        if: matrix.suite == 'docs'
+        if: env.RUN_SUITE == 'true' && matrix.suite == 'docs'
         shell: pwsh
         run: |
           $taskValeDir = Join-Path $env:RUNNER_TEMP 'vale'
           ./tools/doc-check/install_vale.ps1 -InstallDir $taskValeDir
           $taskValeDir | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
       - name: Run ${{ matrix.suite }} checks
+        if: env.RUN_SUITE == 'true'
         run: python -X utf8 tools/ci/check.py ${{ matrix.suite }}
       - name: Upload logs and results
-        if: always()
+        if: always() && env.RUN_SUITE == 'true'
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: checks-${{ matrix.suite }}-${{ github.sha }}
@@ -56,3 +95,11 @@ jobs:
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 14
+      - name: Explain unaffected or reused check
+        if: env.RUN_SUITE != 'true'
+        env:
+          REUSED_RUN: ${{ needs.select.outputs.reused_run }}
+        shell: pwsh
+        run: |
+          if ($env:REUSED_RUN) { "Identical tested tree: $env:REUSED_RUN" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append }
+          else { "No changes affecting this check." | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append }

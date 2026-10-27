@@ -44,6 +44,7 @@ entity CardPlayRecord {
     Card = { type = Ref(Card) visibility = Hidden }
     Kind = { type = String(length = 16) }
     Turn = { type = Int }
+    EnemyPhase = { type = Bool default = false visibility = Hidden }
     Sequence = { type = Int }
     ActionNumber = { type = Int visibility = Hidden }
     ParentPlay = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
@@ -56,6 +57,7 @@ entity CardPlayRecord {
     PlayCount = { type = Int default = 1 visibility = Hidden }
     Started = { type = Bool default = false visibility = Hidden }
     Finished = { type = Bool default = false }
+    # Positive modified gains with Move and this play, including Unpowered|Move.
     PoweredBlocks = { type = Int default = 0 }
   }
 }
@@ -90,6 +92,8 @@ event CardExhausted { payload = { owner = Ref(Player) card = Ref(Card) causedByE
 
 event CardCreated { payload = { card = Ref(Card) } }
 event CardEnteredCombat { payload = { owner = Ref(Player) card = Ref(Card) clone = Bool } }
+event AfterCardGenerated { payload = { owner = Ref(Player) card = Ref(Card) creator = Binding } }
+event AfterCardGeneratedForCombat { payload = { owner = Ref(Player) card = Ref(Card) creator = Binding } }
 entity CardBlueprint {
   fields = {
     DefinitionId = { type = String(length = 64) }

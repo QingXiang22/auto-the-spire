@@ -10,6 +10,8 @@ import re
 import subprocess
 import xml.etree.ElementTree as ET
 
+from normal_report import load_report
+
 ROOT = Path(__file__).resolve().parents[2]
 BASELINE = ROOT / "tools/base-migration-baseline"
 
@@ -100,7 +102,7 @@ def main() -> int:
                     raise ValueError("derivation metadata migration changed original inputs, scripts or dimensions")
         executable = ROOT / f"tools/differential/bin/{args.configuration}/net9.0/Differential.dll"
 
-        def run(name: str, arguments: list[str], expected_code: int, dll: Path = executable) -> dict | None:
+        def run(name: str, arguments: list[str], expected_code: int | tuple[int, ...], dll: Path = executable) -> dict | None:
             folder = args.output / name
             folder.mkdir(parents=True, exist_ok=True)
             result = folder / "result.json"
@@ -111,15 +113,37 @@ def main() -> int:
             process = subprocess.run(command, cwd=ROOT, capture_output=True, text=True,
                                      encoding="utf-8", errors="replace", timeout=120)
             (folder / "command.log").write_text(process.stdout + process.stderr, encoding="utf-8")
-            if process.returncode != expected_code:
+            if process.returncode not in (expected_code if isinstance(expected_code, tuple) else (expected_code,)):
                 raise ValueError(f"{name}: expected exit {expected_code}, got {process.returncode}; see {folder / 'command.log'}")
-            return json.loads(result.read_text(encoding="utf-8")) if result.exists() else None
+            report = load_report(result) if result.exists() else None
+            if isinstance(expected_code, tuple):
+                if report is None or report.get("status") not in ("passed", "diverged"):
+                    raise ValueError(f"{name}: an allowed diagnostic exit still requires an actual comparison report")
+                if process.returncode != (0 if report["status"] == "passed" else 1):
+                    raise ValueError(f"{name}: exit code contradicts the actual diagnostic result")
+            return report
 
         dummy = run("battle-friend", ["battle-friend-compare", "--output", str(args.output / "battle-friend")], 0)
         if (dummy is None or dummy["status"] != "passed" or dummy["independent_verified"] is not True
                 or dummy["normal_run_verified"] is not False or dummy["parent_event_verified"] is not False
                 or len(dummy["cases"]) != 13 or any(c["status"] != "passed" for c in dummy["cases"])):
             raise ValueError("BattleFriend controlled component comparison did not execute all required cases")
+
+        birth = run("enemy-birth", ["enemy-birth-compare", "--output", str(args.output / "enemy-birth")], 0)
+        birth_ids = [seed + ":" + mode for seed in ("777", "A😀B")
+                     for mode in ("reverse-slots", "located-slots", "new-combat", "fixed-hp", "zero-hp-member", "detached", "duplicate-max", "entry-condition", "before-side-condition", "extra-ready")]
+        if (birth is None or birth["schema"] != "dsl-migration/enemy-birth@1" or birth["status"] != "passed"
+                or birth["reference"]["commit"] != lock["commit"] or birth["independent_verified"] is not True
+                or birth["normal_run_verified"] is not False or [c["id"] for c in birth["cases"]] != birth_ids
+                or any(c["status"] != "passed" or c["left"] != c["right"] for c in birth["cases"])):
+            raise ValueError("Enemy birth comparison must retain exact HP calls, identities, RNG and roll boundaries")
+        for case in birth["cases"]:
+            trace = case["left"]
+            if (not trace["births"] or len(trace["hp_calls"]) != len(trace["births"])
+                    or trace["niche_draws"] != len(trace["births"]) or len(trace["niche_state"]) != 4 or len(trace["ai_state"]) != 4
+                    or any(len(b["monster_rng"]) != 4 for b in trace["births"])
+                    or len(trace["random_targets"]) != (8 if case["id"].endswith("-slots") else 0)):
+                raise ValueError("Enemy birth comparison omitted births or actual random state")
 
         wriggler = run("wriggler", ["wriggler-compare", "--output", str(args.output / "wriggler")], 0)
         wriggler_cases = [seed + ":" + mode for seed in ("777", "A😀B")
@@ -128,6 +152,15 @@ def main() -> int:
                 or wriggler["normal_run_verified"] is not False or wriggler["parent_event_verified"] is not False
                 or [c["id"] for c in wriggler["cases"]] != wriggler_cases or any(c["status"] != "passed" for c in wriggler["cases"])):
             raise ValueError("Wriggler/Infection controlled component comparison did not execute all required cases")
+        for case in wriggler["cases"]:
+            if case["left"] != case["right"]:
+                raise ValueError("Wriggler component results disagree despite passed status")
+            mode = case["id"].split(":", 1)[1]
+            expected_count = {"four": 6, "stunned": 4, "hp-exhausted": 12}.get(mode, 0)
+            expected = [{"phase": phase, "creator": "none", "pile": "discard", "generated": 0}
+                        for _ in range(expected_count) for phase in ("entered", "generated", "generated-combat")]
+            if case["left"]["generation"] != expected:
+                raise ValueError("Wriggler generation must preserve null creator, count, pile and all notifications")
 
         unknown = run("unknown-rooms", ["unknown-room-compare", "--output", str(args.output / "unknown-rooms")], 0)
         unknown_cases = [seed + ":" + mode for seed in ("777", "A😀B")
@@ -311,7 +344,7 @@ def main() -> int:
                     or any(set(b) != turn_dimensions or len(b["piles"]) != 5
                            or any(len(b[s]) != 4 for s in ("ai_state", "shuffle_state", "target_state"))
                            or any(set(c) != call_dimensions for c in b["calls"])
-                           or any(set(p) != {"definition", "amount", "applier"} for side in ("powers", "enemy_powers") for p in b[side]) for b in case["left"])):
+                           or any(set(p) != {"definition", "amount", "start_amount", "applier"} for side in ("powers", "enemy_powers") for p in b[side]) for b in case["left"])):
                 raise ValueError(f"Turn phase comparison omitted a dimension or boundary: {case['id']}")
             end = case["left"][-1]
             if name == "listener-order" and (len(end["run_order"]) != 8 or len(end["direct_order"]) != 8
@@ -319,6 +352,95 @@ def main() -> int:
                 raise ValueError("Run and Direct must measure their distinct actual source listener paths")
             if name in ("starting-draw", "charon-reshuffle", "draw-before-block", "block-before-draw") and not end["calls"]:
                 raise ValueError("Nonempty shuffle/target random calls must be compared")
+
+        starts = run("turn-start", ["turn-start-compare", "--output", str(args.output / "turn-start")], 0)
+        start_ids = [seed + ":" + name for seed in ("777", "A😀B")
+                     for name in ("clear", "barricade", "clamp", "barricade-clamp", "enemy-barricade", "zero-member", "spawn-skip", "horn-cleat")]
+        start_stages = ["before:player", "cleared:player", "side:player", "configured", "before:enemy",
+                        "cleared:enemy", "cleared:enemy", "side:enemy", "enemy-end", "before:player", "cleared:player", "side:player"]
+        if (starts is None or starts["schema"] != "dsl-migration/turn-start@1" or starts["status"] != "passed"
+                or starts["reference"]["commit"] != lock["commit"] or starts["independent_verified"] is not True
+                or starts["normal_run_verified"] is not False or [c["id"] for c in starts["cases"]] != start_ids):
+            raise ValueError("Turn start comparison must retain all 16 controlled cases")
+        for case in starts["cases"]:
+            if (case["status"] != "passed" or case["left"] != case["right"]
+                    or [r["at"] for r in case["left"]] != start_stages + (start_stages[4:] if case["id"].endswith(":horn-cleat") else [])
+                    or any(set(r) != {"at", "turn", "hp", "block", "enemy_block", "spawned"}
+                           or len(r["enemy_block"]) != 2 or len(r["spawned"]) != 2 for r in case["left"])):
+                raise ValueError("Turn start comparison omitted an actor or intermediate stage")
+            if case["id"].endswith(":horn-cleat"):
+                sides = [r for r in case["left"] if r["at"] == "side:player"]
+                cleared = [r for r in case["left"] if r["at"] == "cleared:player"]
+                if ([r["turn"] for r in sides] != [1, 2, 3] or [r["block"] for r in sides] != [10, 14, 0]
+                        or [r["turn"] for r in cleared] != [0, 1, 2]):
+                    raise ValueError("HornCleat must use old turn one, granting only on player turn two")
+
+
+        blocks = run("blocks", ["block-compare", "--output", str(args.output / "blocks")], 0)
+        block_names = ("plain", "enemy", "dex", "enemy-dex", "negative-dex", "enemy-negative-dex", "frail", "enemy-frail",
+                       "dex-frail", "unpowered", "enemy-unpowered", "no-move", "frail-unmovable", "unmovable-frail",
+                       "enemy-unmovable", "enemy-owner-unmovable", "zero", "zero-frail", "cap", "enemy-cap", "large-scaled",
+                       "fraction-juggernaut", "remove-before", "nested-before", "paused-before", "ending-before",
+                       "probe-both", "probe-zero", "probe-neutral", "defend-history", "entrench-history", "same-play-history",
+                       "bowl-move", "enemy-plating", "card-source-player", "card-source-enemy", "fraction-history", "cap-history",
+                       "rejected-dead", "rejected-ending")
+        block_ids = [seed + ":" + name for seed in ("777", "A😀B") for name in block_names]
+        block_dimensions = {"preview", "query_read_only", "returned", "rows", "player_hp", "block", "enemy_hp", "enemy_block",
+                            "powers", "play_block_gains", "callbacks", "target_draws", "target_state"}
+        block_row_dimensions = {"at", "amount", "player_block", "enemy_block", "card", "has_play", "enemy", "unpowered", "move", "modifiers"}
+        if (blocks is None or blocks["schema"] != "dsl-migration/block@1" or blocks["status"] != "passed"
+                or blocks["reference"]["commit"] != lock["commit"] or blocks["independent_verified"] is not True
+                or blocks["normal_run_verified"] is not False or [c["id"] for c in blocks["cases"]] != block_ids):
+            raise ValueError("Block comparison must retain all 80 controlled cases")
+        for case in blocks["cases"]:
+            name = case["id"].rsplit(":", 1)[1]
+            value = case["left"]
+            row_count = (0 if name.startswith("rejected-") else 1 if name == "ending-before" else 6 if name == "enemy-plating"
+                         else 4 if name in ("nested-before", "defend-history", "entrench-history", "same-play-history", "fraction-history", "cap-history") else 2)
+            stages = (["before"] if name == "ending-before" else ["before", "before", "after", "after"] if name == "nested-before"
+                      else ["before", "after"] * (row_count // 2))
+            if (case["status"] != "passed" or value != case["right"] or set(value) != block_dimensions
+                    or value["query_read_only"] is not True or len(value["enemy_hp"]) != 2 or len(value["enemy_block"]) != 2
+                    or len(value["target_state"]) != 4 or len(value["rows"]) != row_count or [r["at"] for r in value["rows"]] != stages
+                    or any(set(r) != block_row_dimensions for r in value["rows"])
+                    or any(set(p) != {"definition", "amount", "start_amount", "enemy"} for p in value["powers"])):
+                raise ValueError("Block comparison omitted a modifier, actor, source or command boundary")
+            expected_plays = 1 if name == "same-play-history" else 2 if name in ("defend-history", "entrench-history", "fraction-history", "cap-history") else 0
+            if (len(value["play_block_gains"]) != expected_plays
+                    or value["callbacks"] != (1 if name in ("probe-both", "probe-zero") else 0)
+                    or len(value["returned"]) != (0 if expected_plays or name in ("bowl-move", "enemy-plating") else 1)):
+                raise ValueError("Block comparison omitted per-play history, actual modifier callbacks or return values")
+
+        damage = run("damage", ["damage-compare", "--output", str(args.output / "damage")], 0)
+        damage_names = ("plain", "retaliation-kills-attacker", "retaliation-mutual-death", "whirlwind-double-kill", "self-harm", "self-harm-reactions",
+                        "lethal-self-harm", "negative-strength-vigor", "negative-total", "negative-strength-vigor-weak-vulnerable",
+                        "fraction", "pen-nib-fraction-chain", "fraction-fully-blocked", "fraction-block-remaining", "fraction-broken",
+                        "zero-blocked", "overkill", "body-slam-large", "body-slam-large-chain")
+        damage_ids = [seed + ":" + name for seed in ("777", "A😀B") for name in damage_names]
+        damage_row_fields = {"actor", "dealer", "move", "powered", "unblockable", "blocked", "unblocked", "overkill", "block_broken", "fully_blocked", "killed"}
+        damage_point_fields = {"actor", "stage", "amount_scaled", "hp", "block", "card", "dealer", "other_hp", "active", "ending", "outcome"}
+        if (damage is None or damage["schema"] != "dsl-migration/damage@1" or damage["status"] != "passed"
+                or damage["independent_verified"] is not True or damage["normal_run_verified"] is not False
+                or damage["reference"]["commit"] != lock["commit"] or damage["executed"] != len(damage_ids)
+                or damage["expected_case_ids"] != damage_ids or [c["id"] for c in damage["cases"]] != damage_ids
+                or not re.fullmatch(r"[0-9a-f]{64}", damage["adapter_sha256"])):
+            raise ValueError("Damage comparison must retain and pass every controlled vector with adapter/reference identity")
+        for case in damage["cases"]:
+            value = case["left"]
+            if (case["status"] != "passed" or value != case["right"] or case["diagnostics_read_only"] is not True
+                    or set(value) != {"hp", "block", "energy", "player_hp", "strength", "enemy_hps", "results", "notifications"}
+                    or not value["results"] or not value["notifications"] or not value["enemy_hps"]
+                    or any(set(r) != damage_row_fields for r in value["results"])
+                    or any(set(p) != damage_point_fields for p in value["notifications"])):
+                raise ValueError("Damage comparison omitted attribution, fractional amounts, results or notifications")
+            expected = {"before": len(value["results"]), "given": len(value["results"]),
+                        "received": sum(not r["killed"] for r in value["results"]),
+                        "block": sum(r["block_broken"] for r in value["results"]),
+                        "hp": sum(r["unblocked"] > 0 for r in value["results"]),
+                        "death": sum(r["killed"] for r in value["results"])}
+            if (any(sum(p["stage"] == stage for p in value["notifications"]) != count for stage, count in expected.items())
+                    or any(p["stage"] not in expected for p in value["notifications"])):
+                raise ValueError("Damage diagnostics omitted an actual source callback or invented a duplicate")
 
         causes = run("exhaust-causes", ["exhaust-cause-compare", "--output", str(args.output / "exhaust-causes")], 0)
         cause_names = ("ordinary", "deferred", "current-amount", "no-draw-before", "no-draw-after",
@@ -350,6 +472,84 @@ def main() -> int:
             if name == "natural-lethal" and (not end["ending"] or end["draws"] or end["deferred"] != [1]):
                 raise ValueError("Lethal snapshot must retain entered-listener counting and suppress later draws")
 
+        run("combat-boundary-self-test", ["combat-boundary-self-test"], 0)
+        boundaries = run("combat-boundaries", ["combat-boundary-compare", "--output", str(args.output / "combat-boundaries")], (0, 1))
+        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "anger-ending", "anger-upgraded", "zero-card", "free-x", "repeat-card", "corruption", "juggling", "juggling-full", "juggling-stomp")
+        boundary_ids = [seed + ":" + plan for seed in ("777", "A😀B") for plan in boundary_plans]
+        point_fields = {"phase", "card", "turn", "energy", "hp", "max_hp", "block", "enemy_hp", "move", "ending", "piles", "spent", "generated", "stomp_hand_cost", "anger_discard_upgraded"}
+        if (boundaries is None or boundaries["schema"] != "dsl-migration/combat-boundaries@1"
+                or boundaries["executed"] != len(boundary_ids) or boundaries["expected_case_ids"] != boundary_ids
+                or [c["id"] for c in boundaries["cases"]] != boundary_ids
+                or any(boundaries[k] is not False for k in ("complete", "independent_verified", "normal_run_verified"))
+                or boundaries["reference"]["commit"] != lock["commit"] or not boundaries["hook_sources"]):
+            raise ValueError("Boundary diagnostics must retain all controlled scenarios and unverified full-game scope")
+        for hook in boundaries["hook_sources"]:
+            source = ROOT / hook["path"]
+            if (not source.resolve().is_relative_to((ROOT / "reference/sts2-sim/src/Sts2Sim.Core").resolve())
+                    or hashlib.sha256(hook["body"].encode("utf-8")).hexdigest() != hook["body_sha256"]
+                    or not "\n".join(source.read_text(encoding="utf-8").splitlines()[hook["line"] - 1:]).startswith(hook["body"])):
+                raise ValueError("Boundary Hook evidence must identify actual locked source")
+        for case in boundaries["cases"]:
+            if case["diagnostics_read_only"] is not True or case["status"] not in ("passed", "diverged"):
+                raise ValueError("Boundary diagnostics changed gameplay or failed to execute")
+            if case["return_difference"] is not None:
+                raise ValueError("Complete combat actions must return the same stable state without adapter continuation")
+            # #146 requires actual payment/draw/play boundaries to agree; the independently
+            # scoped paused effect-card batch remains #147's measured difference.
+            if not case["id"].endswith(":two-end-effects-paused") and case["status"] != "passed":
+                raise ValueError("Ordinary and card-play boundaries must match the locked reference")
+            if case["id"].endswith((":zero-card", ":anger-upgraded")):
+                for side in ("left", "right"):
+                    phases = [p["phase"] for p in case[side]["points"]]
+                    for expected in ("card-entered", "generated-player", "generated-combat-player"):
+                        if phases.count(expected) != 1:
+                            raise ValueError("Anger must expose each actual generation notification exactly once")
+                    if case[side]["points"][-1]["generated"] != 1:
+                        raise ValueError("Anger must record one generated card")
+                for side in ("left", "right"):
+                    if any(p["phase"] == "energy-spent" or p["spent"] != 0 for p in case[side]["points"]):
+                        raise ValueError("Zero-cost Anger must not emit an energy payment")
+            if case["id"].endswith(":anger-upgraded"):
+                for side in ("left", "right"):
+                    if case[side]["points"][-1]["anger_discard_upgraded"] != 1:
+                        raise ValueError("Anger clone must preserve the upgraded instance")
+            if case["id"].endswith((":juggling", ":juggling-full", ":juggling-stomp")):
+                count = 2 if case["id"].endswith(":juggling-full") else 1
+                for side in ("left", "right"):
+                    points = case[side]["points"]
+                    generated = [p["phase"] for p in points if p["phase"] in ("card-entered", "generated-player", "generated-combat-player")]
+                    if generated != ["card-entered", "generated-player", "generated-combat-player"] * count or points[-1]["generated"] != count:
+                        raise ValueError("Juggling must enter and notify each clone, recording the real count")
+                    phases = [p["phase"] for p in points]
+                    if not phases.index("card-before") < phases.index("card-entered") < phases.index("card-after"):
+                        raise ValueError("Juggling generation must happen inside BeforeCardPlayed before the attack completes")
+                    if count == 2 and len([c for c in points[-1]["piles"][0].split(",") if c]) != 10:
+                        raise ValueError("Full-hand Juggling must retain its hand limit")
+            if case["id"].endswith(":juggling-stomp"):
+                for side in ("left", "right"):
+                    if case[side]["points"][-1]["stomp_hand_cost"] != 1:
+                        raise ValueError("A newly generated Stomp must not receive the current BeforeCardPlayed discount")
+            if case["id"].endswith(":anger-ending"):
+                for side in ("left", "right"):
+                    points = case[side]["points"]
+                    if points[-1]["generated"] != 1 or any(p["phase"] in ("card-entered", "generated-player", "generated-combat-player") for p in points):
+                        raise ValueError("Ending Anger records its generated clone without entry or callbacks")
+            for side in ("left", "right"):
+                trace = case[side]
+                if (not trace["final_state"] or not trace["raw"] or not trace["points"]
+                        or trace["points"][-1]["phase"] != "action-return"
+                        or any(not any(p["phase"] == phase for p in trace["points"])
+                               for phase in ("combat-before", "player-before", "begin-return", "configured", "action-return"))
+                        or any(set(p) != point_fields or len(p["piles"]) != 5 for p in trace["points"])):
+                    raise ValueError("Boundary diagnostic omitted actual phases or fields")
+                if case["id"].endswith(":two-end-effects-paused") and sum(p["phase"] == "paused" for p in trace["points"]) != 1:
+                    raise ValueError("Both effect-card pipelines must really suspend and resume once")
+            equal = case["left"]["points"] == case["right"]["points"]
+            if equal != (case["status"] == "passed") or equal != (case["first_difference"] is None):
+                raise ValueError("Boundary diagnosis hid an actual difference or invented one")
+        if boundaries["status"] != ("passed" if all(c["status"] == "passed" for c in boundaries["cases"]) else "diverged"):
+            raise ValueError("Boundary diagnostic summary contradicts measured cases")
+
         paired_output = args.output / "normal-paired"
         paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 3)
         paired_ids = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"]
@@ -362,11 +562,12 @@ def main() -> int:
                        or len(c["protocol_checks"]) != len(c["boundaries"])
                        or any(not p["evidence"]["passed"] for p in c["protocol_checks"])
                        or any(b["left"]["diagnostic"]["unmapped_public_actions"] for b in c["boundaries"])
+                       or any(b["left"]["diagnostic"]["unmapped_public_fields"] for b in c["boundaries"])
                        or any("public.piles" not in b[side]["values"] or "random.stream_states" not in b[side]["values"]
                               or "events.observed_order" not in b[side]["values"]
                               or "lifecycle.settlement" not in b[side]["values"]
                               or any(path not in b[side]["values"] for path in (
-                                  "public.map", "public.run", "public.neow", "public.reward_offer", "public.potion_inventory",
+                                  "public.snapshot", "public.map", "public.run", "public.neow", "public.reward_offer", "public.potions", "public.potion_inventory",
                                   "public.relic_inventory", "public.cards", "public.player", "public.enemies", "public.powers", "public.visits"))
                               for b in c["boundaries"] for side in ("left", "right"))
                        or any(not json.loads(c["boundaries"][-1][side]["values"]["events.observed_order"])
@@ -376,6 +577,20 @@ def main() -> int:
                        or (c["id"].startswith("m01-targeted-")
                            and not any(a["kind"] == "choose-target" for a in c["prefix"])) for c in paired["cases"])):
             raise ValueError("all four normal paths must return with matching dimensions, real target decisions and protocol evidence while rejecting incomplete M01")
+        for case in paired["cases"]:
+            for boundary in case["boundaries"]:
+                for side in ("left", "right"):
+                    state = boundary[side]
+                    public = json.loads(state["values"]["public.snapshot"])
+                    if (public["status"] != "decision" or not public["projections"]
+                            or any(p.startswith("public:") for p in state["missing_dimensions"])
+                            or any(json.loads(state["values"][k]) != v for k, v in public["projections"].items())):
+                        raise ValueError("full public snapshot must retain actual independently compared semantic surfaces")
+                for evidence in boundary["right"]["diagnostic"]["native_potion_capability_probes"]:
+                    if (evidence["id"] != "base-spire:flex-potion" or not evidence["procured"] or not evidence["consumed"]
+                            or evidence["strength_after"] - evidence["strength_before"] != 5 or evidence["temporary_amount"] != 5
+                            or evidence["strength_after_turn"] != evidence["strength_before"] or not evidence["temporary_removed"]):
+                        raise ValueError("potion capability must come from real native use and expiry, not a support constant")
         random_case = run("reshuffle-only", ["test", "--suite", "regression", "--case", "random-reshuffle-unsupported"], 1)
         if random_case["passed"] or random_case["independent_verified"] or random_case["cases"][0]["status"] != "diverged":
             raise ValueError("original random case must fail explicitly on the real difference")

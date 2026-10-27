@@ -1,0 +1,116 @@
+# Tool-only read-only notifications. No entities, fields or RNG are changed by the observers.
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+event BoundaryPoint { payload = {
+  phase = String(length = 64) card = String(length = 64) spent = Int generated = Int
+  turn = Int energy = Int hp = Int maxHp = Int block = Int enemyHp = Int
+  move = String(length = 64) ending = Bool
+  hand = String(length = 2048) draw = String(length = 2048) discard = String(length = 2048)
+  exhaust = String(length = 2048) play = String(length = 2048) stompHandCost = Int angerDiscardUpgraded = Int
+} }
+# Administrative pause configuration belongs only to this controlled test fixture.
+entity BoundaryPause { fields = { Enabled = { type = Bool default = false } } }
+action BoundaryEnablePause { role = player locals = { probe = Binding } body = { create = { type = BoundaryPause scope = entityScope(first(type(Player))) into = probe fields = { Enabled = true } } } }
+procedure BoundaryPauseMoved { parameters = { owner = Ref(Player) card = Ref(Card) from = String(length = 16) to = String(length = 16) reason = String(length = 32) } locals = { answer = Bool } body = {
+  if = { condition = and(exists(type(BoundaryPause)), and(equal(from, "hand"), and(equal(to, "play"), equal(count(collection(Hand)), 1)))) then = {
+    decide = { participant = field(owner, Player.Owner) kind = Bool prompt = "observe first effect-card move" into = answer }
+  } }
+} }
+subscription BoundaryPauseMoved { event = CardMoved reaction = BoundaryPauseMoved priority = 2000000 }
+procedure BoundaryPile { pure = true parameters = { pile = String(length = 16) } result = String(length = 2048) locals = { text = String(length = 2048) } body = {
+  let = { into = text value = "" }
+  if = { condition = equal(pile, "hand") then = { forEach = { query = collection(Hand) item = c body = { let = { into = text value = concat(text, concat(field(c, Card.SourceEntry), ",")) } } } } }
+  if = { condition = equal(pile, "draw") then = { forEach = { query = collection(DrawPile) item = c body = { let = { into = text value = concat(text, concat(field(c, Card.SourceEntry), ",")) } } } } }
+  if = { condition = equal(pile, "discard") then = { forEach = { query = collection(DiscardPile) item = c body = { let = { into = text value = concat(text, concat(field(c, Card.SourceEntry), ",")) } } } } }
+  if = { condition = equal(pile, "exhaust") then = { forEach = { query = collection(ExhaustPile) item = c body = { let = { into = text value = concat(text, concat(field(c, Card.SourceEntry), ",")) } } } } }
+  if = { condition = equal(pile, "play") then = { forEach = { query = collection(InPlay) item = c body = { let = { into = text value = concat(text, concat(field(c, Card.SourceEntry), ",")) } } } } }
+  return = { value = text }
+} }
+procedure BoundaryStompHandCost { pure = true result = Int locals = { card = Binding } body = {
+  let = { into = card value = first(where(collection(Hand), c, equal(field(c, Card.SourceEntry), "STOMP"))) }
+  if = { condition = isNone(card) then = { return = { value = -1 } } }
+  return = { value = field(card, Card.Cost) }
+} }
+procedure BoundaryAngerDiscardUpgraded { pure = true result = Int locals = { card = Binding } body = {
+  let = { into = card value = first(where(collection(DiscardPile), c, equal(field(c, Card.SourceEntry), "ANGER"))) }
+  if = { condition = isNone(card) then = { return = { value = -1 } } }
+  if = { condition = field(card, Card.Upgraded) then = { return = { value = 1 } } }
+  return = { value = 0 }
+} }
+procedure BoundaryCapture { parameters = { phase = String(length = 64) card = String(length = 64) spent = Int } body = {
+  emit = { event = BoundaryPoint payload = {
+    phase = phase card = card spent = spent generated = field(first(type(Player)), Player.CardsGeneratedThisCombat)
+    turn = field(first(type(Player)), Player.TurnNumber) energy = field(first(type(Player)), Player.Energy)
+    hp = field(first(type(Player)), Player.Hp) maxHp = field(first(type(Player)), Player.MaxHp) block = field(first(type(Player)), Player.Block)
+    enemyHp = field(first(type(Enemy)), Enemy.Hp) move = field(first(type(Enemy)), Enemy.MoveId) ending = pureCall(CombatIsEnding)
+    hand = pureCall(BoundaryPile, "hand") draw = pureCall(BoundaryPile, "draw") discard = pureCall(BoundaryPile, "discard")
+    exhaust = pureCall(BoundaryPile, "exhaust") play = pureCall(BoundaryPile, "play") stompHandCost = pureCall(BoundaryStompHandCost) angerDiscardUpgraded = pureCall(BoundaryAngerDiscardUpgraded)
+  } }
+} }
+procedure BoundaryBeforeCombat { parameters = { owner = Ref(Player) } body = { call = { procedure = BoundaryCapture args = { spent = 0 phase = "combat-before" card = "" } } } }
+subscription BoundaryBeforeCombat { event = BeforeCombatStart reaction = BoundaryBeforeCombat priority = 1000000 }
+procedure BoundaryBeforePlayer { parameters = { owner = Ref(Player) } body = { call = { procedure = BoundaryCapture args = { spent = 0 phase = "player-before" card = "" } } } }
+subscription BoundaryBeforePlayer { event = BeforePlayerSideTurnStart reaction = BoundaryBeforePlayer priority = 1000000 }
+procedure BoundaryEnergyReset { parameters = { owner = Ref(Player) } body = { call = { procedure = BoundaryCapture args = { spent = 0 phase = "energy-reset" card = "" } } } }
+subscription BoundaryEnergyReset { event = AfterEnergyReset reaction = BoundaryEnergyReset priority = 1000000 }
+procedure BoundaryAfterPlayer { parameters = { owner = Ref(Player) } body = { call = { procedure = BoundaryCapture args = { spent = 0 phase = "player-started" card = "" } } } }
+subscription BoundaryAfterPlayer { event = AfterPlayerSideTurnStart reaction = BoundaryAfterPlayer priority = 1000000 }
+procedure BoundaryBeforeEnemy { parameters = { owner = Ref(Player) } body = { call = { procedure = BoundaryCapture args = { spent = 0 phase = "enemy-before" card = "" } } } }
+subscription BoundaryBeforeEnemy { event = BeforeEnemySideTurnStart reaction = BoundaryBeforeEnemy priority = 1000000 }
+procedure BoundaryAfterEnemy { parameters = { owner = Ref(Player) } body = { call = { procedure = BoundaryCapture args = { spent = 0 phase = "enemy-ended" card = "" } } } }
+subscription BoundaryAfterEnemy { event = AfterEnemySideTurnEnd reaction = BoundaryAfterEnemy priority = 1000000 }
+procedure BoundaryMoved { parameters = { owner = Ref(Player) card = Ref(Card) from = String(length = 16) to = String(length = 16) reason = String(length = 32) } body = {
+  call = { procedure = BoundaryCapture args = { spent = 0 phase = concat("pile:", concat(from, concat(":", to))) card = field(card, Card.SourceEntry) } }
+} }
+subscription BoundaryMoved { event = CardMoved reaction = BoundaryMoved priority = 1000000 }
+procedure BoundaryBeforePlay { parameters = { owner = Ref(Player) card = Ref(Card) } body = { call = { procedure = BoundaryCapture args = { spent = 0 phase = "card-before" card = field(card, Card.SourceEntry) } } } }
+subscription BoundaryBeforePlay { event = BeforeCardPlayed reaction = BoundaryBeforePlay priority = -1000000 }
+procedure BoundaryAfterPlay { parameters = { owner = Ref(Player) card = Ref(Card) } body = { call = { procedure = BoundaryCapture args = { spent = 0 phase = "card-after" card = field(card, Card.SourceEntry) } } } }
+subscription BoundaryAfterPlay { event = AfterCardPlayed reaction = BoundaryAfterPlay priority = -1000000 }
+
+procedure BoundaryEntered { parameters = { owner = Ref(Player) card = Ref(Card) clone = Bool } body = {
+  call = { procedure = BoundaryCapture args = { spent = 0 phase = "card-entered" card = field(card, Card.SourceEntry) } }
+} }
+subscription BoundaryEntered { event = CardEnteredCombat reaction = BoundaryEntered priority = -1000000 }
+procedure BoundaryGenerated { parameters = { owner = Ref(Player) card = Ref(Card) creator = Binding } locals = { phase = String(length = 64) } body = {
+  let = { into = phase value = "generated-player" }
+  if = { condition = isNone(creator) then = { let = { into = phase value = "generated-none" } } }
+  call = { procedure = BoundaryCapture args = { spent = 0 phase = phase card = field(card, Card.SourceEntry) } }
+} }
+subscription BoundaryGenerated { event = AfterCardGenerated reaction = BoundaryGenerated priority = -1000000 }
+procedure BoundaryGeneratedForCombat { parameters = { owner = Ref(Player) card = Ref(Card) creator = Binding } locals = { phase = String(length = 64) } body = {
+  let = { into = phase value = "generated-combat-player" }
+  if = { condition = isNone(creator) then = { let = { into = phase value = "generated-combat-none" } } }
+  call = { procedure = BoundaryCapture args = { spent = 0 phase = phase card = field(card, Card.SourceEntry) } }
+} }
+subscription BoundaryGeneratedForCombat { event = AfterCardGeneratedForCombat reaction = BoundaryGeneratedForCombat priority = -1000000 }
+
+# Hold settlement at the same pre-room boundary as the native engine. This does not execute a missing rule.
+action BoundaryPlay { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } body = {
+  set = { target = first(type(Player)) field = Player.EffectDepth value = add(field(first(type(Player)), Player.EffectDepth), 1) }
+  if = { condition = field(card, Card.Targeted) then = {
+    call = { procedure = PlayAttackCard args = { owner = first(type(Player)) card = card } }
+  } else = {
+    call = { procedure = PlayCard args = { owner = first(type(Player)) card = card } }
+  } }
+  set = { target = first(type(Player)) field = Player.EffectDepth value = subtract(field(first(type(Player)), Player.EffectDepth), 1) }
+} }
+
+procedure BoundaryPaid { parameters = { owner = Ref(Player) card = Ref(Card) amount = Int } body = {
+  call = { procedure = BoundaryCapture args = { spent = amount phase = "energy-spent" card = field(card, Card.SourceEntry) } }
+} }
+subscription BoundaryPaid { event = AfterEnergySpent reaction = BoundaryPaid priority = 1000000 }
+
+action BoundaryRepeat { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:one-two-punch-power" stacks = 1 } } } }
+action BoundaryCorruption { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:corruption-power" stacks = 1 } } } }
+action BoundaryAuto { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = collection(Hand) } body = {
+  call = { procedure = AutoPlayCard args = { owner = first(type(Player)) card = card forceExhaust = false } }
+} }
+
+action BoundaryMove { role = player parameters = { card = Ref(Card) } candidates = { parameter = card query = type(Card) } body = {
+  call = { procedure = MoveCombatCard args = { owner = first(type(Player)) card = card to = "hand" reason = "ending-probe" } }
+} }
+
+action BoundaryJuggling { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:juggling-power" stacks = 1 } } } }
+action BoundaryJugglingFull { role = player body = { call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:juggling-power" stacks = 2 } } } }

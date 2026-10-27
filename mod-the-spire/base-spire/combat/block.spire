@@ -1,36 +1,143 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Unpowered block does not use card/power additive or multiplicative modifiers.
-procedure GainUnpoweredBlock {
-  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
+# Existing integer amounts, x0.75 and x2 are exact at this intermediate scale.
+# These contexts are command-local and hidden; pure previews do not allocate them.
+entity BlockGain { fields = {
+  Player = { type = Ref(Player) optional = true visibility = Hidden }
+  Enemy = { type = Ref(Enemy) optional = true visibility = Hidden }
+  RequestedMicros = { type = Int visibility = Hidden }
+  AmountMicros = { type = Int visibility = Hidden }
+  Unpowered = { type = Bool visibility = Hidden }
+  Move = { type = Bool visibility = Hidden }
+  Card = { type = Ref(Card) optional = true visibility = Hidden }
+  Play = { type = Ref(CardPlayRecord) optional = true visibility = Hidden }
+} }
+entity BlockAmountModifier { fields = {
+  Gain = { type = Ref(BlockGain) visibility = Hidden }
+  Power = { type = Ref(Power) optional = true visibility = Hidden }
+} }
+event BeforeBlockGained { payload = { gain = Ref(BlockGain) } }
+event BlockAdding { payload = { gain = Ref(BlockGain) } }
+event BlockMultiplying { payload = { gain = Ref(BlockGain) } }
+event AfterModifyingBlockAmount { payload = { gain = Ref(BlockGain) } }
+event AfterBlockGained { payload = { gain = Ref(BlockGain) } }
+
+procedure BlockTargetMatchesPower {
+  pure = true parameters = { player = Binding enemy = Binding power = Ref(Power) } result = Bool
+  body = { return = { value = and(equal(field(power, Power.HolderPlayer), player), equal(field(power, Power.HolderEnemy), enemy)) } }
+}
+procedure BlockCardOwnedByPower {
+  pure = true parameters = { card = Binding power = Ref(Power) } result = Bool
   body = {
-    if = { condition = not(pureCall(CanExecuteCombatCommand, owner)) then = { return = {} } }
-    if = { condition = greater(amount, 0) then = {
-      set = { target = owner field = Player.Block value = minimum(999, add(field(owner, Player.Block), amount)) }
-      emit = { event = PlayerBlockGained payload = { owner = owner amount = amount } }
+    if = { condition = or(isNone(card), isNone(field(power, Power.HolderPlayer))) then = { return = { value = false } } }
+    return = { value = equal(field(card, Card.Owner), field(field(power, Power.HolderPlayer), Player.Owner)) }
+  }
+}
+procedure ScaleBlockAmount {
+  pure = true parameters = { amountMicros = Int factorMicros = Int } result = Int
+  # Split before multiplying so a valid near-cap amount does not overflow Int64.
+  body = { return = { value = add(multiply(divide(amountMicros, 1000000), factorMicros), divide(multiply(modulo(amountMicros, 1000000), factorMicros), 1000000)) } }
+}
+procedure CalculateBlockAmount {
+  pure = true parameters = { player = Binding enemy = Binding amount = Int unpowered = Bool move = Bool card = Binding play = Binding }
+  locals = { total = Int } result = Int
+  body = {
+    if = { condition = pureCall(CombatIsOverOrEnding) then = { return = { value = maximum(0, multiply(amount, 1000000)) } } }
+    let = { into = total value = foldEvent(ModifyBlockAdditive, multiply(amount, 1000000), player, enemy, unpowered, move, card, play) }
+    let = { into = total value = foldEvent(ModifyBlockMultiplier, total, player, enemy, unpowered, move, card, play) }
+    return = { value = maximum(0, total) }
+  }
+}
+procedure RecordBlockAmountModifier {
+  parameters = { gain = Ref(BlockGain) power = Ref(Power) }
+  locals = { record = Binding }
+  body = {
+    if = { condition = not(exists(where(type(BlockAmountModifier), r, and(equal(field(r, BlockAmountModifier.Gain), gain), equal(field(r, BlockAmountModifier.Power), power))))) then = {
+      create = { type = BlockAmountModifier scope = entityScope(gain) into = record fields = { Gain = gain Power = power } }
     } }
   }
 }
-
-# CreatureCmd.GainBlock with ValueProp.Move: card and power block that modifier participants apply to.
-# DexterityPower is the additive participant and FrailPower the x0.75 multiplier; the source gates both on
-# powered card block, so relic and power block outside cards stay on GainUnpoweredBlock. The multiplier is
-# applied to the additive total with integer floor.
-procedure GainBlock {
-  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999) }
-  locals = { total = Int }
+procedure AddBlockAmount {
+  parameters = { gain = Ref(BlockGain) power = Ref(Power) deltaMicros = Int }
   body = {
-    if = { condition = not(pureCall(CanExecuteCombatCommand, owner)) then = { return = {} } }
-    let = {
-      into = total value = maximum(0, foldEvent(ModifyBlockAdditive, amount, owner)) }
-    let = { into = total value = foldEvent(ModifyBlockMultiplier, total, owner) }
+    if = { condition = not(equal(deltaMicros, 0)) then = {
+      call = { procedure = RecordBlockAmountModifier args = { gain = gain power = power } }
+      set = { target = gain field = BlockGain.AmountMicros value = add(field(gain, BlockGain.AmountMicros), deltaMicros) }
+    } }
+  }
+}
+procedure MultiplyBlockAmount {
+  parameters = { gain = Ref(BlockGain) power = Ref(Power) factorMicros = Int }
+  body = {
+    # A factor can participate even when multiplying zero leaves the result unchanged.
+    if = { condition = not(equal(factorMicros, 1000000)) then = {
+      call = { procedure = RecordBlockAmountModifier args = { gain = gain power = power } }
+      set = { target = gain field = BlockGain.AmountMicros value = pureCall(ScaleBlockAmount, field(gain, BlockGain.AmountMicros), factorMicros) }
+    } }
+  }
+}
+procedure GainCombatBlock {
+  parameters = { player = Binding enemy = Binding amount = Int unpowered = Bool move = Bool card = Binding play = Binding }
+  locals = { gain = Binding actor = Binding total = Int } result = Int
+  body = {
+    if = { condition = equal(isNone(player), isNone(enemy)) then = { fail = { message = "Block gain requires exactly one creature" } } }
+    let = { into = actor value = first(type(Player)) }
+    if = { condition = not(isNone(player)) then = {
+      let = { into = actor value = player }
+      if = { condition = not(pureCall(CanExecuteCombatCommand, player)) then = { return = { value = 0 } } }
+    } else = {
+      if = { condition = or(pureCall(CombatIsOverOrEnding), not(pureCall(EnemyIsActive, enemy))) then = { return = { value = 0 } } }
+    } }
+    set = { target = actor field = Player.EffectDepth value = add(field(actor, Player.EffectDepth), 1) }
+    create = { type = BlockGain scope = entityScope(actor) into = gain fields = {
+      Player = player Enemy = enemy RequestedMicros = multiply(amount, 1000000) AmountMicros = multiply(amount, 1000000)
+      Unpowered = unpowered Move = move Card = card Play = play
+    } }
+    emit = { event = BeforeBlockGained payload = { gain = gain } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BlockAdding payload = { gain = gain } } } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = BlockMultiplying payload = { gain = gain } } } }
+    set = { target = gain field = BlockGain.AmountMicros value = maximum(0, field(gain, BlockGain.AmountMicros)) }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterModifyingBlockAmount payload = { gain = gain } } } }
+    let = { into = total value = field(gain, BlockGain.AmountMicros) }
+    # An entered source command commits even if a Before/AfterModifying callback caused ending.
     if = { condition = greater(total, 0) then = {
-      set = { target = owner field = Player.Block value = minimum(999, add(field(owner, Player.Block), total)) }
-      if = { condition = not(isNone(field(owner, Player.CurrentPlay))) then = { set = { target = field(owner, Player.CurrentPlay) field = CardPlayRecord.PoweredBlocks value = add(field(field(owner, Player.CurrentPlay), CardPlayRecord.PoweredBlocks), 1) } } }
-      emit = { event = PlayerBlockGained payload = { owner = owner amount = total } }
+      if = { condition = not(isNone(player)) then = {
+        set = { target = player field = Player.Block value = minimum(999999999, add(field(player, Player.Block), divide(total, 1000000))) }
+      } else = {
+        set = { target = enemy field = Enemy.Block value = minimum(999999999, add(field(enemy, Enemy.Block), divide(total, 1000000))) }
+      } }
+      if = { condition = and(move, not(isNone(play))) then = {
+        set = { target = play field = CardPlayRecord.PoweredBlocks value = add(field(play, CardPlayRecord.PoweredBlocks), 1) }
+      } }
     } }
+    if = { condition = not(pureCall(CombatIsOverOrEnding)) then = { emit = { event = AfterBlockGained payload = { gain = gain } } } }
+    forEach = { query = where(type(BlockAmountModifier), r, equal(field(r, BlockAmountModifier.Gain), gain)) item = record body = { destroy = { target = record } } }
+    destroy = { target = gain }
+    set = { target = actor field = Player.EffectDepth value = subtract(field(actor, Player.EffectDepth), 1) }
+    call = { procedure = CheckCombatVictory args = { owner = actor } }
+    return = { value = total }
   }
 }
 
-event PlayerBlockGained { payload = { owner = Ref(Player) amount = Int } }
+# Capture card/play once, before any nested callback can change CurrentCard/CurrentPlay.
+procedure GainBlock {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999999) }
+  locals = { modifiedMicros = Int }
+  body = { call = { procedure = GainCombatBlock args = { player = owner enemy = none amount = amount unpowered = false move = true card = field(owner, Player.CurrentCard) play = field(owner, Player.CurrentPlay) } into = modifiedMicros } }
+}
+procedure GainUnpoweredBlock {
+  parameters = { owner = Ref(Player) amount = Int(min = 0, max = 999999999) }
+  locals = { modifiedMicros = Int }
+  body = { call = { procedure = GainCombatBlock args = { player = owner enemy = none amount = amount unpowered = true move = false card = none play = none } into = modifiedMicros } }
+}
+procedure GainEnemyBlock {
+  parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999999999) }
+  locals = { modifiedMicros = Int }
+  body = { call = { procedure = GainCombatBlock args = { player = none enemy = target amount = amount unpowered = false move = true card = none play = none } into = modifiedMicros } }
+}
+procedure GainEnemyUnpoweredBlock {
+  parameters = { target = Ref(Enemy) amount = Int(min = 0, max = 999999999) }
+  locals = { modifiedMicros = Int }
+  body = { call = { procedure = GainCombatBlock args = { player = none enemy = target amount = amount unpowered = true move = false card = none play = none } into = modifiedMicros } }
+}

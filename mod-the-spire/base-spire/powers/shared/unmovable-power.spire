@@ -1,24 +1,38 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template UnmovablePowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:unmovable-power" } }
-
-procedure Unmovable {
-  pure = true parameters = { value = Int owner = Ref(Player) listener = Ref(Power) }
-  result = Int body = {
-    if = {
-      condition = less(aggregate(where(collection(CardPlays), r, and(equal(field(r, CardPlayRecord.Turn), field(owner, Player.TurnNumber)), not(equal(r, field(owner, Player.CurrentPlay))))), Sum, r, field(r, CardPlayRecord.PoweredBlocks)), field(listener, Power.Stacks)) then = {
-        return = { value = multiply(value, 2) }
-      }
+  procedure Amount {
+    pure = true parameters = { player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding listener = Ref(Power) } result = Int
+    body = {
+      if = { condition = or(not(isNone(enemy)), not(move)) then = { return = { value = 1000000 } } }
+      if = { condition = and(not(isNone(card)), not(pureCall(BlockCardOwnedByPower, card, listener))) then = { return = { value = 1000000 } } }
+      if = { condition = isNone(field(listener, Power.HolderPlayer)) then = {
+        if = { condition = greater(field(listener, Power.Stacks), 0) then = { return = { value = 2000000 } } }
+        return = { value = 1000000 }
+      } }
+      if = { condition = less(aggregate(where(collection(CardPlays), r, and(equal(field(r, CardPlayRecord.Owner), field(field(listener, Power.HolderPlayer), Player.Owner)), and(equal(field(r, CardPlayRecord.Turn), field(field(listener, Power.HolderPlayer), Player.TurnNumber)), and(equal(field(r, CardPlayRecord.EnemyPhase), field(field(listener, Power.HolderPlayer), Player.EnemyPhase)), not(equal(r, play)))))), Sum, r, field(r, CardPlayRecord.PoweredBlocks)), field(listener, Power.Stacks)) then = { return = { value = 2000000 } } }
+      return = { value = 1000000 }
     }
-    return = { value = value }
   }
-}
-
-subscription Unmovable {
-  event = ModifyBlockMultiplier reaction = Unmovable instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:unmovable-power"))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0
-}
+  procedure Query {
+    pure = true parameters = { value = Int player = Binding enemy = Binding unpowered = Bool move = Bool card = Binding play = Binding listener = Ref(Power) } result = Int
+    body = { return = { value = pureCall(ScaleBlockAmount, value, pureCall(Amount, player, enemy, unpowered, move, card, play, listener)) } }
+  }
+  subscription Query {
+    event = ModifyBlockMultiplier reaction = Query
+    instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:unmovable-power"))
+    instance_order = pureCall(PowerHookOrder, listener, false)
+  }
+  procedure Modify {
+    parameters = { gain = Ref(BlockGain) listener = Ref(Power) }
+    body = { call = { procedure = MultiplyBlockAmount args = { gain = gain power = listener factorMicros = pureCall(Amount, field(gain, BlockGain.Player), field(gain, BlockGain.Enemy), field(gain, BlockGain.Unpowered), field(gain, BlockGain.Move), field(gain, BlockGain.Card), field(gain, BlockGain.Play), listener) } } }
+  }
+  subscription Modify {
+    event = BlockMultiplying reaction = Modify
+    instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:unmovable-power"))
+    instance_order = pureCall(PowerHookOrder, listener, false)
+  }
 } }
 use UnmovablePower { template = UnmovablePowerModule }

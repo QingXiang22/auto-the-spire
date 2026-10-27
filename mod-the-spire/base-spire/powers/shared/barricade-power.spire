@@ -1,24 +1,31 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Development-scope model; source identity and unsupported boundaries stay in powers/catalog.json.
 template BarricadePowerModule { body = {
   use Definition { template = PowerDefinition args = { definition = "base-spire:barricade" stackType = "single" } }
-
-procedure Barricade {
-  pure = true parameters = { value = Bool owner = Ref(Player) listener = Ref(Power) }
-  result = Bool body = {
-    if = {
-      condition = greater(field(listener, Power.Stacks), 0) then = {
-        return = { value = false }
-      }
-    }
-    return = { value = value }
+  procedure AllowsClear {
+    pure = true parameters = { player = Binding enemy = Binding listener = Ref(Power) } result = Bool
+    body = { return = { value = not(and(equal(field(listener, Power.HolderPlayer), player), equal(field(listener, Power.HolderEnemy), enemy))) } }
   }
-}
-
-subscription Barricade {
-  event = ShouldClearBlock reaction = Barricade instances = where(collection(Powers), p, and(equal(field(p, Power.HolderPlayer), owner), equal(field(p, Power.DefinitionId), "base-spire:barricade"))) instance_order = pureCall(PowerHookOrder, listener, true) priority = 0
-}
+  procedure Query {
+    pure = true parameters = { value = Bool player = Binding enemy = Binding listener = Ref(Power) } result = Bool
+    body = { return = { value = and(value, pureCall(AllowsClear, player, enemy, listener)) } }
+  }
+  subscription Query {
+    event = ShouldClearBlock reaction = Query
+    instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:barricade"))
+    instance_order = pureCall(PowerHookOrder, listener, true)
+  }
+  procedure Check {
+    parameters = { check = Ref(BlockClearCheck) listener = Ref(Power) }
+    body = { if = { condition = and(field(check, BlockClearCheck.ShouldClear), not(pureCall(AllowsClear, field(check, BlockClearCheck.Player), field(check, BlockClearCheck.Enemy), listener))) then = {
+      call = { procedure = RecordBlockClearPreventer args = { check = check power = listener relic = none } }
+    } } }
+  }
+  subscription Check {
+    event = BlockClearChecking reaction = Check
+    instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:barricade"))
+    instance_order = pureCall(PowerHookOrder, listener, true)
+  }
 } }
 use BarricadePower { template = BarricadePowerModule }

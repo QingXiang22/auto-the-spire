@@ -17,7 +17,7 @@ template InfectionContent { body = {
   subscription HasEffect { event = CardHasTurnEndInHandEffect reaction = HasEffect }
   procedure TurnEnd { parameters = { owner = Ref(Player) card = Ref(Card) } body = {
     if = { condition = equal(field(card, Card.DefinitionId), "base-spire:infection") then = {
-      call = { procedure = DamagePlayerFromCard args = { owner = owner card = card amount = 3 } }
+      call = { procedure = DamagePlayerFromCard args = { owner = owner card = card move = true amount = 3 } }
     } }
   } }
   subscription TurnEnd { event = CardTurnEndInHandEffect reaction = TurnEnd }

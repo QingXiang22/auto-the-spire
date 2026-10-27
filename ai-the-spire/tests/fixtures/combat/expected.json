@@ -2,7 +2,7 @@
   "_provenance": {
     "期望来源": "手写读解 fixtures/combat 的 wire 文档（当前观察），不调用被测实现生成",
     "digest 来源": "冻结共享规范化参考实现 tools/contract-check/wire_canonical.py（check_contracts.py 210/210 passed）",
-    "共享规则词汇": "docs/contracts/net/0.2/invariants.md（I-xx）"
+    "共享规则词汇": "docs/specs/net/0.2/invariants.md（I-xx）"
   },
   "_notes": [
     "战斗样例：玩家/敌人/Power/三个战斗牌区（抽牌堆/手牌/弃牌堆）与打牌、结束回合候选。",

@@ -25,6 +25,7 @@ internal sealed class NormalDslRun : IDisposable
     private RequestDto? lastStep;
     private ResponseDto? lastStepResponse;
     private string sessionId = "";
+    private IdentityDto? identity;
     public PublicSnapshotDto Snapshot { get; private set; } = null!;
     private Session Engine => host.GetSessionForTests(sessionId).EngineForTests;
     public string Phase => Field(Instances("Run").Single(), "Run", "Phase").AsString();
@@ -54,6 +55,7 @@ internal sealed class NormalDslRun : IDisposable
         log = new StreamWriter(path, false, new UTF8Encoding(false));
     }
     internal string RandomState => NormalPreflight.Json(Engine.Random.Capture());
+    internal RandomSnapshot RandomSnapshot => Engine.Random.Capture();
     internal string PublicState => WireCanonical.Text(Snapshot.ToWire());
     internal bool HasCompleteDebug => Engine.Debug is { DroppedRecords: 0 };
     internal IReadOnlyList<SessionDebugRecord> DebugRecords => Engine.Debug?.Capture() ?? [];
@@ -80,6 +82,7 @@ internal sealed class NormalDslRun : IDisposable
     public void Start(string seed)
     {
         var describe = DescribeResultDto.FromWire(Send(Operation.Describe).Result!);
+        identity = describe.Identity;
         var r = Send(Operation.Start, ("seed", WireValue.Str(seed)), ("expected_identity", describe.Identity.ToWire()),
             ("scenario_profile", WireValue.Str(describe.Capabilities.ScenarioProfiles.Single().Id)));
         sessionId = ((WireString)Get(r, "session_id")).Value;
@@ -171,7 +174,7 @@ internal sealed class NormalDslRun : IDisposable
         var name = action.ActionType.Split(':')[^1];
         var kind = name switch
         {
-            "PlayAttackFromHand" or "PlayCardFromHand" => "play", "PlayTargetedCard" => "targeted-play", "EndDevelopmentTurn" => "end-turn",
+            "PlayAttackFromHand" or "PlayCardFromHand" => "play", "PlayTargetedCard" => "targeted-play", "EndTurn" => "end-turn",
             "ChooseMapPoint" => "map", "ClaimDevelopmentCardReward" => "claim-card",
             "DiscardPotion" => "discard-potion",
             "ClaimDevelopmentPotionReward" => "claim-potion", "SkipDevelopmentPotionReward" => "skip-potion",
@@ -193,9 +196,6 @@ internal sealed class NormalDslRun : IDisposable
                 || !Snapshot.LegalActions.Any(c => c.ActionType.EndsWith(":PlayAttackFromHand", StringComparison.Ordinal) && c.Fields.SequenceEqual(a.Fields)))
             .First(a => TrySemantic(a)?.Key == action.Key);
         Step(candidate);
-        // The source driver performs player cleanup, enemies and the next player start in one turn
-        // operation. Consume the DSL's explicit continuation before comparing that common boundary.
-        if (action.Kind == "end-turn" && Find("BeginDevelopmentTurn") is { } begin) Step(begin);
     }
     private NormalAction? TrySemantic(LegalActionDto a) { try { return Semantic(a); } catch (NotSupportedException) { return null; } }
     public NormalBoundary Capture(string kind)
@@ -228,7 +228,9 @@ internal sealed class NormalDslRun : IDisposable
                 holder = Field(p, "Power", "HolderEnemy").IsNone ? "player" : identities[Field(p, "Power", "HolderEnemy").AsRef()],
                 amount = Field(p, "Power", "Stacks").AsInt() }).OrderBy(p => p.holder).ThenBy(p => p.id).ToArray());
         }
-        var actions = Snapshot.LegalActions.Select(TrySemantic).Where(a => a is not null).Select(a => a!.Key).Distinct().Order(StringComparer.Ordinal).ToArray();
+        var actions = Snapshot.LegalActions.Select(TrySemantic).Where(a => a is not null).Select(a => a!.Key).Order(StringComparer.Ordinal).ToArray();
+        if (actions.Distinct(StringComparer.Ordinal).Count() != actions.Length)
+            throw new NotSupportedException("missing_dimension: duplicate public semantic action candidates");
         var unmapped = Snapshot.LegalActions.Where(a => TrySemantic(a) is null).ToArray();
         Put("actions.candidates", actions);
         var decision = Engine.PendingDecision;
@@ -262,14 +264,22 @@ internal sealed class NormalDslRun : IDisposable
         if (trace is not null) Put("events.observed_order", ObservedEvents());
         if (trace is not null) Put("lifecycle.settlement", Settlement());
         if (trace is not null) Put("random.float32_calls", NormalFloat32Trace.Dsl(trace.Capture(), trace.DroppedRecords));
-        if (trace is not null) Put("random.stream_states", Engine.Random.Capture().Streams.OrderBy(s => s.Name, StringComparer.Ordinal)
-            .Select(s => new { stream = s.Name, draws = s.Draws, words = new[] { s.S0, s.S1, s.S2, s.S3 }.Select(w => w.ToString("x16")).ToArray() }).ToArray());
-        string[] missing = ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"];
+        if (trace is not null)
+        {
+            var randomState = Engine.Random.Capture();
+            Put("random.step_states", NormalRandomStateTrace.Dsl(trace.Capture(), trace.DroppedRecords, randomState));
+            Put("random.stream_states", randomState.Streams.OrderBy(s => s.Name, StringComparer.Ordinal)
+                .Select(s => new { stream = s.Name, draws = s.Draws, words = new[] { s.S0, s.S1, s.S2, s.S3 }.Select(w => w.ToString("x16")).ToArray() }).ToArray());
+        }
+        NormalPublicSnapshot.ValidateEnvelope(Snapshot, identity ?? throw new InvalidOperationException("No actual Host handshake."), sessionId);
+        var unmappedFields = NormalPublicObservation.UnmappedFields(Snapshot);
+        var publicComplete = NormalPublicSnapshot.Add(v, unmappedFields, Snapshot.Status);
+        string[] missing = [.. (publicComplete ? Array.Empty<string>() : new[] { "public: complete cross-backend projection" }), "random: full initialization candidates/normalization", "events: cross-backend event projection"];
         if (unmapped.Length > 0) missing = [.. missing, $"actions: {unmapped.Length} public candidates have no normal reference mapping"];
         return new(kind, v, missing,
             new { backend = "dsl:public-host", public_snapshot = WireCanonical.Text(Snapshot.ToWire()),
                 unmapped_public_actions = unmapped,
-                unmapped_public_fields = NormalPublicObservation.UnmappedFields(Snapshot),
+                unmapped_public_fields = unmappedFields,
                 unmapped_public_topology = Array.Empty<string>(),
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = Array.Empty<string>(),

@@ -15,7 +15,7 @@ template AxeRubyRaiderContent { body = {
     } }
   } }
   dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:axe-ruby-raider" procedure = Execute }
-  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = {
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = {
     call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:axe-ruby-raider" hp = 20 } }
   } }
 } }

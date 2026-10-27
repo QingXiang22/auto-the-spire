@@ -35,11 +35,11 @@ internal static class NormalRunComparison
     internal static readonly string[] ExpectedCaseIds = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"];
     internal static readonly string[] Dimensions = ["actions", "decisions", "facts", "public", "visits", "permanent", "piles", "random", "events", "lifecycle"];
     internal static readonly string[] RequiredPaths = ["actions.candidates", "decisions.current", "facts.player.hp", "facts.player.max_hp", "facts.player.gold",
-        "public.snapshot", "public.piles", "public.map", "public.run", "public.neow", "public.reward_offer", "public.reward_sets", "public.potion_inventory", "public.relic_inventory", "public.cards",
+        "public.snapshot", "public.piles", "public.map", "public.run", "public.neow", "public.reward_offer", "public.reward_sets", "public.potions", "public.potion_inventory", "public.relic_inventory", "public.cards",
         "public.ownership", "public.map_members", "public.map_sequence", "public.map_parents", "public.visit_links", "public.relation_types", "public.entity_counts",
         "public.player", "public.draw_blocked", "public.player_history", "public.enemies", "public.powers", "public.visits",
         "visits.phase", "visits.act", "visits.total_floor", "visits.coordinates", "permanent.deck", "permanent.relics", "permanent.potions",
-        "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "random.stream_states", "random.float32_calls", "random.scalar_calls", "random.weighted_candidates", "random.weighted_attempts", "random.opening_queues", "events.trace", "events.observed_order", "lifecycle.settlement"];
+        "piles.Hand", "piles.DrawPile", "piles.DiscardPile", "piles.ExhaustPile", "piles.InPlay", "piles.RemovedFromCombat", "random.trace", "random.step_states", "random.stream_states", "random.float32_calls", "random.scalar_calls", "random.weighted_candidates", "random.weighted_attempts", "random.opening_queues", "events.trace", "events.observed_order", "lifecycle.settlement"];
     internal static NormalDifference? First(int index, NormalBoundary left, NormalBoundary right)
     {
         if (left.Kind != right.Kind) return new(index, left.Kind, "boundary.kind", left.Kind, right.Kind);
@@ -65,6 +65,9 @@ internal static class NormalRunComparison
         if (args.Length != 2 || args[0] != "--output" || string.IsNullOrWhiteSpace(args[1]))
             throw new FormatException("Use normal-compare --output DIRECTORY.");
         var output = Path.GetFullPath(args[1]); Directory.CreateDirectory(output);
+        var archivePath = Path.Combine(output, "normal-evidence.zip");
+        File.Delete(archivePath);
+        using var evidence = new NormalReportStore(archivePath);
         var inputPath = Path.Combine(repository, "tools/base-spire-dev/fixtures/normal-first-combat.json");
         using var input = JsonDocument.Parse(File.ReadAllText(inputPath)); NormalPreflight.ValidateInput(input.RootElement);
         object? reference = null; string? unavailable = null;
@@ -101,7 +104,7 @@ internal static class NormalRunComparison
                     {
                         Apply(left.Semantic(left.Snapshot.LegalActions.First())); Capture("target-resolved:" + moves); continue;
                     }
-                    var candidate = new[] { targeted ? "PlayTargetedCard" : "PlayAttackFromHand", "PlayCardFromHand", "EndDevelopmentTurn" }
+                    var candidate = new[] { targeted ? "PlayTargetedCard" : "PlayAttackFromHand", "PlayCardFromHand", "EndTurn" }
                         .Select(left.Find).FirstOrDefault(a => a is not null)
                         ?? throw new NotSupportedException("No registered public combat action.");
                     Apply(left.Semantic(candidate)); Capture("combat-action:" + moves);
@@ -121,8 +124,10 @@ internal static class NormalRunComparison
                 void Capture(string kind)
                 {
                     protocolChecks.Add(new(kind, left.CheckRequestReplay()));
-                    var a = left.Capture(kind); var b = right.Capture(kind); boundaries.Add(new(a, b));
-                    difference ??= First(boundaries.Count - 1, a, b);
+                    var a = left.Capture(kind); var b = right.Capture(kind);
+                    difference ??= First(boundaries.Count, a, b);
+                    boundaries.Add(new(a with { Diagnostic = evidence.Pack(a.Diagnostic)! },
+                        b with { Diagnostic = evidence.Pack(b.Diagnostic)! }));
                 }
             }
             catch (Exception e) { error = e.GetType().Name + ": " + e.Message; }
@@ -133,9 +138,10 @@ internal static class NormalRunComparison
             Console.WriteLine($"{item.Id}: {item.Status}; paired boundaries={boundaries.Count}; first={difference?.Kind}/{difference?.Path}; {error}");
         }
         var passed = results.Count == ExpectedCaseIds.Length && results.All(r => r.IndependentVerified);
-        File.WriteAllText(Path.Combine(output, "result.json"), JsonSerializer.Serialize(new
+        File.WriteAllText(Path.Combine(output, "result.json"), JsonSerializer.Serialize(evidence.Pack(new
         {
-            schema = "normal-run/paired@1", status = passed ? "passed" : results.Any(r => r.FirstDifference is not null) ? "diverged" : "blocked_compare",
+            schema = "normal-run/paired@2", evidence_archive = "normal-evidence.zip",
+            status = passed ? "passed" : results.Any(r => r.FirstDifference is not null) ? "diverged" : "blocked_compare",
             complete = passed, independent_verified = passed, expected_case_ids = ExpectedCaseIds,
             targeting_policy = "original claim/skip retain first-legal-target; additional targeted paths pause and choose the first public target",
             executed = results.Count(r => r.Boundaries.Length > 0), input = input.RootElement,
@@ -144,7 +150,7 @@ internal static class NormalRunComparison
             production_manifest_sha256 = NormalPreflight.Hash(Path.Combine(repository, "mod-the-spire/base-spire/package.json")),
             cases = results,
             reproduction = "dotnet run --project tools/differential -c Release -- normal-compare --output DIRECTORY"
-        }, new JsonSerializerOptions { WriteIndented = true, IncludeFields = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
+        }), NormalReportStore.Options));
         return passed ? 0 : results.Any(r => r.Reason is not null || r.FirstDifference is null) ? 3 : 1;
     }
 }

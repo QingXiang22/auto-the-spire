@@ -8,7 +8,7 @@ template AssassinRubyRaiderContent { body = {
     call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 10 hits = 1 } }
   } }
   dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:assassin-ruby-raider" procedure = Execute }
-  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = {
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = {
     call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:assassin-ruby-raider" hp = 18 } }
   } }
 } }

@@ -7,16 +7,16 @@ description: "开发、迁移或审阅 auto-the-spire 的纯 DSL base 内容与�
 
 教程中的文件编辑命令以 PowerShell 复现；远端环境可使用等价的文件操作，源码定位助手只需 Python 标准库。不要把未验证的 shell 转写声称为已复现教程。
 
-本 skill 是[人类开发手册](../../../docs/development/base-spire/README.md)的任务路由，供 Codex 和 DSH 使用。假定在该仓库内工作；不依赖用户机器路径、插件或远端服务。玩法与接口以项目文档和 DSL 为准，任务状态在 GitHub Issue 维护，这里不保存第二套规则。
+本 skill 是[人类开发手册](../../../docs/areas/base/README.md)的任务路由，供 Codex 和 DSH 使用。假定在该仓库内工作；不依赖用户机器路径、插件或远端服务。玩法与接口以项目文档和 DSL 为准，任务状态在 GitHub Issue 维护，这里不保存第二套规则。
 
 ## 开始与约束
 
 规则依据先读[锁定来源说明](../../../reference/README.md)，当前源码在 `reference/sts2-sim/src/Sts2Sim.Core/`；不再用本地 `sts2/` 裁决当前目标。下述定位助手读取旧固定来源数据，只用于核对已有 DSL 的迁移来源；新规则和新内容直接在锁定源码按类／方法局部检索。旧向量通过不等于新版符合性。
 
-读取根／目标目录适用指令和当前任务的认领／范围，再选择下表的一条路线；不要默认加载所有历史记录或整本手册。[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)维护状态，[迁移规格](../../../docs/design/mod-the-spire/base-architecture.md)定义纯包边界。
+读取根／目标目录适用指令和当前任务的认领／范围，再选择下表的一条路线；不要默认加载所有历史记录或整本手册。[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)维护状态，[迁移规格](../../../docs/understand/base-architecture.md)定义纯包边界。
 
 - base 包仅含 `.spire`／必要静态 `.json`；玩法用 DSL，真正共用的操作放领域 rules；catalog definition 可承载完整内容模块，独有规则／私有状态留在所属文件，以模板作用域隔离。简单内容仍可只用 `use`。Host／Engine 不加入按内容 ID 的游戏效果分支。
-- 遗物与Power统一按[监听编写指南](../../../docs/development/base-spire/how-to/write-effect-listeners.md)接入：主流程发布通知或征询修正，效果规则绑定有效实例；不恢复主流程中的遗物专属字段查询或Power效果直接调用。
+- 遗物与Power统一按[监听编写指南](../../../docs/areas/base/how-to/write-effect-listeners.md)接入：主流程发布通知或征询修正，效果规则绑定有效实例；不恢复主流程中的遗物专属字段查询或Power效果直接调用。
 - scope 从实际 package.json 读取。静态来源条目、DSL 定义、行为测试结果、独立比较与正常 Run 分别报告；来源条目没有已加载 definition 时不计支持。
 - 旧 C#／旧作者语法只在 `tools/base-migration-baseline/` 核对源码，不恢复生产依赖。保留原来源池、资格条件与全部必测用例；未迁移显式失败，不删池、补答案或注册空效果。
 - 新共享机制先补对应 spec 的状态、输入、顺序、寿命、失败和验证，再写 DSL。通用语言缺口用最小文本复现按现有授权处理；本 skill 不授权解除暂停、擅自改变核心兼容性约定或派出远程 agent。
@@ -25,16 +25,16 @@ description: "开发、迁移或审阅 auto-the-spire 的纯 DSL base 内容与�
 
 | 本次任务 | 首先阅读 | 再读什么 |
 | --- | --- | --- |
-| 修改已有卡牌数值、Power公式或私有状态 | [修改单个内容](../../../docs/development/base-spire/how-to/edit-content.md) | 所属文件与对应判别；精确Power接口查[Power参考](../../../docs/development/base-spire/reference/powers.md) |
-| 新增拥有独有效果的内容模块 | [新增内容模块](../../../docs/development/base-spire/how-to/add-content-module.md) | 已有完整消费者及显式登记步骤 |
-| 改已有模板参数／新增同类内容 | [内容扩展](../../../docs/development/base-spire/how-to/extend-content.md) | 对应内容文件与模板；首用时看[配置教程](../../../docs/development/base-spire/tutorials/first-relic.md) |
-| 新共享触发／生命周期 | [机制迁移](../../../docs/development/base-spire/how-to/migrate-mechanism.md) | 对应领域 spec 和[操作参考](../../../docs/development/base-spire/reference/operations.md)；语法实践看[共享规则教程](../../../docs/development/base-spire/tutorials/shared-rule.md) |
-| 卡牌、附着、费用、伤害、回合 | [卡牌与战斗](../../../docs/development/base-spire/how-to/cards-and-combat.md) | 目标源类／共享约定，不通读全部 Cards |
-| Power、遗物、药水 | [Power 与物品](../../../docs/development/base-spire/how-to/powers-relics-potions.md) | 目标生命周期和一个真实调用方 |
-| 遗物／Power通知、伤害／费用等修正或迁移旧反应 | [编写通知与修正监听](../../../docs/development/base-spire/how-to/write-effect-listeners.md) | [领域约定](../../../docs/design/mod-the-spire/effect-listeners.md)与[通用签名](../../../docs/dsl/core/0.3/authoring-reference.md#实例订阅与只读修正)，再读一个同类消费者 |
-| 敌人、行动、遭遇 | [敌人与遭遇](../../../docs/development/base-spire/how-to/enemies-and-encounters.md) | 对应敌人／遭遇与随机约定 |
-| 角色、房间、地图、奖励、跨幕／终局 | [Run 与房间](../../../docs/development/base-spire/how-to/run-and-rooms.md) | 本次拥有状态的领域约定及必要消费者 |
-| 加载失败、公开结果或覆盖问题 | [验证与排障](../../../docs/development/base-spire/how-to/verify-and-debug.md) | 报错文件附近；包字段只查[格式参考](../../../docs/dsl/core/0.3/package-reference.md) |
+| 修改已有卡牌数值、Power公式或私有状态 | [修改单个内容](../../../docs/areas/base/how-to/edit-content.md) | 所属文件与对应判别；精确Power接口查[Power参考](../../../docs/areas/base/reference/powers.md) |
+| 新增拥有独有效果的内容模块 | [新增内容模块](../../../docs/areas/base/how-to/add-content-module.md) | 已有完整消费者及显式登记步骤 |
+| 改已有模板参数／新增同类内容 | [内容扩展](../../../docs/areas/base/how-to/extend-content.md) | 对应内容文件与模板；首用时看[配置教程](../../../docs/start/first-relic.md) |
+| 新共享触发／生命周期 | [机制迁移](../../../docs/areas/base/how-to/migrate-mechanism.md) | 对应领域 spec 和[操作参考](../../../docs/areas/base/reference/operations.md)；语法实践看[共享规则教程](../../../docs/start/shared-rule.md) |
+| 卡牌、附着、费用、伤害、回合 | [卡牌与战斗](../../../docs/areas/base/how-to/cards-and-combat.md) | 目标源类／共享约定，不通读全部 Cards |
+| Power、遗物、药水 | [Power 与物品](../../../docs/areas/base/how-to/powers-relics-potions.md) | 目标生命周期和一个真实调用方 |
+| 遗物／Power通知、伤害／费用等修正或迁移旧反应 | [编写通知与修正监听](../../../docs/areas/base/how-to/write-effect-listeners.md) | [领域约定](../../../docs/areas/base/spec/effect-listeners.md)与[通用签名](../../../docs/reference/dsl/0.3/authoring-reference.md#实例订阅与只读修正)，再读一个同类消费者 |
+| 敌人、行动、遭遇 | [敌人与遭遇](../../../docs/areas/base/how-to/enemies-and-encounters.md) | 对应敌人／遭遇与随机约定 |
+| 角色、房间、地图、奖励、跨幕／终局 | [Run 与房间](../../../docs/areas/base/how-to/run-and-rooms.md) | 本次拥有状态的领域约定及必要消费者 |
+| 加载失败、公开结果或覆盖问题 | [验证与排障](../../../docs/areas/base/how-to/verify-and-debug.md) | 报错文件附近；包字段只查[格式参考](../../../docs/reference/dsl/0.3/package-reference.md) |
 
 ## 有界定位，按需追到源
 

@@ -76,7 +76,7 @@ procedure GenerateCardsToHand {
       call = { procedure = GenerateCombatCard args = { owner = owner attacksOnly = attacksOnly } into = generated }
       if = { condition = not(isNone(generated)) then = {
         if = { condition = upgraded then = { call = { procedure = UpgradeCard args = { card = generated } } } }
-        call = { procedure = AddGeneratedToHand args = { card = generated } }
+        call = { procedure = GenerateCardIntoCombat args = { owner = owner card = generated creator = owner to = "hand" clone = false } }
       } }
     } }
   }

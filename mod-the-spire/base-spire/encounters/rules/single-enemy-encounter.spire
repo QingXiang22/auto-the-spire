@@ -1,18 +1,83 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Shared development encounter pieces. A source encounter spawns its monster list; this scope has no battle or
-# room yet, so an encounter content file only exposes a Spawn action. Initial HP uses the source minimum
-# because the roll inside the source range is part of the (unmigrated) run RNG.
+# Active-combat creation needs a separate entry lifecycle; these actions configure the next battle.
+procedure CanSpawnDevelopmentEnemies {
+  pure = true parameters = { owner = Ref(Player) } result = Bool
+  body = {
+    if = { condition = field(owner, Player.CombatActive) then = { return = { value = false } } }
+    return = { value = pureCall(CanUseDevelopmentActions, owner) }
+  }
+}
+
+# Creation owns stable identity; slot ordering follows the complete batch.
+procedure PrepareEnemyBirthContext { body = {
+  if = { condition = field(first(type(Player)), Player.CombatActive) then = { fail = { message = "Enemy birth context requires an inactive combat" } } }
+  if = { condition = exists(type(Enemy)) then = { fail = { message = "Enemy birth context requires an empty side" } } }
+  set = { target = first(type(Player)) field = Player.NextEnemyBirthOrder value = 0 }
+} }
+procedure SortEncounterEnemies { body = {
+  forEach = { query = type(Enemy) item = enemy body = {
+    set = { target = enemy field = Enemy.SpawnOrder value = count(where(type(Enemy), other, or(less(field(other, Enemy.SlotIndex), field(enemy, Enemy.SlotIndex)), and(equal(field(other, Enemy.SlotIndex), field(enemy, Enemy.SlotIndex)), less(field(other, Enemy.BirthOrder), field(enemy, Enemy.BirthOrder)))))) }
+  } }
+} }
+procedure EnemyIsSideMember { pure = true parameters = { target = Ref(Enemy) } result = Bool body = {
+  return = { value = and(not(field(target, Enemy.DeathResolved)), not(field(target, Enemy.Escaped))) }
+} }
+procedure RollEncounterEnemyHp {
+  parameters = { min = Int(min = 1, max = 9999) max = Int(min = 1, max = 9999) } result = Int
+  locals = { available = Int value = Int offset = Int }
+  body = {
+    if = { condition = greater(min, max) then = { fail = { message = "Enemy HP minimum exceeds maximum" } } }
+    let = { into = value value = min }
+    repeat = { count = add(subtract(max, min), 1) body = {
+      if = { condition = not(exists(where(type(Enemy), e, and(pureCall(EnemyIsSideMember, e), equal(field(e, Enemy.MaxHp), value))))) then = { let = { into = available value = add(available, 1) } } }
+      let = { into = value value = add(value, 1) }
+    } }
+    if = { condition = equal(available, 0) then = {
+      sampleInt = { stream = "base-spire:run:niche" min = min max = add(max, 1) into = value }
+      return = { value = value }
+    } }
+    sampleInt = { stream = "base-spire:run:niche" min = 0 max = available into = offset }
+    let = { into = value value = min }
+    repeat = { count = add(subtract(max, min), 1) body = {
+      if = { condition = not(exists(where(type(Enemy), e, and(pureCall(EnemyIsSideMember, e), equal(field(e, Enemy.MaxHp), value))))) then = {
+        if = { condition = equal(offset, 0) then = { return = { value = value } } }
+        let = { into = offset value = subtract(offset, 1) }
+      } }
+      let = { into = value value = add(value, 1) }
+    } }
+    fail = { message = "Enemy HP offset did not select a value" }
+  }
+}
+procedure CreateSourceEncounterEnemy {
+  parameters = { definition = String(length = 64) min = Int(min = 1, max = 9999) max = Int(min = 1, max = 9999) }
+  result = Binding locals = { hp = Int target = Binding }
+  body = {
+    call = { procedure = RollEncounterEnemyHp args = { min = min max = max } into = hp }
+    call = { procedure = CreateEncounterEnemy args = { definition = definition hp = hp } into = target }
+    return = { value = target }
+  }
+}
 procedure CreateEncounterEnemy {
   parameters = { definition = String(length = 64) hp = Int(min = 1, max = 9999) }
   result = Binding
-  locals = { target = Binding }
+  locals = { target = Binding owner = Binding run = Binding node = Binding birth = Int seed = Int }
   body = {
+    let = { into = owner value = first(type(Player)) }
+    let = { into = birth value = field(owner, Player.NextEnemyBirthOrder) }
+    let = { into = seed value = uint64Add(pureCall(SourceRunSeed), add(birth, 1)) }
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    if = { condition = not(isNone(run)) then = {
+      let = { into = seed value = uint64Add(seed, field(run, Run.ActIndex)) }
+      let = { into = node value = field(run, Run.CurrentNode) }
+      if = { condition = not(isNone(node)) then = { let = { into = seed value = uint64Add(uint64Add(seed, field(node, MapNode.Col)), field(node, MapNode.Row)) } } }
+    } }
     create = {
       type = Enemy scope = frameScope() into = target
-      fields = { DefinitionId = definition SpawnOrder = count(type(Enemy)) Hp = hp MaxHp = hp MoveIndex = 0 Intent = "attack" }
+      fields = { DefinitionId = definition BirthOrder = birth CombatId = add(birth, 1) MonsterSeed = seed SpawnOrder = birth Hp = hp MaxHp = hp MoveIndex = 0 Intent = "none" }
     }
+    set = { target = owner field = Player.NextEnemyBirthOrder value = add(birth, 1) }
     return = { value = target }
   }
 }
@@ -21,7 +86,6 @@ procedure SpawnDevelopmentEnemy {
   locals = { target = Binding }
   body = {
     call = { procedure = CreateEncounterEnemy args = { definition = definition hp = hp } into = target }
-    call = { procedure = ResetEnemyMoves args = { target = target } }
   }
 }
 # definition is the encounter identity (it names the generated symbols); enemyDefinition and hp describe the
@@ -35,7 +99,7 @@ template SingleEnemyEncounter {
   body = {
     action Spawn {
       role = player
-      requires = pureCall(CanUseDevelopmentActions, first(type(Player)))
+      requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
       body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = arg(enemyDefinition) hp = arg(hp) } } }
     }
   }

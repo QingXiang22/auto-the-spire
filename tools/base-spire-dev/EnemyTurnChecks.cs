@@ -4,6 +4,7 @@ internal static partial class PackageChecks
 {
     private static Dictionary<string, string[]> RunEnemyTurnChecks(DslPackage package, Action<string, Action> check)
     {
+        RunTurnStartChecks(package, check);
         var witness = new Dictionary<string, List<string>>(StringComparer.Ordinal);
         var shared = new List<string>();
         void Case(string name, Action body) { check(name, body); shared.Add(name); }
@@ -18,14 +19,14 @@ internal static partial class PackageChecks
         {
             var s = Start(package); Submit(s, "FuzzyWurmCrawler.Spawn");
             Equal(55L, EnemyHp(s), "the development spawn uses the source minimum HP");
-            Equal("attack", EnemyIntent(s), "the first intent is the goop attack");
+            Equal("none", EnemyIntent(s), "creation does not select a move");
             Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
-            Submit(s, "EndDevelopmentTurn");
+            Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal(76L, Hp(s), "the acid goop hit for 4"); Equal(1L, EnemyMove(s), "the next move is inhale"); Equal("buff", EnemyIntent(s), "and the intent is public");
-            Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
+            Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal(76L, Hp(s), "inhale deals no damage"); Equal(7L, PowerStacksFor(s, "base-spire:strength-power", FirstTarget(s)), "the enemy gained 7 strength");
             Equal(2L, EnemyMove(s), "the next move is the second goop");
-            Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
+            Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal(65L, Hp(s), "the goop now deals 4 + 7 strength"); Equal(0L, EnemyMove(s), "the rotation wraps to the first goop state");
         });
         Case("CP58: enemy attacks honour player block, enemy weak and player vulnerable", () =>
@@ -119,11 +120,11 @@ internal static partial class PackageChecks
         Case("CP74: an attack-and-buff enemy alternates its damage and its strength buff", () =>
         {
             var s = Start(package); Submit(s, "BruteRubyRaider.Spawn");
-            Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
+            Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal(73L, Hp(s), "the beat hit for 7"); Equal(1L, EnemyMove(s), "the next move is the roar");
-            Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
+            Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal(73L, Hp(s), "the roar deals no damage"); Equal(3L, PowerStacksFor(s, "base-spire:strength-power", FirstTarget(s)), "the brute gained 3 strength");
-            Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
+            Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal(63L, Hp(s), "the next beat deals 7 + 3");
         });
         Case("CP75: an attack-and-debuff enemy applies Frail, which weakens the next card block", () =>
@@ -146,7 +147,7 @@ internal static partial class PackageChecks
         {
             var s = Start(package); Submit(s, "BruteRubyRaider.Spawn");
             Equal(30L, EnemyHp(s), "spawn HP matches the Ascension 0 minimum");
-            Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
+            Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal("buff", EnemyIntent(s), "the roar is announced next");
         });
         Own("base-spire:stabbot", "CP78 Stabbot: source HP and a stab that applies Frail", () =>
@@ -164,17 +165,17 @@ internal static partial class PackageChecks
             var s = Start(package); Submit(s, "AxeRubyRaider.Spawn");
             Equal(20L, EnemyHp(s), "spawn HP matches the Ascension 0 minimum");
             Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
-            Submit(s, "EndDevelopmentTurn");
+            Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal(75L, Hp(s), "the first swing hit for 5"); Equal(5L, EnemyBlock(s), "and gained 5 block"); Equal(1L, EnemyMove(s), "next is the second swing");
-            Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
+            Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal(70L, Hp(s), "the second swing hit for 5 again"); Equal(2L, EnemyMove(s), "next is the big swing");
-            Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
+            Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal(58L, Hp(s), "the big swing hit for 12"); Equal(0L, EnemyMove(s), "the chain wraps to the first swing");
         });
         Own("base-spire:crossbow-ruby-raider", "CP82 Crossbow Ruby Raider: reload for 3 block then fire for 14", () =>
         {
             var s = Start(package); Submit(s, "CrossbowRubyRaider.Spawn");
-            Equal(18L, EnemyHp(s), "spawn HP matches the Ascension 0 minimum"); Equal("defend", EnemyIntent(s), "it announces the reload first");
+            Equal(18L, EnemyHp(s), "spawn HP matches the Ascension 0 minimum"); Equal("none", EnemyIntent(s), "creation has no prepared reload");
             Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
             Equal(80L, Hp(s), "the reload deals no damage"); Equal(3L, EnemyBlock(s), "and gains 3 block");
             Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
@@ -183,7 +184,7 @@ internal static partial class PackageChecks
         Own("base-spire:tracker-ruby-raider", "CP83 Tracker Ruby Raider: track applies Frail 2 then the hounds hit eight times", () =>
         {
             var s = Start(package); Submit(s, "TrackerRubyRaider.Spawn");
-            Equal(21L, EnemyHp(s), "spawn HP matches the Ascension 0 minimum"); Equal("debuff", EnemyIntent(s), "it announces the track first");
+            Equal(21L, EnemyHp(s), "spawn HP matches the Ascension 0 minimum"); Equal("none", EnemyIntent(s), "creation has no prepared track");
             Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
             Equal(80L, Hp(s), "the track deals no damage"); Equal(2L, PowerStacks(s, "base-spire:frail-power"), "two frail applied");
             Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
@@ -255,9 +256,10 @@ internal static partial class PackageChecks
                 Equal(hash, session.State.StateHash(), "observations preserve state"); Equal(version, session.StateVersion, "observations preserve version");
                 Equal(draws, session.Random.TotalDraws, "observations preserve RNG");
                 Submit(session, "EndDevelopmentTurn");
+                Submit(session, "BeginDevelopmentTurn");
                 Equal(initial, MoveText(session, enemies[0], "Enemy", "MoveId"), "stun restores selected source move itself");
                 Equal(next, MoveText(session, enemies[1], "Enemy", "MoveId"), "other instance advances exactly once");
-                if (name == "BruteRubyRaider") { Submit(session, "BeginDevelopmentTurn"); Submit(session, "EndDevelopmentTurn"); }
+                if (name == "BruteRubyRaider") { Submit(session, "EndDevelopmentTurn"); }
                 if (name is "Stabbot" or "TrackerRubyRaider" or "BruteRubyRaider")
                 {
                     var power = Members(session, "Powers").Single();
@@ -266,14 +268,14 @@ internal static partial class PackageChecks
                     True(session.State.GetField(power, powerType.FieldIndex("SourceCard")).IsNone, "monster Power has no card source");
                     True(session.State.GetField(power, powerType.FieldIndex("SourcePlay")).IsNone, "monster Power has no play source");
                 }
-                Submit(session, "EndDevelopmentCombat"); Submit(session, "BeginDevelopmentCombat");
+                Submit(session, "EndDevelopmentCombat"); Submit(session, "BeginDevelopmentCombat"); Submit(session, "BeginDevelopmentTurn");
                 foreach (var enemy in enemies)
                 {
                     Equal(initial, MoveText(session, enemy, "Enemy", "MoveId"), "combat reset restores first move");
                     Equal(1L, IntField(session, MoveState(session, enemy), "EnemyMoveState", "Sequence"), "combat history resets per instance");
                 }
                 Equal(0L, session.Random.DrawCount(MonsterAi), "fixed graphs and stun do not sample AI");
-                var other = Start(graphPackage); Submit(other, name + ".Spawn");
+                var other = Start(graphPackage); Submit(other, name + ".Spawn"); Submit(other, "BeginDevelopmentCombat"); Submit(other, "BeginDevelopmentTurn");
                 Equal(initial, MoveText(other, FirstTarget(other), "Enemy", "MoveId"), "separate session retains fresh first move");
             });
         }

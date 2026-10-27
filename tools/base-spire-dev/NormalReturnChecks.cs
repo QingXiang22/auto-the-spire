@@ -92,8 +92,7 @@ internal static partial class PackageChecks
         var defeat = NormalFirstCombat(package);
         for (var turn = 0; Active(defeat) && turn < 30; turn++)
         {
-            Submit(defeat, "EndDevelopmentTurn");
-            if (Active(defeat)) Submit(defeat, "BeginDevelopmentTurn");
+            Submit(defeat, "EndTurn");
         }
         Equal("defeat", Outcome(defeat), "actual enemy attacks cause death");
         Equal("defeated", TextField(defeat, Members(defeat, "RunVisits").Single(), "RunVisit", "Status"), "death closes the real visit without victory");
@@ -102,12 +101,93 @@ internal static partial class PackageChecks
         True(!Legal(defeat, "ChooseMapPoint"), "death opens no successors");
         Console.WriteLine("ok   ENV-T05 normal source enemy death path has no rewards or map return");
         RunNormalSettlementOrderChecks(package);
+        RunNormalTurnBoundaryChecks(package);
         RunDeathPowerChecks(package);
         RunNormalUnknownRoom(package);
         RunNormalEventSelection(package);
         RunNormalSapphireSeed(package);
         RunNormalDenseVegetation(package);
         return 0;
+    }
+
+    private static void RunNormalTurnBoundaryChecks(DslPackage package)
+    {
+        using var copy = new Copy(package.Root);
+        copy.Include("normal-turn-boundary.spire", """
+            entity TurnBoundaryProbe { fields = {
+              Mode = { type = String(length = 16) default = "pause" }
+              Starts = { type = Int default = 0 }
+              Ends = { type = Int default = 0 }
+            } }
+            action SetupTurnBoundary { role = player locals = { probe = Binding } body = { create = { type = TurnBoundaryProbe scope = frameScope() into = probe } } }
+            procedure CheckClosedEnd { parameters = { owner = Ref(Player) } body = {
+              if = { condition = exists(type(TurnBoundaryProbe)) then = {
+                if = { condition = field(owner, Player.TurnOpen) then = { fail = { message = "Manual play remained open during end effects" } } }
+                set = { target = first(type(TurnBoundaryProbe)) field = TurnBoundaryProbe.Ends value = add(field(first(type(TurnBoundaryProbe)), TurnBoundaryProbe.Ends), 1) }
+              } }
+            } }
+            subscription CheckClosedEnd { event = BeforePlayerSideTurnEnd reaction = CheckClosedEnd }
+            procedure CheckClosedStart { parameters = { owner = Ref(Player) } locals = { answer = Bool } body = {
+              if = { condition = exists(type(TurnBoundaryProbe)) then = {
+                if = { condition = field(owner, Player.TurnOpen) then = { fail = { message = "Manual play opened before start effects finished" } } }
+                set = { target = first(type(TurnBoundaryProbe)) field = TurnBoundaryProbe.Starts value = add(field(first(type(TurnBoundaryProbe)), TurnBoundaryProbe.Starts), 1) }
+                if = { condition = equal(field(first(type(TurnBoundaryProbe)), TurnBoundaryProbe.Mode), "pause") then = {
+                  decide = { participant = field(owner, Player.Owner) kind = Bool prompt = "turn start probe" into = answer }
+                } }
+                if = { condition = equal(field(first(type(TurnBoundaryProbe)), TurnBoundaryProbe.Mode), "kill") then = {
+                  call = { procedure = DamageAllEnemiesFromPlayer args = { owner = owner amount = 999 } }
+                } }
+                if = { condition = equal(field(first(type(TurnBoundaryProbe)), TurnBoundaryProbe.Mode), "death") then = {
+                  call = { procedure = LosePlayerHp args = { owner = owner amount = 999 } }
+                } }
+                if = { condition = equal(field(first(type(TurnBoundaryProbe)), TurnBoundaryProbe.Mode), "auto") then = {
+                  call = { procedure = AutoPlayFromDrawPile args = { owner = owner play = none count = 1 forceExhaust = false } }
+                } }
+              } }
+            } }
+            subscription CheckClosedStart { event = BeforeHandDraw reaction = CheckClosedStart }
+            procedure CheckClosedLate { parameters = { owner = Ref(Player) } body = {
+              if = { condition = field(owner, Player.TurnOpen) then = { fail = { message = "Manual play opened during side-start notification" } } }
+            } }
+            subscription CheckClosedLate { event = AfterPlayerSideTurnStart reaction = CheckClosedLate }
+            """);
+        var rules = copy.Load();
+        foreach (var mode in new[] { "pause", "kill", "death", "auto" })
+        {
+            var s = NormalFirstCombat(rules); Submit(s, "SetupTurnBoundary");
+            var probe = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:TurnBoundaryProbe").Id).Single();
+            Set(s, probe, "TurnBoundaryProbe", "Mode", Value.Of(mode));
+            Submit(s, "EndTurn");
+            if (mode == "pause")
+            {
+                Equal(SessionStatus.AwaitingDecision, s.Status, "one end action reaches a real start decision");
+                True(!s.State.GetField(Player(s), s.RuleSet.TypeByQualifiedId("base-spire:Player").FieldIndex("TurnOpen")).AsBool(), "manual play stays closed at the start decision");
+                Equal(0, Hand(s).Count, "starting draw waits for the real answer");
+                var request = s.PendingDecision!; var hash = s.State.StateHash(); var rng = JsonSerializer.Serialize(s.Random.Capture());
+                Throws<EngineFaultException>(() => s.Answer(new DecisionAnswer(request.RequestId + 1, Flag: true)));
+                s.Observe(s.Participant(0), "base-spire:PlayerView"); s.LegalActions(s.Participant(0));
+                Equal(hash, s.State.StateHash(), "stale answer and paused queries preserve state");
+                Equal(rng, JsonSerializer.Serialize(s.Random.Capture()), "stale answer and paused queries consume no RNG");
+                s.Answer(new DecisionAnswer(request.RequestId, Flag: true)); Healthy(s);
+                Equal(5, Hand(s).Count, "continuation draws once");
+                hash = s.State.StateHash(); rng = JsonSerializer.Serialize(s.Random.Capture());
+                Throws<EngineFaultException>(() => s.Answer(new DecisionAnswer(request.RequestId, Flag: true)));
+                Equal(hash, s.State.StateHash(), "repeated answer cannot replay the turn");
+                Equal(rng, JsonSerializer.Serialize(s.Random.Capture()), "repeated answer cannot redraw");
+            }
+            Equal(1L, s.State.GetField(probe, s.RuleSet.TypeByQualifiedId("base-spire:TurnBoundaryProbe").FieldIndex("Starts")).AsInt(), "next ordinary start runs once");
+            Equal(1L, s.State.GetField(probe, s.RuleSet.TypeByQualifiedId("base-spire:TurnBoundaryProbe").FieldIndex("Ends")).AsInt(), "player end runs once");
+            Equal(2L, Field(s, "TurnNumber"), "single action advances to the next ordinary turn");
+            if (mode is "kill" or "death")
+            {
+                Equal(mode == "kill" ? "victory" : "defeat", Outcome(s), "start effect returns the real outcome");
+                True(!Legal(s, "EndTurn") && !Legal(s, "PlayCardFromHand"), "lethal start never reopens manual actions");
+            }
+            else True(Legal(s, "EndTurn"), "manual actions open after the entire start finishes");
+            if (mode == "auto")
+                Equal(1, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:CardPlayRecord").Id).Count, "automatic start play works while manual play is closed");
+        }
+        Console.WriteLine("ok   TURN complete normal EndTurn, closed manual phases, automatic play, start lethal and single decision continuation");
     }
 
     private static Session NormalFirstCombat(DslPackage package)
@@ -136,7 +216,7 @@ internal static partial class PackageChecks
             return name.EndsWith(".Obtain", StringComparison.Ordinal) || name.EndsWith(".AddToHand", StringComparison.Ordinal)
                 || name.EndsWith(".Spawn", StringComparison.Ordinal) || name.EndsWith(".Initialize", StringComparison.Ordinal)
                 || name is "Draw" or "DiscardHand" or "UpgradeCardInHand" or "RemoveOwnedRelic" or "AddDevelopmentTarget"
-                    or "BeginDevelopmentCombat" or "EndDevelopmentCombat" || name.StartsWith("EnterDevelopment", StringComparison.Ordinal);
+                    or "BeginDevelopmentCombat" or "EndDevelopmentCombat" or "BeginDevelopmentTurn" or "EndDevelopmentTurn" || name.StartsWith("EnterDevelopment", StringComparison.Ordinal);
         }
         True(!s.LegalActions(s.Participant(0)).Any(a => Development(a.Definition)), "normal Run has no external development setup candidates");
         if (!rejectSubmissions) return;
@@ -167,19 +247,31 @@ internal static partial class PackageChecks
     {
         using var copy = new Copy(package.Root);
         copy.Include("settlement-order.spire", """
+            entity EndOrder { fields = { Phase = { type = Int default = 0 } } }
             procedure CheckEnd { parameters = { owner = Ref(Player) victory = Bool } body = {
               if = { condition = victory then = {
                 if = { condition = or(not(equal(field(owner, Player.MaxHp), 83)), or(not(equal(count(collection(ExhaustPile)), 0)), not(equal(field(first(collection(InPlay)), Card.DefinitionId), "base-spire:feed")))) then = { fail = { message = "Feed growth must precede combat end while ending refuses self-exhaust" } } }
                 if = { condition = not(isNone(field(owner, Player.CurrentRewardSet))) then = { fail = { message = "Rewards generated before combat-end hooks" } } }
+                set = { target = first(type(EndOrder)) field = EndOrder.Phase value = 1 }
               } }
             } }
             subscription End { event = CombatEnded reaction = CheckEnd priority = 200 }
+            procedure SourceEnd { parameters = { owner = Ref(Player) } body = {
+              if = { condition = or(not(equal(field(first(type(EndOrder)), EndOrder.Phase), 1)), or(not(exists(collection(InPlay))), not(exists(collection(Powers))))) then = { fail = { message = "Source end must follow result commit and precede combat cleanup" } } }
+              set = { target = first(type(EndOrder)) field = EndOrder.Phase value = 2 }
+              call = { procedure = CheckCombatVictory args = { owner = owner } }
+            } }
+            subscription SourceEnd { event = AfterCombatEnd reaction = SourceEnd }
             procedure CheckVictory { parameters = { owner = Ref(Player) victory = Bool } body = {
+              if = { condition = or(not(equal(field(first(type(EndOrder)), EndOrder.Phase), 2)), exists(collection(Powers))) then = { fail = { message = "Victory must follow source end and complete cleanup" } } }
+              set = { target = first(type(EndOrder)) field = EndOrder.Phase value = 3 }
               if = { condition = or(not(equal(field(owner, Player.Hp), 49)), or(not(equal(field(owner, Player.Block), 0)), exists(collection(Hand)))) then = { fail = { message = "Cleanup then BurningBlood must precede settlement" } } }
               if = { condition = not(isNone(field(owner, Player.CurrentRewardSet))) then = { fail = { message = "Rewards must wait for all victory hooks" } } }
             } }
             subscription Victory { event = CombatVictory reaction = CheckVictory priority = 200 }
-            action SetupControlledFeed { role = player locals = { card = Binding } body = {
+            action SetupControlledFeed { role = player locals = { card = Binding audit = Binding } body = {
+              create = { type = EndOrder scope = frameScope() into = audit }
+              call = { procedure = ApplyPlayerPower args = { owner = first(type(Player)) definition = "base-spire:dexterity-power" stacks = 1 } }
               call = { procedure = CreateCombatCard args = { owner = first(type(Player)) definition = "base-spire:feed" } into = card }
               call = { procedure = AddGeneratedToHand args = { card = card } }
             } }
@@ -193,6 +285,7 @@ internal static partial class PackageChecks
         Submit(s, "SetupControlledFeed");
         var feed = Hand(s).Single(c => CardDefinition(s, c) == "base-spire:feed");
         Submit(s, "PlayAttackFromHand", feed);
+        Equal(3L, IntField(s, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:EndOrder").Id).Single(), "EndOrder", "Phase"), "commit, source end, cleanup and victory all completed once");
         Equal(83L, IntField(s, Player(s), "Player", "MaxHp"), "last-kill growth persists");
         Equal(49L, Hp(s), "growth heals three before victory heals six");
         Equal("rewards", TextField(s, Player(s), "Player", "Room"), "rewards publish after the source end order");
@@ -216,8 +309,10 @@ internal static partial class PackageChecks
             """);
         var compiled = effects.Load();
         var turnEnd = NormalFirstCombat(compiled);
-        Submit(turnEnd, "EndDevelopmentTurn");
+        Submit(turnEnd, "EndTurn");
         Equal("victory", Outcome(turnEnd), "turn-end effect settles after all callbacks");
+        Equal(1L, Field(turnEnd, "TurnNumber"), "end-phase last kill cannot begin another turn");
+        True(!Legal(turnEnd, "EndTurn"), "settled turn remains closed");
         var potionKill = NormalFirstCombat(compiled);
         foreach (var enemy in potionKill.State.AllInstances(potionKill.RuleSet.TypeByQualifiedId("base-spire:Enemy").Id).Skip(1))
             Set(potionKill, enemy, "Enemy", "Hp", Value.Of(0));

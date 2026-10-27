@@ -64,8 +64,7 @@ internal static partial class PackageChecks
                         Set(s, FirstTarget(s), "Enemy", "Hp", Value.Of(5)); Submit(s, "ControlledFeed");
                         Submit(s, "PlayAttackFromHand", Hand(s).Single(c => CardDefinition(s, c) == "base-spire:feed"));
                     }
-                    else Submit(s, "EndDevelopmentTurn");
-                    if (Active(s)) Submit(s, "BeginDevelopmentTurn");
+                    else Submit(s, "EndTurn");
                 }
                 Equal("victory", Outcome(s), "real kill or source timeout completes combat");
                 Equal(row.GetProperty("timed_out").GetBoolean(), s.State.GetField(child, s.RuleSet.TypeByQualifiedId("base-spire:EventCombatVisit").FieldIndex("TimedOut")).AsBool(), "actual timeout retained");
@@ -87,7 +86,7 @@ internal static partial class PackageChecks
                 True(next != visit, "new entry creates a fresh parent");
                 Equal(2L, IntField(s, next, "EventVisit", "Sequence"), "new entry advances event stream identity");
                 Choose(s, 1);
-                for (var turn = 0; turn < 3; turn++) { Submit(s, "EndDevelopmentTurn"); if (Active(s)) Submit(s, "BeginDevelopmentTurn"); }
+                for (var turn = 0; turn < 3; turn++) { Submit(s, "EndTurn"); }
                 Equal("finished", TextField(s, next, "EventVisit", "Status"), "second visit resumes only its own parent");
                 Equal(0L, s.Random.DrawCount("base-spire:battleworn-dummy:visit:2"), "second timeout never replays first upgrades");
             }

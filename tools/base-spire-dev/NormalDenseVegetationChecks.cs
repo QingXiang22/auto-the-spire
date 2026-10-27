@@ -119,8 +119,7 @@ internal static partial class PackageChecks
                     var rewardsDraws = s.Random.DrawCount("base-spire:player:rewards");
                     for (var turn = 0; Active(s) && turn < 30; turn++)
                     {
-                        Submit(s, "EndDevelopmentTurn");
-                        if (Active(s)) Submit(s, "BeginDevelopmentTurn");
+                        Submit(s, "EndTurn");
                     }
                     Equal("defeat", Outcome(s), "real Wriggler attacks cause death");
                     Equal("defeated", TextField(s, child, "RunVisit", "Status"), "death ends child");

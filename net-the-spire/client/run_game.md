@@ -1,8 +1,8 @@
 # 公开整局运行器 `run_game.py`
 
-当前 `run_game.py` 仍面向旧 formal-dev／dev-map 场景。当前纯 DSL 包尚未恢复正常 Run，本页保留驱动参数和策略参考；可执行的开发场景调用见 [公开接口指南](../../docs/design/net-the-spire/how-to-run-public-game.md)。
+当前 `run_game.py` 仍面向旧 formal-dev／dev-map 场景。当前纯 DSL 包尚未恢复正常 Run，本页保留驱动参数和策略参考；可执行的开发场景调用见 [公开接口指南](../../docs/areas/net/how-to/run-public-game.md)。
 
-编写新策略前可先运行[最小客户端教程](../../docs/design/net-the-spire/how-to-run-public-game.md)。本运行器的实体、字段、集合、牌堆和地图关系访问复用[public_snapshot.py](public_snapshot.py)，调用签名见[客户端参考](../../docs/design/net-the-spire/public-client-reference.md)。
+编写新策略前可先运行[最小客户端教程](../../docs/areas/net/how-to/run-public-game.md)。本运行器的实体、字段、集合、牌堆和地图关系访问复用[public_snapshot.py](public_snapshot.py)，调用签名见[客户端参考](../../docs/areas/net/reference/public-client.md)。
 
 `net-the-spire/client/run_game.py` 用**公开 NDJSON 协议**（`NetClient`）把一整局 Spire 从正常
 `start` 推到**整局结论**（Victory / Death / 其它终局）或**明确的开发边界**。它替代"每次真实

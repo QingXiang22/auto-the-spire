@@ -1,17 +1,17 @@
 # ai-the-spire（A-01 ~ A-05 交付物）
 
-本模块通过 `net-the-spire` 公开协议（net v0.1）读取观察并选择合法候选，提供确定性编码、低成本模型/PPO，以及默认单战斗的命令行运行与诊断。使用既有工具从下节的 D1 入口开始；是否执行新实验以[路线图](../docs/roadmap.md)为准。
+本模块通过 `net-the-spire` 公开协议（net v0.1）读取观察并选择合法候选，提供确定性编码、低成本模型/PPO，以及默认单战斗的命令行运行与诊断。使用既有工具从下节的 D1 入口开始；是否执行新实验以[路线图](../docs/meta/roadmap.md)为准。
 
 * 编码/模型层不实现规则、不导入 `core-the-spire` / `mod-the-spire` / 活动 client；`delivery` 生产编排通过已有net客户端交互，只读公开快照。
-* 协议结构与判定逻辑来自共享资产 `docs/contracts/net/0.2/`（schema/不变量）
+* 协议结构与判定逻辑来自共享资产 `docs/specs/net/0.2/`（schema/不变量）
   与 `tools/contract-check/`（参考实现）。`contracts/shared.py` 集中读取共享约定；运行编排负责解析生产 Host/客户端位置。
 * 数值变换、误差容差与容量是**显式 `EncodingConfig`**，随 Manifest 一起持久化（A-02/A-04）。
 
 ## D1 可运行战斗学习版本（用户入口）
 
-任务包见 [相关规格](../docs/design/ai-the-spire/training-design.md)；
+任务包见 [相关规格](../docs/areas/ai/spec/training.md)；
 
-这些入口已验收；当前先按[ENV完整环境任务](../docs/design/environment-completion-and-differential-v1.md)完成core/base及源规则差异测试，AI仅做必要约定兼容和回归。未启动D3/D4学习实验退出当前/暂缓，不能将设计命令当作可用功能；状态见[路线图](../docs/roadmap.md)。
+这些入口已验收；当前先按[ENV完整环境任务](../docs/specs/environment.md)完成core/base及源规则差异测试，AI仅做必要约定兼容和回归。未启动D3/D4学习实验退出当前/暂缓，不能将设计命令当作可用功能；状态见[路线图](../docs/meta/roadmap.md)。
 在**仓库根目录**执行（输出路径相对调用者工作目录解析；配置与 Host 相对仓库位置解析）：
 
 ```powershell
@@ -72,7 +72,7 @@ python ai-the-spire/tests/d2_diagnose.py
 **仍未判定/可定位的线索**：32 局全部失败且未折扣回报完全相同，实测**局长度与折扣回报
 相关系数 0.986**；该相关性尚不能证明折扣是唯一瓶颈，"表示遗漏"本轮**未测**。
 原诊断建议γ=1只属于待验证假设。负责人离线重算发现，在这32局失败轨迹中γ=1的G仍完全由当前玩家HP决定；
-当前已固定的下一实验是[D3敌方HP进度奖励对照](../docs/design/ai-the-spire/training-design.md)，不是自动执行原γ建议。
+当前已固定的下一实验是[D3敌方HP进度奖励对照](../docs/areas/ai/spec/training.md)，不是自动执行原γ建议。
 
 ## 快速开始
 

@@ -47,8 +47,8 @@ internal static partial class PackageChecks
             Equal(6L, Block(s), "two active discards, unaffected by Dexterity or Frail");
             True(Members(s, "DiscardPile").Contains(one) && Members(s, "DiscardPile").Contains(two), "both cards actually moved");
             Equal(draws, s.Random.TotalDraws, "discard reaction consumes no random values");
-            Set(s, Player(s), "Player", "Block", Value.Of(998L));
-            Submit(s, "DiscardOne", IcAdd(s, "StrikeIronclad")); Equal(999L, Block(s), "shared block cap");
+            Set(s, Player(s), "Player", "Block", Value.Of(999999998L));
+            Submit(s, "DiscardOne", IcAdd(s, "StrikeIronclad")); Equal(999999999L, Block(s), "source Creature.GainBlockInternal cap");
         });
         Case("BANDAGES normal movement, played-card movement and end-turn flush do not trigger", () =>
         {

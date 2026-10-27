@@ -116,9 +116,17 @@ procedure SaveEnemyMove {
       set = { target = state field = EnemyMoveState.Consecutive value = add(field(state, EnemyMoveState.Consecutive), 1) }
     } else = { set = { target = state field = EnemyMoveState.Consecutive value = 1 } } }
     set = { target = state field = EnemyMoveState.Current value = node }
-    set = { target = state field = EnemyMoveState.Ready value = true }
     set = { target = state field = EnemyMoveState.Sequence value = add(field(state, EnemyMoveState.Sequence), 1) }
     create = { type = EnemyMoveHistory scope = entityScope(target) into = history fields = { State = state Node = node Sequence = field(state, EnemyMoveState.Sequence) } }
+    call = { procedure = PublishEnemyMove args = { state = state node = node } }
+  }
+}
+procedure PublishEnemyMove {
+  parameters = { state = Ref(EnemyMoveState) node = Ref(EnemyMoveNode) }
+  locals = { target = Binding }
+  body = {
+    let = { into = target value = field(state, EnemyMoveState.Enemy) }
+    set = { target = state field = EnemyMoveState.Ready value = true }
     set = { target = target field = Enemy.MoveId value = field(node, EnemyMoveNode.Id) }
     set = { target = target field = Enemy.MoveIndex value = field(node, EnemyMoveNode.Index) }
     set = { target = target field = Enemy.Intent value = field(node, EnemyMoveNode.Intent) }
@@ -134,25 +142,32 @@ procedure ClearEnemyMoves {
   }
 }
 procedure ResetEnemyMoves {
-  parameters = { target = Ref(Enemy) } locals = { graph = Binding state = Binding node = Binding }
+  parameters = { target = Ref(Enemy) } locals = { graph = Binding state = Binding node = Binding history = Binding }
   body = {
     call = { procedure = ClearEnemyMoves args = { target = target } }
+    set = { target = target field = Enemy.SpawnedThisTurn value = true }
     let = { into = graph value = first(where(type(EnemyMoveGraph), g, equal(field(g, EnemyMoveGraph.DefinitionId), field(target, Enemy.DefinitionId)))) }
     if = { condition = not(isNone(graph)) then = {
       set = { target = target field = Enemy.MoveId value = "none" }
+      set = { target = target field = Enemy.MoveIndex value = 0 }
+      set = { target = target field = Enemy.Intent value = "none" }
       if = { condition = pureCall(EnemyIsActive, target) then = {
         create = { type = EnemyMoveState scope = entityScope(target) into = state fields = { Enemy = target Graph = graph } }
-        call = { procedure = ResolveEnemyMoveNode args = { state = state node = pureCall(FindEnemyMoveNode, graph, field(graph, EnemyMoveGraph.Initial)) } into = node }
-        call = { procedure = SaveEnemyMove args = { state = state node = node } }
+        let = { into = node value = pureCall(FindEnemyMoveNode, graph, field(graph, EnemyMoveGraph.Initial)) }
+        if = { condition = equal(field(node, EnemyMoveNode.Kind), "move") then = {
+          set = { target = state field = EnemyMoveState.Current value = node }
+          set = { target = state field = EnemyMoveState.Sequence value = 1 }
+          set = { target = state field = EnemyMoveState.Consecutive value = 1 }
+          create = { type = EnemyMoveHistory scope = entityScope(target) into = history fields = { State = state Node = node Sequence = 1 } }
+        } }
       } }
     } }
   }
 }
 procedure ResetCombatEnemyMoves {
   parameters = { owner = Ref(Player) }
-  body = { forEach = { query = type(Enemy) item = enemy body = { call = { procedure = ResetEnemyMoves args = { target = enemy } } } } }
+  body = { forEach = { query = sort(type(Enemy), e, field(e, Enemy.SpawnOrder)) item = enemy body = { call = { procedure = ResetEnemyMoves args = { target = enemy } } } } }
 }
-subscription OnResetCombatEnemyMoves { event = BeforeCombatStart reaction = ResetCombatEnemyMoves }
 procedure PerformEnemyMove {
   parameters = { owner = Ref(Player) target = Ref(Enemy) } locals = { state = Binding node = Binding }
   body = {
@@ -187,7 +202,15 @@ procedure SelectNextEnemyMove {
       call = { procedure = SaveEnemyMove args = { state = state node = node } }
       return = {}
     } }
-    let = { into = node value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), field(field(state, EnemyMoveState.Current), EnemyMoveNode.Next)) }
+    if = { condition = and(not(field(state, EnemyMoveState.FirstPerformed)), not(isNone(field(state, EnemyMoveState.Current)))) then = {
+      call = { procedure = PublishEnemyMove args = { state = state node = field(state, EnemyMoveState.Current) } }
+      return = {}
+    } }
+    if = { condition = isNone(field(state, EnemyMoveState.Current)) then = {
+      let = { into = node value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), field(field(state, EnemyMoveState.Graph), EnemyMoveGraph.Initial)) }
+    } else = {
+      let = { into = node value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), field(field(state, EnemyMoveState.Current), EnemyMoveNode.Next)) }
+    } }
     call = { procedure = ResolveEnemyMoveNode args = { state = state node = node } into = node }
     call = { procedure = SaveEnemyMove args = { state = state node = node } }
   }

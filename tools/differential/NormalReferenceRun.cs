@@ -55,6 +55,7 @@ internal sealed class NormalReferenceRun : IDisposable
     private CardModel? targetedCard;
     private PlayerCombatState? lastCombatState;
     private string[] neowOptions = [];
+    private NormalNeowOption[] neowPublicOptions = [];
     public string Phase { get; private set; } = "neow";
     private Neow Neow => (Neow)opening.Event;
     internal static string Id(ModelId id) => "base-spire:" + id.Entry.ToLowerInvariant().Replace('_', '-');
@@ -62,10 +63,11 @@ internal sealed class NormalReferenceRun : IDisposable
     public NormalReferenceRun(string seed, bool diagnostics = true)
     {
         this.diagnostics = diagnostics;
+        RunReplayDemo.EnsureModelsRegistered();
+        NormalReferencePotionCapabilities.Prime();
         random = new NormalReferenceRandom(diagnostics);
         try
         {
-            RunReplayDemo.EnsureModelsRegistered();
             Sts2Sim.Core.Content.ActDefinition[] acts = [new Overgrowth(), new Hive(), new Glory()];
             random.WatchOpening(acts);
             run = new RunState(seed, acts);
@@ -82,6 +84,7 @@ internal sealed class NormalReferenceRun : IDisposable
         opening.Enter(run).GetAwaiter().GetResult();
         random.Name(Neow.Rng, "base-spire:event:neow");
         neowOptions = Neow.CurrentOptions.Select(o => Relic(o.Key)).ToArray();
+        neowPublicOptions = Neow.CurrentOptions.Select((o, index) => NormalReferenceNeow.Read(o, index)).ToArray();
     }
     private string Card(CardModel card)
     {
@@ -347,7 +350,7 @@ internal sealed class NormalReferenceRun : IDisposable
             Coord(run.CurrentMapPoint!), run.CurrentMapPoint!.PointType.ToString(), combat.RoomType.ToString().ToLowerInvariant(), "base-spire:" + combat.Encounter!.IdEntry.ToLowerInvariant().Replace('_', '-'),
             Phase == "map" ? "closed" : Phase, Phase == "map" ? "closed" : "active", combat.Won)]);
         Put("public.neow", new NormalNeowView(Phase != "neow" ? "closed" : Neow.IsFinished ? "finished" : "pending",
-            player.Relics.Select(r => Id(r.Id)).SingleOrDefault(neowOptions.Contains) ?? "none", neowOptions.Select((id, index) => new NormalNeowOption(id, index)).ToArray()));
+            player.Relics.Select(r => Id(r.Id)).SingleOrDefault(neowOptions.Contains) ?? "none", neowPublicOptions));
         var offer = Phase == "rewards" ? combat!.Rewards : null;
         Put("public.reward_sets", rewardObservation?.Capture(Potion) ?? []);
         Put("public.reward_offer", new NormalRewardView(offer is not null, offer is not null && !offer.Gold.IsResolved,
@@ -356,14 +359,17 @@ internal sealed class NormalReferenceRun : IDisposable
                 ? offer.Card.Options.Select(c => new NormalCardOffer(Id(c.Id), c.IsUpgraded, c.EnergyCost, c.Rarity.ToString().ToLowerInvariant()))
                     .OrderBy(c => c.Id, StringComparer.Ordinal).ThenBy(c => c.Upgraded).ToArray() : [],
             offer?.Potion is { IsResolved: false, Potion: {} offeredPotion } ? [Potion(offeredPotion)] : []));
-        Put("public.potion_inventory", player.PotionSlots.Select((p, index) => (p, index)).Where(p => p.p is not null)
-            .Select(p => new NormalPotionView(Potion(p.p!), p.index, p.p!.Usage switch
+        NormalPotionView PublicPotion(PotionModel p, long slot) => new(Potion(p), slot, p.Usage switch
             {
                 Sts2Sim.Core.Entities.Potions.PotionUsage.CombatOnly => "combat", Sts2Sim.Core.Entities.Potions.PotionUsage.AnyTime => "anytime",
                 Sts2Sim.Core.Entities.Potions.PotionUsage.Automatic => "automatic", _ => throw new NotSupportedException("Unmapped native potion usage")
-            }, p.p.TargetType switch { TargetType.Self => "self", TargetType.AnyPlayer when run.Players.Count == 1 => "self",
+            }, p.TargetType switch { TargetType.Self => "self", TargetType.AnyPlayer when run.Players.Count == 1 => "self",
                 TargetType.AnyEnemy => "enemy", TargetType.None => "none",
-                _ => throw new NotSupportedException("Unmapped native potion target") })).OrderBy(p => p.Origin, StringComparer.Ordinal).ToArray());
+                _ => throw new NotSupportedException("Unmapped native potion target") }, NormalReferencePotionCapabilities.Read(p).Supported);
+        var visiblePotions = player.PotionSlots.OfType<PotionModel>().Concat(offer?.Potion is { IsResolved: false, Potion: {} pendingPotion } ? new[] { pendingPotion } : []).Distinct().ToArray();
+        Put("public.potions", visiblePotions.Select(p => PublicPotion(p, Array.IndexOf(player.PotionSlots.ToArray(), p))).OrderBy(p => p.Origin, StringComparer.Ordinal).ToArray());
+        Put("public.potion_inventory", player.PotionSlots.Select((p, index) => (p, index)).Where(p => p.p is not null)
+            .Select(p => PublicPotion(p.p!, p.index)).OrderBy(p => p.Origin, StringComparer.Ordinal).ToArray());
         Put("public.relic_inventory", player.Relics.Select(r => new NormalRelicView(Id(r.Id), r.IsMelted)).OrderBy(r => r.Id, StringComparer.Ordinal).ToArray());
         var visibleCards = player.Deck.Cards.Select(c => (scope: "deck", card: c))
             .Concat(state?.AllPiles.Where(p => p.Type != PileType.Draw).SelectMany(p => p.Cards).Select(c => (scope: "combat", card: c)) ?? [])
@@ -417,18 +423,21 @@ internal sealed class NormalReferenceRun : IDisposable
             NormalOpeningQueues.Validate(random.WeightedCalls(), attempts, queues);
             Put("random.weighted_attempts", attempts); Put("random.opening_queues", queues);
         }
-        if (diagnostics) { Put("random.stream_states", random.ConsumedStates()); Put("random.float32_calls", random.Float32Calls()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
+        if (diagnostics) { Put("random.step_states", random.StepStates()); Put("random.stream_states", random.ConsumedStates()); Put("random.float32_calls", random.Float32Calls()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
         Put("decisions.current", targetedCard is not null ? new { min = 1, max = 1,
             candidates = CombatTargetCandidates.ForCard(combat!.Engine.State, player, targetedCard.TargetType).Select(Creature).ToArray() }
             : Phase == "neow" ? Neow.IsFinished ? new { min = 0, max = 0, candidates = new[] { "true" } } :
             new { min = 1, max = 1, candidates = Neow.CurrentOptions.Select(o => Relic(o.Key)).Order(StringComparer.Ordinal).ToArray() } : null);
         var coverage = eventCoverage.Capture();
-        string[] missing = ["public: complete cross-backend projection", "random: full initialization candidates/normalization", "events: cross-backend event projection"];
+        var publicComplete = NormalPublicSnapshot.Add(v, [], Actions().Length > 0 ? "decision" : "unmapped-outcome");
+        string[] missing = [.. (publicComplete ? Array.Empty<string>() : new[] { "public: complete cross-backend projection" }), "random: full initialization candidates/normalization", "events: cross-backend event projection"];
         if (coverage.Unmapped.Length > 0) missing = [.. missing, $"events: {coverage.Unmapped.Length} native notifications remain unmapped"];
         return new(kind, v, missing,
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
                 native_player_history = new { active, retained_plays = lastCombatState?.CardsPlayedThisCombat, retained_hp_losses = history.Length },
                 native_configuration = configuration,
+                native_neow_option_callbacks = neowPublicOptions,
+                native_potion_capability_probes = visiblePotions.Select(NormalReferencePotionCapabilities.Read).Distinct().ToArray(),
                 native_rest_context = restContext,
                 native_event_coverage = coverage,
                 native_reward_policies = rewardObservation?.Evidence,
@@ -546,6 +555,19 @@ internal sealed class NormalReferenceRandom : IDisposable
         opening_commits = opening?.Commits(),
         calls = calls.Select(c => new { stream = Name(c.Rng), c.Operation, c.Result, c.Before, c.After, c.Parameters, c.StateAfter }).ToArray(),
         streams = names.Keys.Concat(attached).Distinct().Select(r => new { name = Name(r), state = r.ToSerializable() }).ToArray() };
+    internal NormalRandomStateStep[] StepStates()
+    {
+        if (dropped != 0 || pending.Count != 0) throw new NotSupportedException("missing_dimension: incomplete native per-call states");
+        return NormalRandomStateTrace.Canonical(calls.Select(c =>
+        {
+            var before = c.Parameters.State; var after = c.StateAfter;
+            if (before.counter != c.Before || after.counter != c.After)
+                throw new NotSupportedException("missing_dimension: native per-call state cursor");
+            return new NormalRandomStateStep(Name(c.Rng), c.Before, c.After,
+                NormalRandomStateTrace.Words(before.state0, before.state1, before.state2, before.state3),
+                NormalRandomStateTrace.Words(after.state0, after.state1, after.state2, after.state3));
+        }));
+    }
     internal NormalFloat32Call[] Float32Calls()
     {
         if (dropped != 0 || pending.Count != 0) throw new NotSupportedException("missing_dimension: incomplete native random diagnostics");

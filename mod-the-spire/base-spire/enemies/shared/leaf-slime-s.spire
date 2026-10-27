@@ -13,12 +13,12 @@ template LeafSlimeSContent { body = {
     locals = { card = Binding }
     body = {
       if = { condition = equal(field(node, EnemyMoveNode.Id), "GOOP_MOVE") then = {
-        call = { procedure = CreateCombatCard args = { owner = owner definition = "base-spire:slimed" } into = card }
-        call = { procedure = MoveCombatCard args = { owner = owner card = card to = "discard" reason = "generate" } }
+        call = { procedure = CreateCardInstance args = { owner = owner definition = "base-spire:slimed" } into = card }
+        call = { procedure = GenerateCardIntoCombat args = { owner = owner card = card creator = none to = "discard" clone = false } }
       } else = { call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 3 } } } }
     }
   }
   dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:leaf-slime-s" procedure = Execute }
-  action Spawn { role = player requires = pureCall(CanUseDevelopmentActions, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:leaf-slime-s" hp = 11 } } } }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:leaf-slime-s" hp = 11 } } } }
 } }
 use LeafSlimeS { template = LeafSlimeSContent }

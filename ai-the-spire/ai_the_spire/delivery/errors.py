@@ -1,4 +1,4 @@
-"""D1 交付入口的错误分类与退出码（与 `docs/design/battle-learning-delivery-v1.md` §2 一致）。
+"""D1 交付入口的错误分类与退出码；当前要求见 `docs/areas/ai/spec/training.md`。
 
 四类退出码是**契约**：调用方（用户脚本、验收入口）按码判断"承诺是否完成"。
 

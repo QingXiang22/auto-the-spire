@@ -1,5 +1,23 @@
 # DSL 与独立参考比较
 
+## 伤害数值与反应边界
+
+`dotnet run --project tools/differential -c Release -- damage-compare --output .artifacts/differential/damage`执行两个seed的38项组件：负力量与Vigor、分数全挡／破挡／零伤／超杀、大值BodySlam、真实PenNib第十次乘法链、Hemokinesis自伤与Inferno／Rupture反应、致死自伤、Whirlwind同击双杀和Thorns反击致死后中止后续击及双方嵌套死亡。PenNib通过九次真实付费Strike准备；场景初值由工具设置，不能当作正常Run。
+
+报告保留每条结果的实际承受者／dealer、Move／Powered／Unblockable、格挡、实际失血、超杀和致死事实，以及伤害提交前、破挡、HP损失、给予、接收与死亡前的顺序；分数金额以10000为单位，群体回调同时观察另一目标HP。双方均实际执行同一场景，诊断开关核对各自完整状态及随机状态不变；只读probe不执行游戏效果。缺源、缺用例、截断和异常非零，差异返回1。成功仅证明所列组件维度与锁定实现一致，normal_run_verified始终为false，不替代11份原suite或完整M01；任意HP修正／转移／防死仍未支持。
+
+## 战斗动作边界诊断
+
+运行 `dotnet run --project tools/differential -c Release -- combat-boundary-compare --output .artifacts/differential/combat-boundaries`，从两个固定 seed 分别执行开场及完整`EndTurn`（含下一普通玩家开始）、付费 Strike、两张 Infection、第一张移牌时暂停的两张 Infection，以及 Feed 末杀；另覆盖末杀同步／异步移牌、普通／升级及末杀Anger、免费自动Whirlwind、OneTwoPunch重复Strike、Corruption和Juggling普通／满手／Stomp克隆，共30项。`combat-boundary-self-test` 检查比较器拒绝缺通知、错阶段、错牌区、错支付、错招式、错 ending、零执行和重复动作返回。
+
+这些是人工设置的组件：空永久牌组、真实 FuzzyWurmCrawler、双方生命设为1000，Feed 的敌人设为10HP。只读通知记录实际回合号、能量、当前通知实付量spent、生命、格挡、招式、ending、生成数、Stomp手牌费用、Anger克隆升级状态和五个有序牌区；暂停例分别使用 DSL 的行政选择与参考既有异步通知的未完成 Task，观察后各续接一次，不加入游戏效果或动画等待。Feed 停在房间结算前。报告同时保存双方原始事件／监听信息，以及锁定 Hook 的准确源码、行号、摘要、迭代入口、名单固定和资格检查位置，供逐通知核查；这些源码片段和局部观察不证明全部监听已对齐。
+
+`first_difference` 保留从开场起的首差；`action_difference` 从已经配置好的动作初态比较，`return_difference` 单独比较真实返回值。这样开场的选招差异不会掩盖后续付款或回合末差异。配置牌区期间的 DSL 通知另保留在 raw 中；初始 HP 抽样与 niche、正常房间、重复定义牌的实例标识和完整事件比较不属于本探针。适配器不补执行额外的开始回合动作。
+
+每例另跑关闭诊断的相同初态：DSL 核对完整 StateHash 和随机状态，参考核对自身精确战斗描述和随机状态；观察与候选查询也不得改变 DSL 状态。缺场景／字段、截断、缺参考和异常返回3；实际差异返回1，所比较边界全部一致才返回0。报告的 complete、independent_verified 与 normal_run_verified 始终为 false，不代替原 suites 或 M01 验收。
+
+手动出牌的源入口使用同步 `CardPileCmd.Add` 移入 Play，它不发异步 `AfterCardChangedPiles`；扣费后才在正支付量时发 `AfterEnergySpent`。普通 `AddAsync` 则在整批移牌后通知。Anger和Juggling记录实际入场与两个生成通知；暂停批次的调度差异由 #147 处理，不过滤该事件以制造全轨迹通过。诊断分别记录这些实际站点，不能为了统一事件名给参考添加不存在的回调。
+
 [锁定 sts2-sim](../../reference/README.md) 同时作为当前规则依据和独立执行的比较后端。生产随机派生与开局向量使用同一锁定基线，旧source-catalogs仅保留原迁移清单；一致只表示与该模拟器实现一致，不能单独证明客户端保真。
 
 `regression` 的原 `strike-normal` 和 `random-reshuffle-unsupported` 使用当前生产 DSL 包和锁定的 `sts2-sim` 分别执行。Strike 通过，重洗保留真实首差；其余 15 个原用例及其他 10 份 suite 仍明确报告 `unsupported`。11 份原定义、必测 ID 和比较维度保持不变；完整 regression 返回 3，测试集的 `independent_verified` 为 false。
@@ -80,7 +98,7 @@ BattlewornDummy开发升级档由独立原生 `battleworn-continuation-vector.js
 
 ## Wriggler与Infection受控组件比较
 
-运行`dotnet run --project tools/differential -c Release -- wriggler-compare --output .artifacts/differential/wriggler`。两侧使用空永久牌组及真实战斗开始、抽牌／重洗和回合命令，验证四槽三回合、StartStunned、HP候选耗尽，以及Infection格挡、无加成、致死、Retain／Ethereal、非手牌、费用修改与自动尝试。niche比较实际参数、结果、游标及完整状态，并核对run／怪物AI消费和shuffle消费。参考的StatusCard意图名称显式映射为DSL的status，保留buff,status顺序。
+运行`dotnet run --project tools/differential -c Release -- wriggler-compare --output .artifacts/differential/wriggler`。两侧使用空永久牌组及真实战斗开始、抽牌／重洗和回合命令，验证四槽三回合、StartStunned、HP候选耗尽，以及Infection格挡、无加成、致死、Retain／Ethereal、非手牌、费用修改与自动尝试。niche比较实际参数、结果、游标及完整状态，并核对run／怪物AI消费、shuffle消费，以及状态牌入场／生成顺序、空creator和玩家生成数。参考侧增加不改玩法的观察遗物。参考的StatusCard意图名称显式映射为DSL的status，保留buff,status顺序。
 
 工具只在受控初态设置HP、格挡和效果牌；测试附加DSL入口调用相同生产过程，参考使用真实CombatEngine及AutoPlayCmd.FromCards。致死场景保留原生牌区守卫结果：致死牌在Play，后一张效果牌在Hand。两个seed共24个组件场景必须全部通过，migration保留原11份suite与严格失败；normal_run_verified和parent_event_verified保持false，不关闭DenseVegetation父事件或完整Run。
 
@@ -96,10 +114,10 @@ dotnet run --project tools/differential -- test --suite regression --case random
 
 参考适配沿锁定上游已有的实例结果观察字段附加并释放本次诊断，不新增全局回调、不修改参考源码。洗牌候选从参考自己的实际牌区及 `CardModel.CompareTo` 构造，按实测交换更新诊断副本，再与真实手牌／抽牌堆顺序核对；核对失败便拒绝认证该轨迹。
 
-`locked-native-sequential@1`使用参考原生根和具名流派生，不再覆盖全部run流为旧hash32。原[有序受控初始化](../../docs/design/environment-implementation-constraints.md#env-t04受控初始化与回合case边界2026-10-11)仍将参考初始牌区恢复为用例声明顺序，并在脚本起点以相同的原生Shuffle种子恢复该流游标0；这项消费单列，不能用于正常Run。脚本期间禁止补抽、重键或重设游标。报告保存原始seed、实际原生种子、来源摘要与初始化消费，迁移检查通过当前独立Python神谕核对15条流派生及抽样。玩家流保留原生状态，未迁移敌人的行动差异继续严格失败。
+`locked-native-sequential@1`使用参考原生根和具名流派生，不再覆盖全部run流为旧hash32。原[有序受控初始化](../../docs/specs/environment-constraints.md#env-t04受控初始化与回合case边界2026-10-11)仍将参考初始牌区恢复为用例声明顺序，并在脚本起点以相同的原生Shuffle种子恢复该流游标0；这项消费单列，不能用于正常Run。脚本期间禁止补抽、重键或重设游标。报告保存原始seed、实际原生种子、来源摘要与初始化消费，迁移检查通过当前独立Python神谕核对15条流派生及抽样。玩家流保留原生状态，未迁移敌人的行动差异继续严格失败。
 
 
-[迁移检查](../ci/README.md)执行这两个原用例及严格失败检查，校验原 suite 和生产依赖隔离。`self-test` 另外检查候选错序、相同消费数但参数不同、结果／流位置首差，以及记录缺失／截断／溢出；故障注入不算独立玩法通过。原源与旧适配器见[迁移对照](../base-migration-baseline/README.md)，逐组去向见[CI 迁移数据](../ci/fixtures/legacy-dsl-checks.json)。受控机制比较不替代完整[ENV 验收](../../docs/design/environment-completion-and-differential-v1.md)；参考玩法保持只读。
+[迁移检查](../ci/README.md)执行这两个原用例及严格失败检查，校验原 suite 和生产依赖隔离。`self-test` 另外检查候选错序、相同消费数但参数不同、结果／流位置首差，以及记录缺失／截断／溢出；故障注入不算独立玩法通过。原源与旧适配器见[迁移对照](../base-migration-baseline/README.md)，逐组去向见[CI 迁移数据](../ci/fixtures/legacy-dsl-checks.json)。受控机制比较不替代完整[ENV 验收](../../docs/specs/environment.md)；参考玩法保持只读。
 
 ## 核对正常开局是否可以比较
 
@@ -131,7 +149,11 @@ dotnet run --project tools/differential -c Release -- normal-compare --output .a
 dotnet run --project tools/differential -c Release -- normal-compare-self-test
 ```
 
-`normal-compare` 保留固定输入下领取／跳过两条奖励路径，并新增分别使用真实目标决策的领取／跳过路径，共四个用例。DSL 侧通过正式 Host 工厂、协议编码和 `ControlHost.Dispatch` 执行公开候选；内部诊断读取该 Host 正在执行的同一会话。参考侧从原生 RunState、Player 和真实房间入口独立执行同一个语义动作。它与启动 stdio 子进程的 `normal-preflight` 分开报告。
+`normal-compare` 保留固定输入下领取／跳过两条奖励路径，并新增分别使用真实目标决策的领取／跳过路径，共四个用例。DSL 侧通过正式 Host 工厂、协议编码和 `ControlHost.Dispatch` 执行公开候选；结束回合只提交一次生产`EndTurn`，不补发开始动作；内部诊断读取该 Host 正在执行的同一会话。参考侧从原生 RunState、Player 和真实房间入口独立执行同一个语义动作。它与启动 stdio 子进程的 `normal-preflight` 分开报告。
+
+当前报告格式为 `normal-run/paired@2`：`result.json` 保存状态、动作前缀、比较边界、首差和诊断引用，`normal-evidence.zip` 保存按内容摘要去重的压缩数据。累计历史按 64 条组成共享片段，边界仍保留原历史长度；长 JSON 字符串按原字面值保存。完整比较发生在存储转换之前，不删事件、候选或必需维度。两个文件须一起保留，不能只拷贝摘要。
+
+Python 消费者使用 [load_report](../ci/normal_report.py) 按需读取引用；会校验内容摘要及历史长度，缺条目、损坏或计数不符均失败。公开请求／响应仍分别写入原 `.public.ndjson`。同一任务复用一个输出目录，不再为每轮核对保存完整报告副本。
 
 每个共同边界保存正常动作候选、Neow 决策约束、玩家资源、全部初始敌人及 Power、访问阶段与坐标、永久资产和六个有序战斗牌区。永久卡按各自正常起始牌组建立槽位，战斗副本沿 `PermanentSource`／`DeckVersion` 对应；死亡敌人沿参考的 `SpawnedEnemies` 保留最初编号，不按剩余敌人重新编号。Neow 的可选实体集合按语义排序比较，选项原位置仍保留在真实公开快照中。
 
@@ -139,13 +161,15 @@ dotnet run --project tools/differential -c Release -- normal-compare-self-test
 
 每个共同边界分别从真实公开快照和参考原生牌区提取七个牌堆的总数、成员完整性、可见成员及已知位置；这与内部有序牌区诊断分开比较。抽牌堆成员保持隐藏。双方还比较实际消费过的每条随机流的游标与四个状态字；这不能替代逐次随机操作及候选比较。参考遭遇的局部随机流在真实房间初始化后，按其实际初始状态和原生遭遇种子唯一识别。
 
+`random.step_states` 比较每次随机调用前后的四个状态字和流内游标。参考侧记录真实调用状态；DSL 侧从实际边界状态逆推，并逐次核对实际记录的原始随机字。缺失、截断、多字消费或不支持的随机算法会使该维度失败。独立流按各自顺序比较；完整候选与事件仍是未满足的必需维度，不能据此将正常路径判为通过。
+
 `random.float32_calls` 逐条比较正常路径中的浮点取样：具名流、调用前后游标、已求值的上下界及最终 binary32 位型。DSL 读取真实 `RandomCallDetails.Float32`，参考读取自身 `NextFloat` 参数和实际结果；原始 double 记录保留在诊断中。比较按流名与流内游标规范化，不要求独立流有相同的全局初始化顺序。缺附加数据、截断、丢失、重复或流内错序均失败。固定首战有敌人三次与奖励八次浮点调用；这部分一致不代表离散候选、权重及拒绝过程已经比较，完整 `random.trace` 仍为必需维度。
 
 `random.scalar_calls` 比较实际整数上下界、结果及流内游标。原生无参 `NextBool` 的 true／false 对应 DSL `[0,2)` 的 0／1；地图 Gaussian 的四次输入将 DSL `[0,2^53)` 整数除以 `2^53`，与原生单位区间 `NextDouble` 的 binary64 位型比较。94 次开局加权抽样读取 core 0.9.5 在实际抽样时保留的 `SingleRawWord`，按 vanilla 公式 `(raw >> 11) * 2^-53` 规范化，同时校验实际离散结果确为该单位值乘候选数后的截断。缺字或多字消费明确失败，不从选中索引反推或重跑生成器。
 
 固定首战累计比较 725 次数值调用，其中 627 次整数、四次 Gaussian 输入及 94 次加权单位值，双方 `unmapped_scalar_calls` 为空。独立流按流名分组，流内原顺序仍须完整保留；其离散候选另见下文。数值结果相同不证明全部候选或拒绝过程相同，完整 `random.trace` 继续作为必需维度。
 
-SlimesWeak 的三次 HP 抽样由原生 `NextInt(0, width)` 偏移规范化为 DSL 的完整 HP 区间。参考通过已有的只读 before-setup 诊断，在真实创建完成、任何 Setup 效果之前保存 `SpawnedEnemies` 原创建顺序、同一怪物的初始区间及 MaxHp，并关联同一创建窗口的真实 niche 调用。必须逐项符合区间宽度与 `minimum + offset == initial HP`，且先前创建怪物的实际 HP 均不落在当前区间；存在已用 HP 排除、缺抽样或关联不符时明确失败。该映射仅覆盖已锁定的 SlimesWeak 初始化，不推断其他遭遇或排除候选的语义；原生偏移参数和 `hp_initialization` 副本同时保留，后续 Setup／战斗值不参与重建。
+正常出生的 HP 抽样直接比较两侧真实 niche 调用：有可用值时保留 `NextInt(0, availableCount)` 的偏移；候选耗尽时保留原HP区间调用，不再把源偏移转换为最终HP参数。参考通过只读 before-setup 诊断，在真实创建完成、任何 Setup 效果之前保存 `SpawnedEnemies` 原创建顺序、同一怪物的初始区间及 MaxHp，并关联同一创建窗口的真实 niche 调用。初始化验证按前序不同MaxHp排除候选，检查实际参数和所选生命与原生实例一致，随后保留原始调用；缺记录、错序、参数或生命不符均失败。该窗口不推断中途召唤／复活的成员变化；其他随机来源仍按原边界严格报告未分类。
 
 `random.weighted_candidates` 另行比较 94 次开局加权抽样的实际有序候选、幕／房型／弱怪标记、兼容性标签、权重、总权重、选中索引及流内游标。DSL 从抽样时保存的候选、一层定义引用与出关系目标字段取值，均匀离散抽样对应各条目权重 1；不回查已销毁候选或后来的定义状态。参考在真实 RNG 回调中复制同一幕对象上存活的 GrabBag 条目、标签与总权重，将实际单位区间结果按原生累积权重规范化为索引。标签按名称排序比较成员，原生不参与兼容性判断的 None 不计入；候选顺序仍按抽样输入保留。该诊断限定于锁定来源的同步开局生成：每个新池建立一个新 bag，后续抽样及补池沿用同一对象；缺少或同时发现多个新池时失败。
 
@@ -169,7 +193,11 @@ Player.RoomUsed 和 PendingForge 表示休息点选项已使用及锻造目标�
 
 `public.cards` 比较全部当前可见的永久牌、战斗牌与奖励牌的实例来源、定义、标签、原生条目、种类、稀有度、费用、伤害变量、升级及关键字元数据；不展开隐藏抽牌堆。DSL 的 BaseDamage 与 DamageGrowth 相加对应参考的原生伤害变量。奖励牌从两侧实际创建位置登记来源，领取后保留：参考原生 SelectOption 会复制选中对象，因此检查实际 SelectedOption 及唯一新增永久实例后建立这条获得来源，不按领取后的名字或位置重新配对。多实例获得或未提取的能量 X 明确非零。
 
-完整公开投影仍需处理未映射字段及其余结构；`unmapped_public_fields` 按真实快照列出尚未比较的字段，不把上述语义面等同于完整 `public.snapshot`。缺失、未知字段、未登记的新字段和底层句柄不能通过内部状态或相同名称补齐。
+`public.snapshot` 汇集上述由双方分别读取的全部公开语义面，以及真实候选和当前决策。只有每个必需语义面都有结果、没有未映射字段时才生成；新字段、错误命名空间、字段未知或缺失、内容可见性错误都不能用内部状态补齐。自检逐类扰动实际快照中的每个字段，要求结果变化或明确拒绝；保留奖励集合的 PotionPending 也单独读取，不能只在当前奖励窗口比较。
+
+Host 的协议、规则包、目录及后端标识与真实 describe 应答核对，session_id 与实际 start 应答核对；观察号和候选句柄继续由请求重放、过期拒绝与实例映射验证。原生参考没有这些 Host 专属标识，不能伪造相同字符串当作游戏事实。原始 Host 快照保留在诊断，跨后端比较使用共同语义和已经声明的规范化，例如伤害变量总值和战后活动计数归零。
+
+Neow 的 EffectSupported 对照真实 EventOption.IsEnabled：锁定的 AncientEventModel.RelicOption 必须有已注册遗物目标和实际获得回调，不使用 DSL 支持名单或参考常量；禁用回调及未知目标另有负向检查。这项可执行资格不能单独证明遗物全部后续机制。药水对照覆盖奖励中和库存中的全部公开实例、来源、槽位、用法、目标及 EffectSupported。当前四路径的 FlexPotion 能力来自另一个原生组件的实际获得、使用、5层临时力量和回合末移除；组件先于正常随机观察执行，结果和随机不注入被比较的 Run，也不把它写成正常路径已经用药。其他尚无独立执行依据的药水明确报缺维度，不默认支持或缩减来源池。
 
 每个边界重发上一条真实请求，检查原响应缓存；换用新 request_id 和旧观察号时，严格要求 `stale_observation`，并检查拒绝也被缓存。每次查询和拒绝前后，游戏状态、随机状态、待决策及完整公开快照必须不变。报告保存逐边界检查结果；缺结果或任一检查失败均不能认证路径。
 
@@ -185,7 +213,7 @@ Player.RoomUsed 和 PendingForge 表示休息点选项已使用及锻造目标�
 
 公开结构另比较七个牌堆视图、库存组和 Run 序列的所有者，地图节点序列的成员、地图双向连接、全部公开实体的分类数量，以及当前访问／当前奖励／访问奖励之间的引用。实体句柄按玩家、Run、坐标与原生访问 ID 解释，不能用最终位置修复错误引用。缺失、重复或游离的公开地图节点、访问、奖励、药水、遗物和牌堆视图均拒绝；未知关系类型也进入比较。原生牌区没有独立视图实体，其视图名称和所有者规范化为单人玩家的对应牌区。
 
-地图节点以`public.map_sequence`比较实际发布顺序，以`public.map`逐节点比较公开Index、坐标及原有字段。base `0.7.0-dsl.64`将旧创建次序改为公开遍历语义：参考端直接读取`ActMap.GetAllMapPoints()`，随后接独立StartingMapPoint、BossMapPoint；Index为这份实际序列的位置。DSL在最终坐标整理后发布同一语义，不修改来源抽样、实例或边，也不按DSL输出重排参考。独立十seed向量保存该原生顺序，正常四路径在每个共同边界继续比较；倒序、错索引、缺字段和缺／重复成员均严格失败。`unmapped_public_fields`保留其余未比较字段；完整`public.snapshot`仍为必需维度，部分公开结构一致不能通过完整公开投影验收。
+地图节点以`public.map_sequence`比较实际发布顺序，以`public.map`逐节点比较公开Index、坐标及原有字段。base `0.7.0-dsl.64`将旧创建次序改为公开遍历语义：参考端直接读取`ActMap.GetAllMapPoints()`，随后接独立StartingMapPoint、BossMapPoint；Index为这份实际序列的位置。DSL在最终坐标整理后发布同一语义，不修改来源抽样、实例或边，也不按DSL输出重排参考。独立十seed向量保存该原生顺序，正常四路径在每个共同边界继续比较；倒序、错索引、缺字段和缺／重复成员均严格失败。`unmapped_public_fields`继续按真实快照检查，非空时不能生成完整`public.snapshot`。
 
 药水按共同动作序号和各侧原生奖励位置登记创建来源，领取后保留同一实例对应，不按持有槽号或名称重新配对。合法丢弃候选对应参考原生 `PotionCmd.Discard`；自检通过正常战斗取得并领取药水，再回到地图实际丢弃，同时核对候选、资产、事件、随机状态和协议重放。持有药水缺少创建来源时明确报告缺维度。
 
@@ -193,7 +221,7 @@ Player.RoomUsed 和 PendingForge 表示休息点选项已使用及锻造目标�
 
 `lifecycle.settlement` 比较原四路径最后击杀的两处真实状态：外层牌效果结束、奖励生成完成。DSL 从 `CombatEnded` 发生时的快照读取前者，并检查击杀、出牌后通知、战斗结束的顺序及效果深度归零；参考在原生出牌结束通知和驱动的胜利检查后、`ResolveOutcomeAsync` 前读取。双方分别保留生命、最大生命、金币与奖励生成状态，再与真实奖励边界比较。正常 BurningBlood 胜利治疗应位于这两处之间；错序、缺失和重复结算记录均失败。这里覆盖固定正常路径的普通牌末杀；Feed 和药水末杀仍由单独的受控 base 检查验证。
 
-遇到已比较维度的首差便停止共同前缀，保存动作、双方边界和首差。`missing_dimensions` 另列尚缺的完整公开投影、逐次随机候选与规范化和适用事件。原始公开协议、Engine 事件与随机诊断、参考原生战斗观察及初始化以来的原始随机结果保留供定位；这些原始记录不等于完成跨后端比较。报告为非零，`complete`／`independent_verified` 保持 false，不能认证 M01 或推断尚未比较的维度已通过。
+遇到已比较维度的首差便停止共同前缀，保存动作、双方边界和首差。`missing_dimensions` 继续列出逐次随机候选与规范化和适用事件；公开快照有缺项时仍单列 public 缺维度。原始公开协议、Engine 事件与随机诊断、参考原生战斗观察及初始化以来的原始随机结果保留供定位；这些原始记录不等于完成跨后端比较。报告为非零，`complete`／`independent_verified` 保持 false，不能认证 M01 或推断尚未比较的维度已通过。
 
 自检逐项删除双方同一个必需字段、注入各维度首差、检查零执行、缺动作／终点、缺协议检查结果及目标脚本缺决策，并核对开启与关闭诊断时真实 Host 和原生参考的已比较状态及随机状态不变；Host 另核对完整公开快照。迁移组同时执行四条正常路径和缺参考构建；原11份 suite、必测ID和严格失败语义保留。
 
@@ -204,3 +232,25 @@ Player.RoomUsed 和 PendingForge 表示休息点选项已使用及锻造目标�
 `dotnet run --project tools/differential -c Release -- exhaust-cause-compare --output .artifacts/differential/exhaust-causes`运行两seed各15种场景。受控命令例比较设置、耗尽后与侧结束三个边界，自然回合末例比较设置与敌方开始前两个边界；均比较五个有序牌区、实际Power与隐藏虚无次数、每次抽牌时已清零的次数、资源／ending及monster_ai、shuffle、combat_targets的完整状态、游标和逐次调用候选。普通耗尽、改量、NoDraw先后获得、满手、重洗、Hellraiser嵌套耗尽、移除重建、无事件生成、即时Charon／FeelNoPain、真实回合末虚无及Infection正文、末杀和暂停续接均执行实际命令。
 
 两侧明确使用空永久牌组、HP1000和受控牌区；Strike／Bash／Infection显式取得虚无，嵌套Strike另取得耗尽关键词。自然回合末比较参考原生EnemyTurnStarting观察点与DSL清手／侧结束后、敌方行动前的行政暂停；末杀停在奖励前。暂停抽牌先与参考只读CardDrawn通知比较首张，再续接完成。该报告仅认证受控组件，不认证正常Run或M01；原11份suite与正常比较的缺维度失败保持。
+
+## 敌人出生与选招边界组件
+
+`dotnet run --project tools/differential -c Release -- enemy-birth-compare --output .artifacts/differential/enemy-birth`运行两seed共20项受控判别。反向槽位编队使用真实CombatRoom.Prepare，先登记玩家，再按4、1、3、2工厂顺序创建Wriggler并排序；比较源CombatId、逐只HP、个体RNG初始状态、实际行动顺序、niche每次参数／结果／游标及完整终态。另保留第三幕位置种子、零HP但仍在侧列表、完整移除后编号不复用、显式新战斗重置、重复MaxHp去重与固定HP仍消费的场景。位置／HP／移除设置明确为工具状态，不证明正常可达。
+
+入场条件使用原生SlumberingBeetle的真实入场Power及SLEEP_CHECK图；DSL仅加载工具专用条件探针，比较BeforeCombatStart、玩家BeforeSideTurnStart、AfterEnergyReset和敌方末的节点／历史，再验证下一回合。回合前移除原生Slumber与改变探针条件用于判别提前选招。该场景不登记SlumberingBeetle或Slumber为正式支持，不认证其伤害／Power全效果。组件显式执行DSL End+Begin，正常EndTurn自动进入下一可行动回合仍独立验收。新组件不替代原11份suite或正常Run比较。
+
+固定首招的补充判别使用真实TwigSlimeM，比较建图后的初始历史与尚未发布的NextMove、首次Roll，以及普通玩家回合后的额外玩家入口。原生调用真实额外回合StartTurn入口；DSL显式关闭开发回合标志后再次Begin，只认证保存招式／历史及AI四字状态不变，不声明正式额外回合动作或完整生命周期。`--package MANIFEST`可对指定生产包复现差异；migration要求包含原18项和新增两seed的extra-ready，未知／重复参数被拒绝。
+
+## 侧开始、清格挡与行动资格组件
+
+`dotnet run --project tools/differential -c Release -- turn-start-compare --output .artifacts/differential/turn-start`运行两个seed共16项判别。两只真实TwigSlimeS使用空牌组、归一化HP1000与显式格挡初态；逐项比较12个侧开始／清挡／侧结束边界（HornCleat为20个，运行至第三回合）、玩家资源及两个敌人的格挡和出生资格标志。实际Anchor证明首回合保留格挡，HornCleat读取清挡后的旧编号1并只在第二回合给14格挡，Barricade验证双方持有者与Direct首否决顺序。参考SturdyClamp与DSL工具专用钳制监听对照，只认证阻止者回调接缝，不登记SturdyClamp正式支持。
+
+零HP场景明确不执行死亡命令，验证仍在侧列表的成员先清挡、再全体通知而不行动。出生资格场景直接设置双方标志，只证明当轮跳过和换边清标，不宣称召唤／复活。DSL显式End+Begin与参考自动推进到下一普通玩家回合比较；正常EndTurn动作另验。已有28项回合组件同时新增实际Power.AmountOnTurnStart维度，保留全部旧维度、用例和严格失败。
+
+## 双方格挡命令组件
+
+`dotnet run --project tools/differential -c Release -- block-compare --output .artifacts/differential/blocks`运行两个seed共80项受控判别。真实Dexterity／Frail／Unmovable／Juggernaut／Plating分别验证双方、来源所有者、负加值、无加成、非Move、分数、零量及999999999上限；BowlbugEgg执行真实招式，Plating执行初始与两个本侧末得挡。Before／After逐条比较精确修正量、已提交格挡、card／play／旗标和实际修正者实例标识，原生实例标识来自同输入的只读Hook.ModifyBlock输出。专用修正Power另验证双阶段只回调一次、乘零仍参与、无修正不回调；这不登记为正式内容。
+
+真实Defend与EvilEye比较每个play的Move得挡历史；源EvilEye的两次调用不合并。Entrench真实源卡只与工具专用DSL正文比较Unpowered|Move，不登记正式支持。分数未增加整数格挡、已到上限和Unpowered|Move仍按源记录正的Move历史。暂停使用真实原生未完成Task及DSL决策，各续接一次；嵌套Before保留独立上下文，临时记录在完成后清理。只读预览另验状态hash、版本和随机不变。
+
+初态为玩家先登记、两敌人、空牌组和归一化HP1000；给定格挡与Power是明确组件输入。出生HP随机、完整公开库存和正常Run不由本组件认证；ending场景只比较已进入格挡命令的余效，不替代完整胜负／奖励结算验收。原80项、16项侧开始、28项回合及原11份suite继续由migration严格保留。
