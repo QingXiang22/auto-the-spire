@@ -27,11 +27,11 @@ namespace Differential;
 
 internal static class CombatBoundaryComparison
 {
-    private static readonly string[] Plans = ["turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "anger-ending", "zero-card", "free-x", "repeat-card", "corruption"];
+    private static readonly string[] Plans = ["turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "anger-ending", "anger-upgraded", "zero-card", "free-x", "repeat-card", "corruption", "juggling", "juggling-full", "juggling-stomp"];
     private static readonly string[] Seeds = ["777", "A😀B"];
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = true, PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower };
     internal sealed record Point(string Phase, string Card, long Turn, long Energy, long Hp, long MaxHp, long Block,
-        long EnemyHp, string Move, bool Ending, string[] Piles, long Spent = 0);
+        long EnemyHp, string Move, bool Ending, string[] Piles, long Spent = 0, long Generated = 0, long StompHandCost = -1, long AngerDiscardUpgraded = -1);
     internal sealed record Trace(Point[] Points, string FinalState, object[] Raw);
     internal sealed record Difference(int Index, string Field, object? Left, object? Right);
     private sealed record HookSource(string Hook, int Overload, string Path, int Line, string BodySha256, string[] Iterators,
@@ -64,7 +64,7 @@ internal static class CombatBoundaryComparison
             adapter_sha256 = Convert.ToHexStringLower(SHA256.HashData(File.ReadAllBytes(typeof(CombatBoundaryComparison).Assembly.Location))),
             status = differences == 0 ? "passed" : "diverged", executed = cases.Count, expected_case_ids = Seeds.SelectMany(s => Plans.Select(p => s + ":" + p)).ToArray(),
             complete = false, independent_verified = false, normal_run_verified = false, scope = "controlled-boundary-diagnostic",
-            controlled_setup = "Empty permanent decks, real FuzzyWurmCrawler and actual production commands; both HP set to 1000. Paid-card creates Strike; two-end-effects creates two Infection in hand. Its paused variant holds the first real move notification administratively (DSL decide/native incomplete Task), then resumes once, without game effects. Ending-move uses a last-kill Strike followed by actual AddAsync to hand, distinguishing synchronous result placement from rejected async movement. Feed-ending uses Feed at enemy HP10 and holds DSL room settlement until after the outer card. The named native probe relic only observes real hooks; source declarations and raw notifications are retained, without claiming complete listener parity or full events.trace. Fixture card placement is outside action comparison; its DSL notifications remain in raw diagnostics. No missing normal turn is executed by the adapter. Initial HP sampling/niche and normal rooms are outside this probe. Duplicate labels preserve definition/order but do not certify instance identity. Enabled/disabled diagnostics compare the same-backend DSL full StateHash/RNG and native exact combat description/RNG.",
+            controlled_setup = "Empty permanent decks, real FuzzyWurmCrawler and actual production commands; both HP set to 1000. Paid-card creates Strike; two-end-effects creates two Infection in hand. Its paused variant holds the first real move notification administratively (DSL decide/native incomplete Task), then resumes once, without game effects. Ending-move uses a last-kill Strike followed by actual AddAsync to hand, distinguishing synchronous result placement from rejected async movement. Feed-ending uses Feed at enemy HP10 and holds DSL room settlement until after the outer card. Anger generation observes normal, upgraded and ending clones. Juggling executes two real prefix attacks before the third, including a full hand or Stomp cost snapshot. The named native probe relic only observes real hooks; source declarations and raw notifications are retained, without claiming complete listener parity or full events.trace. Fixture card placement is outside action comparison; its DSL notifications remain in raw diagnostics. No missing normal turn is executed by the adapter. Initial HP sampling/niche and normal rooms are outside this probe. Duplicate labels preserve definition/order but do not certify instance identity. Enabled/disabled diagnostics compare the same-backend DSL full StateHash/RNG and native exact combat description/RNG.",
             hook_sources = HookSources(repository), cases };
         var text = JsonSerializer.Serialize(report, Json);
         if (args.Length != 0) { Directory.CreateDirectory(args[1]); File.WriteAllText(Path.Combine(args[1], "result.json"), text); }
@@ -107,7 +107,7 @@ internal static class CombatBoundaryComparison
         Reject(trace with { Points = [] }); Reject(trace with { FinalState = "" });
         Reject(trace with { Points = trace.Points.Append(trace.Points[^1]).ToArray() });
         Reject(trace with { Points = trace.Points.Select(p => p with { Piles = [""] }).ToArray() });
-        foreach (var changed in new[] { point with { Phase = "wrong-stage" }, point with { Energy = 2 }, point with { Spent = 2 }, point with { Move = "NEXT" },
+        foreach (var changed in new[] { point with { Phase = "wrong-stage" }, point with { Energy = 2 }, point with { Spent = 2 }, point with { Generated = 1 }, point with { StompHandCost = 2 }, point with { AngerDiscardUpgraded = 1 }, point with { Move = "NEXT" },
             point with { Ending = true }, point with { Piles = ["INFECTION,", "", "", "", ""] } })
             if (FirstDifference([point], [changed]) is null) throw new InvalidOperationException("Missed boundary divergence.");
         if (FirstDifference([point], []) is null || FirstDifference([], [point]) is null) throw new InvalidOperationException("Missed missing notification.");
@@ -146,7 +146,7 @@ internal static class CombatBoundaryComparison
             boundaries.Add(new(phase, "", Field(player, "Player", "TurnNumber").AsInt(), Field(player, "Player", "Energy").AsInt(),
                 Field(player, "Player", "Hp").AsInt(), Field(player, "Player", "MaxHp").AsInt(), Field(player, "Player", "Block").AsInt(),
                 Field(enemy, "Enemy", "Hp").AsInt(), Field(enemy, "Enemy", "MoveId").AsString(), Field(enemy, "Enemy", "Hp").AsInt() == 0,
-                new[] { "Hand", "DrawPile", "DiscardPile", "ExhaustPile", "InPlay" }.Select(Pile).ToArray()));
+                new[] { "Hand", "DrawPile", "DiscardPile", "ExhaustPile", "InPlay" }.Select(Pile).ToArray(), Generated: Field(player, "Player", "CardsGeneratedThisCombat").AsInt(), StompHandCost: session.State.CollectionMembers(session.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:Hand").Id).Where(c => Field(c, "Card", "SourceEntry").AsString() == "STOMP").Select(c => Field(c, "Card", "Cost").AsInt()).DefaultIfEmpty(-1).First(), AngerDiscardUpgraded: session.State.CollectionMembers(session.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:DiscardPile").Id).Where(c => Field(c, "Card", "SourceEntry").AsString() == "ANGER").Select(c => Field(c, "Card", "Upgraded").AsBool() ? 1L : 0L).DefaultIfEmpty(-1).First()));
         }
         var raw = new List<object>(); long cursor = 0;
         void Flush(bool fixture = false)
@@ -158,10 +158,10 @@ internal static class CombatBoundaryComparison
                 if (record.Subject == "base-spire:BoundaryPoint" && record.Kind == SessionDebugKind.EventEmit)
                 {
                     var snapshot = record.Snapshot;
-                    if (record.TextTruncated || snapshot is null || !snapshot.Complete || snapshot.Values.Count != 16) throw new InvalidOperationException("Incomplete DSL boundary snapshot.");
+                    if (record.TextTruncated || snapshot is null || !snapshot.Complete || snapshot.Values.Count != 19) throw new InvalidOperationException("Incomplete DSL boundary snapshot.");
                     var v = snapshot.Values; string S(int i) => v[i].Scalar ?? throw new InvalidOperationException("Missing scalar.");
                     long N(int i) => long.Parse(S(i), CultureInfo.InvariantCulture);
-                    var point = new Point(S(0), S(1), N(3), N(4), N(5), N(6), N(7), N(8), S(9), bool.Parse(S(10)), Enumerable.Range(11, 5).Select(S).ToArray(), N(2));
+                    var point = new Point(S(0), S(1), N(4), N(5), N(6), N(7), N(8), N(9), S(10), bool.Parse(S(11)), Enumerable.Range(12, 5).Select(S).ToArray(), N(2), N(3), N(17), N(18));
                     if (fixture) raw.Add(new { fixture = true, point }); else boundaries.Add(point);
                 }
                 else if (record.Kind is SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter)
@@ -172,17 +172,26 @@ internal static class CombatBoundaryComparison
         Submit("BeginDevelopmentCombat"); Submit("BeginDevelopmentTurn"); Flush(); Take("begin-return");
         if (plan is "paid-card" or "feed-ending" or "ending-move") Submit(plan == "feed-ending" ? "Feed.AddToHand" : "Strike.AddToHand");
         else if (plan.StartsWith("two-end-effects", StringComparison.Ordinal)) { Submit("Infection.AddToHand"); Submit("Infection.AddToHand"); }
-        else if (plan is "zero-card" or "anger-ending") Submit("Anger.AddToHand");
+        else if (plan is "zero-card" or "anger-ending" or "anger-upgraded") Submit("Anger.AddToHand");
         else if (plan == "free-x") Submit("Whirlwind.AddToHand");
         else if (plan == "repeat-card") { Submit("Strike.AddToHand"); Submit("BoundaryRepeat"); }
         else if (plan == "corruption") { Submit("Defend.AddToHand"); Submit("BoundaryCorruption"); }
+        else if (plan is "juggling" or "juggling-full" or "juggling-stomp")
+        {
+            Submit(plan == "juggling-full" ? "BoundaryJugglingFull" : "BoundaryJuggling"); Set(player, "Player", "Energy", 12);
+            if (plan == "juggling-stomp") Submit("Stomp.AddToHand");
+            for (var i = 0; i < 2; i++) { Submit("Strike.AddToHand"); Submit("BoundaryPlay", session.State.CollectionMembers(session.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:Hand").Id).Last()); }
+            if (plan == "juggling-full") for (var i = 0; i < 9; i++) Submit("Defend.AddToHand");
+            if (plan != "juggling-stomp") Submit("Strike.AddToHand");
+        }
+        if (plan == "anger-upgraded") Submit("UpgradeCardInHand", session.State.CollectionMembers(session.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:Hand").Id).Last());
         if (plan == "feed-ending") Set(enemy, "Enemy", "Hp", 10);
         if (plan is "ending-move" or "anger-ending") Set(enemy, "Enemy", "Hp", 6);
         Flush(fixture: true); Take("configured");
         if (plan == "two-end-effects-paused")
             Submit("BoundaryEnablePause");
         if (plan == "turn-return" || plan.StartsWith("two-end-effects", StringComparison.Ordinal)) Submit("EndTurn");
-        else Submit(plan == "free-x" ? "BoundaryAuto" : "BoundaryPlay", All("Card").Single());
+        else Submit(plan == "free-x" ? "BoundaryAuto" : "BoundaryPlay", session.State.CollectionMembers(session.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:Hand").Id).Last());
         if (plan == "ending-move") Submit("BoundaryMove", All("Card").Single());
         if (plan == "two-end-effects-paused")
         {
@@ -216,10 +225,11 @@ internal static class CombatBoundaryComparison
             var s = player.PlayerCombatState!;
             return new(phase, card, s.TurnNumber, s.Energy, player.Creature.CurrentHp, player.Creature.MaxHp, player.Creature.Block,
                 enemy.CurrentHp, enemy.Monster!.NextMove?.Id ?? "none", combat.IsOverOrEnding(),
-                new[] { s.Hand, s.DrawPile, s.DiscardPile, s.ExhaustPile, s.PlayPile }.Select(p => string.Concat(p.Cards.Select(c => c.Id.Entry + ","))).ToArray());
+                new[] { s.Hand, s.DrawPile, s.DiscardPile, s.ExhaustPile, s.PlayPile }.Select(p => string.Concat(p.Cards.Select(c => c.Id.Entry + ","))).ToArray(), Generated: s.CardsGeneratedThisCombat, StompHandCost: s.Hand.Cards.Where(c => c.Id.Entry == "STOMP").Select(c => (long)c.EnergyCost).DefaultIfEmpty(-1).First(), AngerDiscardUpgraded: s.DiscardPile.Cards.Where(c => c.Id.Entry == "ANGER").Select(c => c.IsUpgraded ? 1L : 0L).DefaultIfEmpty(-1).First());
         }
+        var observing = capture;
         var probe = (BoundaryProbeRelic)new BoundaryProbeRelic().MutableClone(); probe.AssignOwner(player); player.AddRelicInternal(probe);
-        probe.Capture = (phase, card) => { if (capture) points.Add(phase.StartsWith("energy-spent:", StringComparison.Ordinal) ? Take("energy-spent", card) with { Spent = int.Parse(phase.Split(':')[1], CultureInfo.InvariantCulture) } : Take(phase, card)); };
+        probe.Capture = (phase, card) => { if (observing) points.Add(phase.StartsWith("energy-spent:", StringComparison.Ordinal) ? Take("energy-spent", card) with { Spent = int.Parse(phase.Split(':')[1], CultureInfo.InvariantCulture) } : Take(phase, card)); };
         var observerType = typeof(CombatEngine).Assembly.GetType("Sts2Sim.Core.Combat.ICombatObserver")!;
         var observer = DispatchProxy.Create(observerType, typeof(NormalReferenceObserver));
         ((NormalReferenceObserver)observer).Record = (name, arguments) =>
@@ -244,10 +254,18 @@ internal static class CombatBoundaryComparison
         else if (plan == "feed-ending") { played = Add(ModelDb.Card<Feed>()); enemy.SetCurrentHpInternal(10); }
         else if (plan == "ending-move") { played = Add(ModelDb.Card<StrikeIronclad>()); enemy.SetCurrentHpInternal(6); }
         else if (plan.StartsWith("two-end-effects", StringComparison.Ordinal)) { Add(ModelDb.Card<Infection>()); Add(ModelDb.Card<Infection>()); }
-        else if (plan is "zero-card" or "anger-ending") { played = Add(ModelDb.Card<Anger>()); if (plan == "anger-ending") enemy.SetCurrentHpInternal(6); }
+        else if (plan is "zero-card" or "anger-ending" or "anger-upgraded") { played = Add(ModelDb.Card<Anger>()); if (plan == "anger-ending") enemy.SetCurrentHpInternal(6); if (plan == "anger-upgraded") CardCmd.Upgrade(played); }
         else if (plan == "free-x") played = Add(ModelDb.Card<Whirlwind>());
         else if (plan == "repeat-card") { played = Add(ModelDb.Card<StrikeIronclad>()); PowerCmd.Apply<OneTwoPunchPower>(combat, player.Creature, 1, null, null).GetAwaiter().GetResult(); }
         else if (plan == "corruption") { played = Add(ModelDb.Card<DefendIronclad>()); PowerCmd.Apply<CorruptionPower>(combat, player.Creature, 1, null, null).GetAwaiter().GetResult(); }
+        else if (plan is "juggling" or "juggling-full" or "juggling-stomp")
+        {
+            observing = false; PowerCmd.Apply<JugglingPower>(combat, player.Creature, plan == "juggling-full" ? 2 : 1, null, null).GetAwaiter().GetResult(); player.PlayerCombatState!.Energy = 12;
+            if (plan == "juggling-stomp") played = Add(ModelDb.Card<Stomp>());
+            for (var i = 0; i < 2; i++) engine.PlayCardAsync(player, Add(ModelDb.Card<StrikeIronclad>()), enemy).GetAwaiter().GetResult();
+            if (plan == "juggling-full") for (var i = 0; i < 9; i++) Add(ModelDb.Card<DefendIronclad>());
+            if (plan != "juggling-stomp") played = Add(ModelDb.Card<StrikeIronclad>()); observing = capture;
+        }
         points.Add(Take("configured"));
         if (plan == "free-x") AutoPlayCmd.FromCards(combat, player, [played!]).GetAwaiter().GetResult();
         else if (played is not null) engine.PlayCardAsync(player, played, played.TargetType == TargetType.AnyEnemy ? enemy : null).GetAwaiter().GetResult();
@@ -281,7 +299,7 @@ internal static class CombatBoundaryComparison
         const string path = "reference/sts2-sim/src/Sts2Sim.Core/Hooks/Hook.cs";
         var text = File.ReadAllText(Path.Combine(repository, path)).Replace("\r\n", "\n");
         var names = new[] { "BeforeCombatStart", "BeforeSideTurnStart", "AfterEnergyReset", "AfterSideTurnStart", "AfterEnergySpent",
-            "BeforeCardPlayed", "AfterCardPlayed", "AfterCardChangedPiles", "ModifyCardPlayResultLocation", "AfterModifyingCardPlayResultLocation",
+            "BeforeCardPlayed", "AfterCardPlayed", "AfterCardEnteredCombat", "AfterCardGenerated", "AfterCardGeneratedForCombat", "AfterCardChangedPiles", "ModifyCardPlayResultLocation", "AfterModifyingCardPlayResultLocation",
             "ModifyCardPlayCount", "AfterModifyingCardPlayCount", "BeforeSideTurnEndVeryEarly", "BeforeSideTurnEndEarly", "BeforeSideTurnEnd", "AfterSideTurnEnd",
             "ShouldClearBlock", "AfterPreventingBlockClear", "AfterBlockCleared", "IterateCombatHookListeners",
             "IterateDirectCombatHookListeners", "IterateBlockClearListeners", "IsEligibleHookListener" };
@@ -344,6 +362,9 @@ internal sealed class BoundaryProbeRelic : RelicModel
     public override Task AfterEnergySpent(CardModel card, int amount) { Capture("energy-spent:" + amount, card.Id.Entry); return Task.CompletedTask; }
     public override Task BeforeCardPlayed(CardPlay play) { Capture("card-before", play.Card.Id.Entry); return Task.CompletedTask; }
     public override Task AfterCardPlayed(CardPlay play) { Capture("card-after", play.Card.Id.Entry); return Task.CompletedTask; }
+    public override Task AfterCardEnteredCombat(CardModel card) { Capture("card-entered", card.Id.Entry); return Task.CompletedTask; }
+    public override Task AfterCardGenerated(CardModel card, Player? creator) { Capture(creator is null ? "generated-none" : "generated-player", card.Id.Entry); return Task.CompletedTask; }
+    public override Task AfterCardGeneratedForCombat(CardModel card, Player? creator) { Capture(creator is null ? "generated-combat-none" : "generated-combat-player", card.Id.Entry); return Task.CompletedTask; }
     public override Task AfterCardChangedPiles(CardModel card, PileType oldPileType, AbstractModel? clonedBy)
     {
         Capture("pile:" + Pile(oldPileType) + ":" + Pile(card.Pile?.Type ?? PileType.None), card.Id.Entry);

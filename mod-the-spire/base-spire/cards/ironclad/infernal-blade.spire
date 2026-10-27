@@ -11,7 +11,7 @@ procedure InfernalBladeBody {
   locals = { generated = Binding }
   body = {
     call = { procedure = GenerateCombatCardWithCost args = { owner = owner attacksOnly = true cost = 0 source = "base-spire:infernal-blade" lifetime = "turn-or-play" } into = generated }
-    if = { condition = not(isNone(generated)) then = { call = { procedure = AddGeneratedToHand args = { card = generated } } } }
+    if = { condition = not(isNone(generated)) then = { call = { procedure = GenerateCardIntoCombat args = { owner = owner card = generated creator = owner to = "hand" clone = false } } } }
   }
 }
 dispatchCase InfernalBladeBody { dispatch = ExecuteCardBody key = "base-spire:infernal-blade" procedure = InfernalBladeBody }

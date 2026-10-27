@@ -19,7 +19,7 @@ procedure GenerateCombatCard {
     let = { into = card value = none }
     if = { condition = exists(where(collection(CardLibrary), b, and(field(b, CardBlueprint.Generatable), or(not(attacksOnly), equal(field(b, CardBlueprint.Kind), "attack"))))) then = {
       samplePick = { stream = "base-spire:run:combat_card_generation" candidates = where(collection(CardLibrary), b, and(field(b, CardBlueprint.Generatable), or(not(attacksOnly), equal(field(b, CardBlueprint.Kind), "attack")))) into = chosen }
-      call = { procedure = CreateCombatCard args = { owner = owner definition = field(chosen, CardBlueprint.DefinitionId) } into = card }
+      call = { procedure = CreateCardInstance args = { owner = owner definition = field(chosen, CardBlueprint.DefinitionId) } into = card }
     } }
     return = { value = card }
   }

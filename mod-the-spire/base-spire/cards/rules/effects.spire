@@ -84,7 +84,7 @@ template ClonePlayedCardEffect {
       locals = { copy = Binding }
       body = {
         if = { condition = equal(field(card, Card.DefinitionId), arg(definition)) then = {
-          call = { procedure = CloneCombatCardToPile args = { owner = owner source = card to = arg(destination) reason = "clone" } into = copy }
+          call = { procedure = CloneGeneratedCombatCard args = { owner = owner source = card creator = owner to = arg(destination) } into = copy }
         } }
       }
     }

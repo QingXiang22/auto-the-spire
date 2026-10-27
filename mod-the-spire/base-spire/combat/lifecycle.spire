@@ -135,6 +135,7 @@ procedure BeginDevelopmentCombat {
     call = { procedure = ClearCombatPowers }
     call = { procedure = ResetCardCombatCosts }
     set = { target = owner field = Player.EnemyPhase value = false }
+    set = { target = owner field = Player.CardsGeneratedThisCombat value = 0 }
     call = { procedure = BuildCombatDeck args = { owner = owner } }
     set = { target = owner field = Player.PendingForge value = false }
     set = { target = owner field = Player.Block value = 0 }

@@ -34,9 +34,12 @@ base 声明正文分派，参数为 owner／card／target／play。每个已执�
 
 费用修正作为独立 CardCostModifier 保存 card、source、set／add、amount 和 turn／play／turn-or-play／combat 寿命，按插入顺序折叠；临时费用不再依靠三个覆盖开关。公开 Cost 是命令维护的缓存，读取和预览不写缓存。克隆复制独立修正，新战清除临时费用，永久基础费用与临时费用分开。
 
-MoveCombatCard 统一拥有者、永久／战斗资格、原区／目的区、插入位置、满手与移动通知；生成入手、回顶、Anger 复制和 PrimalForce 移除调用此操作。主动弃牌使用同步移牌并发CardDiscarded，不发异步CardMoved；回合末整批 flush 和打出结果区不冒充主动弃牌。FinishTurnHand 固定 Ethereal 批次，再处理 BeforeHandFlush、Retain／ShouldFlushHand 筛选、整批提交与通知。新抽到的牌不混入旧消耗批次。当前未接带独有回合末手牌正文的牌与完整有序多选消费者。
+MoveCombatCard 处理已有战斗牌的异步移动、拥有者与目的区校验、满手和移动通知；来源生成、同步结果移牌及Remove各用自己的入口。主动弃牌使用同步移牌并发CardDiscarded，不发异步CardMoved；回合末整批 flush 和打出结果区不冒充主动弃牌。FinishTurnHand 固定 Ethereal 批次，再处理 BeforeHandFlush、Retain／ShouldFlushHand 筛选、整批提交与通知。新抽到的牌不混入旧消耗批次。当前未接带独有回合末手牌正文的牌与完整有序多选消费者。
 
-重复的克隆后放置使用CloneCombatCardToPile：保留CloneCombatCard的实例复制与全部回调，再交给MoveCombatCard处理落点。Anger与Juggling分别传入弃牌／手牌及原移动原因；满手时克隆仍只进入弃牌堆，不丢失或重新创建。ClonePlayedCardEffect只包装当前牌的这一操作，不增加敌人资格限制；不能用CreateCombatCard替代已有实例的克隆。普通／升级常量选择由CardUpgradeValue纯计算，自身Power模板统一处理是否在回合末到期，均不新增事件或改变正文顺序。
+生成与已有卡牌移动分开。锁定来源 `CardPileCmd.Generate` 接受持有者、可为空的生成者、新建且尚无牌堆的卡及目的区。先校验战斗、持有者和目的区；满手生成到弃牌堆。普通情况先入堆，再记录生成者本场生成数，然后发 `CardEnteredCombat`、`AfterCardGenerated` 和 `AfterCardGeneratedForCombat`；生成不发异步 `CardMoved` 或耗尽通知。战斗潜在结束时仍创建实例并记录非空生成者，但不入堆、不发入场通知；来源虽调用两个生成Hook，其战斗监听迭代器在结束中为空，不执行监听。每个生成通知都独立重新检查结束状态。空生成者不增加玩家计数；LeafSlimeS／M、TwigSlimeM与Wriggler生成状态牌传none，InfernalBlade／Stoke传玩家。入场监听失败时来源移除新牌、回滚生成数并向已执行监听器发中止补偿；现有DSL在监听器失败时终止Session，不能执行来源的异常补偿；该边界尚未支持。当前加载内容没有两个生成通知的实际玩法监听者，不将通知声明等同于所有监听资格与失效时点已迁移。
+
+Anger在伤害后对当前牌创建独立克隆，再调用Generate放入弃牌堆；Juggling在每次攻击的BeforeCardPlayed计数，并在第三次攻击正文前按层数生成克隆到手牌，满手落到弃牌堆。克隆复制费用修正与附着实例，原牌及副本各自独立。BeforeCardPlayed按来源快照原有实例；本次生成的Stomp不追溯参与该次出牌的自身费用折扣。同步开发场景中的AddToHand和已有卡牌移动不冒充来源生成；通用 `CloneCombatCardToPile` 仍执行其带移动通知的操作。普通／升级常量选择由CardUpgradeValue纯计算，Power模板继续处理自身到期。
+
 
 CardCloned、CardCombatCopied、CardRemoving 是附属能力的复制与清理接缝。Stomp 的费用与 HowlFromBeyond 的耗尽堆自动行为归所属模块；通用 Card 不再保存它们的专属开关。CardAttachment 保存附魔标识与状态，Sown 在明确附魔阶段回能后禁用；永久→战斗副本与战斗克隆按各自来源复制，升级不重置状态，销毁前清理。公开附属实体采用通用 identity_from 依附卡标识，隐藏抽牌堆不泄漏附魔或卡引用。
 
