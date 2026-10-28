@@ -40,6 +40,43 @@ procedure ClearRaiderPool {
     }
   }
 }
+procedure CreateSourceRaider {
+  parameters = { definition = String(length = 64) totalFloor = Int }
+  locals = { target = Binding }
+  body = {
+    if = { condition = equal(definition, "base-spire:axe-ruby-raider") then = { call = { procedure = CreateSourceEncounterEnemy args = { definition = definition min = 20 max = 22 } into = target } } }
+    if = { condition = equal(definition, "base-spire:assassin-ruby-raider") then = { call = { procedure = CreateSourceEncounterEnemy args = { definition = definition min = 18 max = 23 } into = target } } }
+    if = { condition = equal(definition, "base-spire:brute-ruby-raider") then = { call = { procedure = CreateSourceEncounterEnemy args = { definition = definition min = 30 max = 33 } into = target } } }
+    if = { condition = equal(definition, "base-spire:crossbow-ruby-raider") then = { call = { procedure = CreateSourceEncounterEnemy args = { definition = definition min = 18 max = 21 } into = target } } }
+    if = { condition = equal(definition, "base-spire:tracker-ruby-raider") then = { call = { procedure = CreateSourceEncounterEnemy args = { definition = definition min = 21 max = 25 } into = target } } }
+  }
+}
+procedure PickSourceRaider {
+  parameters = { totalFloor = Int }
+  locals = { picked = Binding }
+  body = {
+    samplePick = { stream = "base-spire:encounter:monsters" candidates = collection(EnemyPool) into = picked }
+    removeFromCollection = { collection = EnemyPool item = picked }
+    call = { procedure = CreateSourceRaider args = { definition = field(picked, EnemyPoolEntry.DefinitionId) totalFloor = totalFloor } }
+    destroy = { target = picked }
+  }
+}
+procedure SpawnSourceRubyRaidersNormal {
+  parameters = { totalFloor = Int }
+  locals = { entry = Binding }
+  body = {
+    seedStream64 = { stream = "base-spire:encounter:monsters" seed = pureCall(SourceContentSeed, totalFloor, "RUBY_RAIDERS_NORMAL", 0) }
+    create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:axe-ruby-raider" Hp = 20 } }
+    create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:assassin-ruby-raider" Hp = 18 } }
+    create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:brute-ruby-raider" Hp = 30 } }
+    create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:crossbow-ruby-raider" Hp = 18 } }
+    create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:tracker-ruby-raider" Hp = 21 } }
+    call = { procedure = PickSourceRaider args = { totalFloor = totalFloor } }
+    call = { procedure = PickSourceRaider args = { totalFloor = totalFloor } }
+    call = { procedure = PickSourceRaider args = { totalFloor = totalFloor } }
+    call = { procedure = ClearRaiderPool }
+  }
+}
 template RubyRaidersFormation {
   parameters = { definition = { type = String(length = 64) } }
   body = {

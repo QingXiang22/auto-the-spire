@@ -8,7 +8,7 @@ internal static partial class PackageChecks
     {
         var count = 0;
         void Case(string name, Action body) { body(); count++; Console.WriteLine("ok   " + name); }
-        RunEnemyTurnChecks(package, Case); RunEnemyMoveGraphChecks(package, Case); RunSlimedChecks(package, Case); RunSlimeChecks(package, Case); RunBattleFriendChecks(package, Case); RunWrigglerChecks(package, Case); RunWhistleChecks(package, Case);
+        RunEnemyTurnChecks(package, Case); RunEnemyMoveGraphChecks(package, Case); RunSlimedChecks(package, Case); RunSlimeChecks(package, Case); RunBattleFriendChecks(package, Case); RunWrigglerChecks(package, Case); RunWhistleChecks(package, Case); RunActOneEncounterChecks(package, Case); RunActOneBehaviorChecks(package, Case);
         Console.WriteLine($"All {count} enemy move checks passed; controlled development combat, not normal encounters or full simulator comparison.");
         return 0;
     }
@@ -74,7 +74,7 @@ internal static partial class PackageChecks
             var seed = vector.GetProperty("seed").GetString()!;
             Case("MOVE source candidates, weights, raw draws, history and effects: " + seed, () =>
             {
-                var s = observedPackage.CreateSession(1, ["player"], seed, new SessionDebugOptions(MaxRecords: 100_000)); s.Start(); Healthy(s);
+                var s = observedPackage.CreateSession(1, ["player"], seed, new SessionDebugOptions(MaxRecords: 200_000)); s.Start(); Healthy(s);
                 Submit(s, "TwigSlimeM.Spawn"); var enemy = FirstTarget(s);
                 Equal(26L, EnemyHp(s), "A0 minimum HP, no HP RNG claim");
                 Equal("none", MoveText(s, enemy, "Enemy", "MoveId"), "creation has no selected move");

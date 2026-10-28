@@ -75,7 +75,7 @@ internal static partial class PackageChecks
             var cards = rows.RootElement.GetProperty("entries"); Equal(578, SourceCatalog.Entries("cards").Length, "independent frozen card source denominator");
             var migrated = cards.EnumerateArray().Where(row => row.GetProperty("definition").ValueKind == System.Text.Json.JsonValueKind.String)
                 .Select(row => row.GetProperty("id").GetString()).Order(StringComparer.Ordinal);
-            var expected = IroncladSinglePlayerNames.Split(' ').Select(IroncladId).Concat(["base-spire:giant-rock", "base-spire:shockwave", "base-spire:slimed", "base-spire:infection", "base-spire:whistle", "base-spire:greed"]).Order(StringComparer.Ordinal);
+            var expected = IroncladSinglePlayerNames.Split(' ').Select(IroncladId).Concat(["base-spire:giant-rock", "base-spire:shockwave", "base-spire:slimed", "base-spire:infection", "base-spire:dazed", "base-spire:whistle", "base-spire:greed"]).Order(StringComparer.Ordinal);
             True(migrated.SequenceEqual(expected), "actual complete singleplayer Ironclad roster plus the token, colorless, status and curse consumers");
         });
         Case("CP09: targeted and untargeted cards are offered by different play actions", () =>
@@ -290,6 +290,16 @@ internal static partial class PackageChecks
             Equal(0L, EnemyHp(s), "upgraded Bludgeon deals 42 and HP floors at zero");
         });
 
+        Own("base-spire:dazed", "CP127 Dazed: unplayable ethereal status exhausts without payment", () =>
+        {
+            var s = Start(package); Submit(s, "AddDevelopmentTarget"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
+            Submit(s, "Dazed.AddToHand"); var card = Hand(s).Single(c => CardDefinition(s, c) == "base-spire:dazed");
+            True(!s.LegalActions(s.Participant(0)).Any(a => a.Definition.QualifiedId == "base-spire:PlayCardFromHand"
+                && a.Bindings.Any(b => b.Count > 0 && b[0].AsRef() == card)), "unplayable status has no play candidate");
+            Submit(s, "EndDevelopmentTurn");
+            True(Members(s, "ExhaustPile").Contains(card), "ethereal status exhausts at the flush");
+            True(!Members(s, "DiscardPile").Contains(card), "ethereal status does not reach discard");
+        });
         foreach (var list in witness.Values) list.InsertRange(0, shared);
         return witness.ToDictionary(row => row.Key, row => row.Value.ToArray(), StringComparer.Ordinal);
     }

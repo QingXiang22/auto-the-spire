@@ -1,0 +1,67 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Inklet.cs, A0: HP 11..17. The middle Inklet starts Whirlwind (2x3); others start Jab 3.
+# Both then use the same random Piercing Gaze 10 / Whirlwind branch and return to Jab.
+template InkletContent { body = {
+  entity State { fields = {
+    Enemy = { type = Ref(Enemy) visibility = Hidden }
+    Middle = { type = Bool visibility = Hidden }
+  } }
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:inklet" initial = "INIT_MOVE" } }
+  use Initial { template = EnemyMoveNodeDefinition args = { definition = "base-spire:inklet" id = "INIT_MOVE" kind = "conditional" } }
+  use Jab { template = EnemyMoveNodeDefinition args = { definition = "base-spire:inklet" id = "JAB_MOVE" next = "RAND" intent = "attack" index = 0 } }
+  use Whirlwind { template = EnemyMoveNodeDefinition args = { definition = "base-spire:inklet" id = "WHIRLWIND_MOVE" next = "JAB_MOVE" intent = "attack" index = 1 } }
+  use Piercing { template = EnemyMoveNodeDefinition args = { definition = "base-spire:inklet" id = "PIERCING_GAZE_MOVE" next = "JAB_MOVE" intent = "attack" index = 2 } }
+  use Random { template = EnemyMoveNodeDefinition args = { definition = "base-spire:inklet" id = "RAND" kind = "random" } }
+  use PiercingBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:inklet" node = "RAND" target = "PIERCING_GAZE_MOVE" maxRepeats = 1 } }
+  use WhirlwindBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:inklet" node = "RAND" target = "WHIRLWIND_MOVE" maxRepeats = 1 } }
+  procedure Condition {
+    pure = true parameters = { state = Ref(EnemyMoveState) node = Ref(EnemyMoveNode) } result = Binding
+    locals = { own = Binding }
+    body = {
+      let = { into = own value = first(where(type(State), s, equal(field(s, State.Enemy), field(state, EnemyMoveState.Enemy)))) }
+      if = { condition = isNone(own) then = { fail = { message = "Inklet: missing birth variant" } } }
+      if = { condition = field(own, State.Middle) then = { return = { value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "WHIRLWIND_MOVE") } } }
+      return = { value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "JAB_MOVE") }
+    }
+  }
+  dispatchCase Condition { dispatch = ResolveEnemyMoveCondition key = "base-spire:inklet" procedure = Condition }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "JAB_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 3 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "WHIRLWIND_MOVE") then = {
+        call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 2 hits = 3 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "PIERCING_GAZE_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 10 } }
+      } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:inklet" procedure = Execute }
+  procedure Added {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) }
+    body = { if = { condition = equal(field(target, Enemy.DefinitionId), "base-spire:inklet") then = {
+      call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:slippery-power" stacks = 1 } }
+    } } }
+  }
+  subscription Added { event = EnemyAddedToCombat reaction = Added }
+  procedure CreateInklet {
+    parameters = { middle = Bool } result = Binding
+    locals = { target = Binding own = Binding }
+    body = {
+      call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:inklet" min = 11 max = 17 } into = target }
+      create = { type = State scope = entityScope(target) into = own fields = { Enemy = target Middle = middle } }
+      return = { value = target }
+    }
+  }
+  procedure Remove { parameters = { target = Ref(Enemy) } body = {
+    forEach = { query = where(type(State), s, equal(field(s, State.Enemy), target)) item = own body = { destroy = { target = own } } }
+  } }
+  subscription Remove { event = EnemyRemoving reaction = Remove }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) locals = { target = Binding } body = { call = { procedure = CreateInklet args = { middle = false } into = target } } }
+} }
+use Inklet { template = InkletContent }

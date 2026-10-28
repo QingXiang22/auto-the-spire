@@ -1,0 +1,20 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Overgrowth MonsterEncounters: SnappingJaxfruitNormal, SnappingJaxfruit then Flyconid.
+procedure SpawnSnappingJaxfruitNormal {
+  locals = { target = Binding }
+  body = {
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:snapping-jaxfruit" min = 31 max = 33 } into = target }
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:flyconid" min = 47 max = 49 } into = target }
+  }
+}
+use SnappingJaxfruitNormal { template = TwoEnemyEncounterFormation }
+
+template TwoEnemyEncounterFormation { body = {
+  action Spawn {
+    role = player
+    requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
+    body = { call = { procedure = SpawnSnappingJaxfruitNormal } }
+  }
+} }

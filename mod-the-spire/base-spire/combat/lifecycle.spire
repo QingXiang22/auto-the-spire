@@ -77,7 +77,7 @@ procedure CheckCombatVictory {
       condition = and(and(greater(field(owner, Player.Hp), 0), equal(field(owner, Player.AttackDepth), 0)), and(equal(field(owner, Player.PlayDepth), 0), and(field(owner, Player.CombatActive), equal(field(owner, Player.CombatOutcome), "none"))))
       then = {
         if = {
-          condition = and(or(field(owner, Player.EnemyDiedInCombat), field(owner, Player.CombatTimedOut)), and(exists(type(Enemy)), not(exists(where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy))))))
+          condition = and(or(field(owner, Player.EnemyDiedInCombat), field(owner, Player.CombatTimedOut)), and(exists(type(Enemy)), not(exists(where(type(Enemy), enemy, pureCall(EnemyBlocksVictory, enemy))))))
           then = {
             set = { target = owner field = Player.CombatOutcome value = "victory" }
             set = { target = owner field = Player.TurnOpen value = false }

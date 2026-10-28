@@ -1,0 +1,9 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Overgrowth MonsterEncounters: MawlerNormal, fixed A0 HP 72.
+procedure SpawnMawlerNormal {
+  locals = { target = Binding }
+  body = { call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:mawler" min = 72 max = 72 } into = target } }
+}
+use MawlerNormal { template = SingleEnemyEncounterRange args = { definition = "base-spire:mawler-normal" enemyDefinition = "base-spire:mawler" min = 72 max = 72 } }

@@ -1,0 +1,21 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Overgrowth MonsterEncounters: InkletsNormal, three Inklets with the middle one marked.
+procedure SpawnInkletsNormal {
+  locals = { target = Binding }
+  body = {
+    call = { procedure = Inklet.CreateInklet args = { middle = false } into = target }
+    call = { procedure = Inklet.CreateInklet args = { middle = true } into = target }
+    call = { procedure = Inklet.CreateInklet args = { middle = false } into = target }
+  }
+}
+use InkletsNormal { template = InkletsNormalFormation }
+
+template InkletsNormalFormation { body = {
+  action Spawn {
+    role = player
+    requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
+    body = { call = { procedure = SpawnInkletsNormal } }
+  }
+} }

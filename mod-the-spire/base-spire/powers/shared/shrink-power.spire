@@ -1,0 +1,23 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Locked ShrinkPower: a permanent -1 debuff applied by the Shrinker Beetle. It only reduces the owner's
+# powered attacks by 30% and disappears when the applier dies.
+template ShrinkPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:shrink-power" powerType = "debuff" allowNegative = true } }
+  procedure Shrink {
+    pure = true parameters = { value = Int owner = Ref(Player) card = Binding target = Binding listener = Ref(Power) }
+    result = Int body = {
+      if = { condition = and(equal(field(listener, Power.HolderPlayer), owner), not(equal(field(listener, Power.Stacks), 0))) then = {
+        return = { value = divide(multiply(value, 70), 100) }
+      } }
+      return = { value = value }
+    }
+  }
+  subscription Shrink { event = ModifyAttackMultiplier reaction = Shrink instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:shrink-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+  procedure Remove { parameters = { target = Ref(Enemy) } body = {
+    forEach = { query = where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), "base-spire:shrink-power"), equal(field(p, Power.ApplierEnemy), target))) item = power body = { call = { procedure = RemovePower args = { power = power } } } }
+  } }
+  subscription Remove { event = EnemyDied reaction = Remove }
+} }
+use ShrinkPower { template = ShrinkPowerModule }

@@ -103,6 +103,10 @@
       "definition": "cards/ironclad/dark-embrace.spire"
     },
     {
+      "id": "base-spire:dazed",
+      "definition": "cards/status/dazed.spire"
+    },
+    {
       "id": "base-spire:defend-ironclad",
       "definition": "cards/ironclad/defend-ironclad.spire"
     },

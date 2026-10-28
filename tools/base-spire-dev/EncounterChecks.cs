@@ -62,6 +62,7 @@ internal static partial class PackageChecks
             Equal(3, other.Split(',').Distinct(StringComparer.Ordinal).Count(), "another seed still yields three distinct raiders");
         });
 
+        RunActOneEncounterChecks(package, Case);
         return new Dictionary<string, string[]>(StringComparer.Ordinal) { ["base-spire:fuzzy-wurm-crawler-weak"] = witnesses.ToArray(), ["base-spire:ruby-raiders-normal"] = witnesses.ToArray() };
     }
 }

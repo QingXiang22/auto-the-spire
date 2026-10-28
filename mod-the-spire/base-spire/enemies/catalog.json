@@ -35,8 +35,28 @@
       "definition": "enemies/shared/crossbow-ruby-raider.spire"
     },
     {
+      "id": "base-spire:cubex-construct",
+      "definition": "enemies/shared/cubex-construct.spire"
+    },
+    {
+      "id": "base-spire:flyconid",
+      "definition": "enemies/shared/flyconid.spire"
+    },
+    {
+      "id": "base-spire:fogmog",
+      "definition": "enemies/shared/fogmog.spire"
+    },
+    {
       "id": "base-spire:fuzzy-wurm-crawler",
       "definition": "enemies/shared/fuzzy-wurm-crawler.spire"
+    },
+    {
+      "id": "base-spire:eye-with-teeth",
+      "definition": "enemies/shared/eye-with-teeth.spire"
+    },
+    {
+      "id": "base-spire:inklet",
+      "definition": "enemies/shared/inklet.spire"
     },
     {
       "id": "base-spire:leaf-slime-m",
@@ -45,6 +65,26 @@
     {
       "id": "base-spire:leaf-slime-s",
       "definition": "enemies/shared/leaf-slime-s.spire"
+    },
+    {
+      "id": "base-spire:mawler",
+      "definition": "enemies/shared/mawler.spire"
+    },
+    {
+      "id": "base-spire:nibbit",
+      "definition": "enemies/shared/nibbit.spire"
+    },
+    {
+      "id": "base-spire:shrinker-beetle",
+      "definition": "enemies/shared/shrinker-beetle.spire"
+    },
+    {
+      "id": "base-spire:slithering-strangler",
+      "definition": "enemies/shared/slithering-strangler.spire"
+    },
+    {
+      "id": "base-spire:snapping-jaxfruit",
+      "definition": "enemies/shared/snapping-jaxfruit.spire"
     },
     {
       "id": "base-spire:stabbot",
@@ -61,6 +101,10 @@
     {
       "id": "base-spire:twig-slime-s",
       "definition": "enemies/shared/twig-slime-s.spire"
+    },
+    {
+      "id": "base-spire:vine-shambler",
+      "definition": "enemies/shared/vine-shambler.spire"
     },
     {
       "id": "base-spire:wriggler",
