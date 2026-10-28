@@ -11,11 +11,16 @@ import urllib.error
 import urllib.request
 
 
-SUITES = ["core", "base", "net", "migration", "docs"]
+SUITES = ["core", "base", "net", "migration", "docs", "package", "enemy-graph"]
 # These exact scripts are used only by their named suite in check.py. The select job
 # independently runs test_normal_report.py on every event.
 MIGRATION_CHECK_FILES = {"tools/ci/check_dsl_migration.py", "tools/ci/normal_report.py"}
 BASE_COVERAGE_FILES = {"tools/ci/check_relic_coverage.py", "tools/ci/check_card_coverage.py"}
+PACKAGE_ONLY_FILES = {"tools/base-spire-dev/PackageBoundaryChecks.cs"}
+PACKAGE_SUITE_FILES = {"tools/base-spire-dev/PackageChecks.cs", "tools/base-spire-dev/ContentRegistration.cs",
+                       "mod-the-spire/base-spire/package.json"}
+GRAPH_ONLY_FILES = {"tools/base-spire-dev/EnemyMoveGraphChecks.cs", "tools/base-spire-dev/EnemyGraphMechanismChecks.cs"}
+GRAPH_SUITE_FILES = {"mod-the-spire/base-spire/enemies/schema.spire", "mod-the-spire/base-spire/enemies/rules/move-graph.spire"}
 
 
 def affected(paths: list[str]) -> list[str]:
@@ -29,6 +34,14 @@ def affected(paths: list[str]) -> list[str]:
             selected.add("migration")
         elif path in BASE_COVERAGE_FILES:
             selected.add("base")
+        elif path in PACKAGE_ONLY_FILES:
+            selected.add("package")
+        elif path in GRAPH_ONLY_FILES:
+            selected.add("enemy-graph")
+        elif path in PACKAGE_SUITE_FILES:
+            selected.update(("base", "net", "migration", "package"))
+        elif path in GRAPH_SUITE_FILES:
+            selected.update(("base", "net", "migration", "enemy-graph"))
         elif path.startswith(("mod-the-spire/base-spire/", "net-the-spire/", "tools/base-spire-dev/")):
             selected.update(("base", "net", "migration"))
         elif path.startswith(("tools/differential/", "tools/rng-oracle/")):

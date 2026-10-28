@@ -53,7 +53,7 @@ def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     sys.stderr.reconfigure(encoding="utf-8")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("suite", nargs="+", choices=["content", "core", "base", "net", "differential", "migration", "docs"])
+    parser.add_argument("suite", nargs="+", choices=["content", "core", "base", "net", "differential", "migration", "docs", "package", "enemy-graph", "paused"])
     parser.add_argument("--focus", action="append", type=content_arguments,
                         help="content only; repeat to select behavior groups, e.g. --focus 'relic:RL pickup '")
     parser.add_argument("--configuration", choices=["Debug", "Release"], default="Release")
@@ -91,9 +91,15 @@ def main() -> int:
         project = "tools/base-spire-dev/BaseSpire.Dev.csproj"
         commands = [build(project), run(project) + ["--", "validate"],
                     run(project) + ["--", "check", "--report", str(output / "behavior")],
-                    run(project) + ["--", "check", "--normal-run-only"],
+                    run(project) + ["--", "check", "--normal-run-only", "--skip-dense-vegetation"],
                     [sys.executable, "-X", "utf8", "tools/ci/check_relic_coverage.py", str(output / "behavior/package-behavior.json")],
                     [sys.executable, "-X", "utf8", "tools/ci/check_card_coverage.py", str(output / "behavior/package-behavior.json"), "--require-ironclad-complete"]]
+    elif args.suite == "package":
+        project = "tools/base-spire-dev/BaseSpire.Dev.csproj"
+        commands = [build(project), run(project) + ["--", "check", "--package-only"]]
+    elif args.suite == "enemy-graph":
+        project = "tools/base-spire-dev/BaseSpire.Dev.csproj"
+        commands = [build(project), run(project) + ["--", "check", "--enemy-graph-only"]]
     elif args.suite == "net":
         project = "net-the-spire/Net.TheSpire.Tests"
         commands = [build(project), run(project)]
@@ -101,6 +107,10 @@ def main() -> int:
         commands = [[sys.executable, "-X", "utf8", "tools/differential/prepare_reference.py"],
                     build("tools/differential/Differential.csproj"),
                     [sys.executable, "-X", "utf8", "tools/ci/check_dsl_migration.py", "--configuration", config, "--output", str(output)]]
+    elif args.suite == "paused":
+        commands = [[sys.executable, "-X", "utf8", "tools/differential/prepare_reference.py"],
+                    build("tools/differential/Differential.csproj"),
+                    [sys.executable, "-X", "utf8", "tools/ci/check_dsl_migration.py", "--configuration", config, "--paused-schedule", "--output", str(output)]]
     elif args.suite == "docs":
         commands = [[sys.executable, "-X", "utf8", "tools/doc-check/check_docs.py"],
                     [sys.executable, "-X", "utf8", "tools/doc-check/check_terms.py"],

@@ -48,4 +48,4 @@ BattleFriendV1／V2／V3使用固定IDLE自循环和stun意图，HP分别为75�
 
 新遭遇接入地图／战斗入口后，通过公开合法动作实际进入并完成一次战斗，再核对奖励及永久状态写回。受控单敌探针和正常多敌流程分列，静态名单存在不算敌人行为已迁移。交付后更新[真实操作参考](../reference/operations.md)与原回归去向。
 
-本地定向运行 `dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only`；完整包检查仍运行全部卡牌、敌人及其他机制。源向量只证明标明的受控选招与随机范围，不能代替正常遭遇或模拟器独立比较。
+本地定向运行 `dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only`；图机制输入另用 `check --enemy-graph-only`，只在图规则或该检查变化时需要。完整包检查仍运行全部卡牌、敌人及其他机制。源向量只证明标明的受控选招与随机范围，不能代替正常遭遇或模拟器独立比较。

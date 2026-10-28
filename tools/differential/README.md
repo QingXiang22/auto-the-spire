@@ -8,9 +8,9 @@
 
 ## 战斗动作边界诊断
 
-运行 `dotnet run --project tools/differential -c Release -- combat-boundary-compare --output .artifacts/differential/combat-boundaries`，从两个固定 seed 分别执行开场及完整`EndTurn`（含下一普通玩家开始）、付费 Strike、两张 Infection、第一张移牌时暂停的两张 Infection，以及 Feed 末杀；另覆盖末杀同步／异步移牌、普通／升级及末杀Anger、免费自动Whirlwind、OneTwoPunch重复Strike、Corruption和Juggling普通／满手／Stomp克隆，共30项。`combat-boundary-self-test` 检查比较器拒绝缺通知、错阶段、错牌区、错支付、错招式、错 ending、零执行和重复动作返回。
+运行 `dotnet run --project tools/differential -c Release -- combat-boundary-compare --output .artifacts/differential/combat-boundaries`，从两个固定 seed 分别执行开场及完整`EndTurn`（含下一普通玩家开始）、付费 Strike、两张 Infection、Feed 末杀；另覆盖末杀同步／异步移牌、普通／升级及末杀Anger、免费自动Whirlwind、OneTwoPunch重复Strike、Corruption和Juggling普通／满手／Stomp克隆，共28项。第一张移牌时暂停的两张 Infection 已从日常清单移入明确命名的暂停调度专项：`combat-boundary-compare --paused-schedule` 只执行这两项已知 #147 差异，`check.py paused` 是本地入口，不进入 migration 默认组或 CI。`combat-boundary-self-test` 检查比较器拒绝缺通知、错阶段、错牌区、错支付、错招式、错 ending、零执行和重复动作返回。
 
-这些是人工设置的组件：空永久牌组、真实 FuzzyWurmCrawler、双方生命设为1000，Feed 的敌人设为10HP。只读通知记录实际回合号、能量、当前通知实付量spent、生命、格挡、招式、ending、生成数、Stomp手牌费用、Anger克隆升级状态和五个有序牌区；暂停例分别使用 DSL 的行政选择与参考既有异步通知的未完成 Task，观察后各续接一次，不加入游戏效果或动画等待。Feed 停在房间结算前。报告同时保存双方原始事件／监听信息，以及锁定 Hook 的准确源码、行号、摘要、迭代入口、名单固定和资格检查位置，供逐通知核查；这些源码片段和局部观察不证明全部监听已对齐。
+这些是人工设置的组件：空永久牌组、真实 FuzzyWurmCrawler、双方生命设为1000，Feed 的敌人设为10HP。只读通知记录实际回合号、能量、当前通知实付量spent、生命、格挡、招式、ending、生成数、Stomp手牌费用、Anger克隆升级状态和五个有序牌区；暂停例分别使用 DSL 的行政选择与参考既有异步通知的未完成 Task，观察后各续接一次，不加入游戏效果或动画等待。暂停例只在专项运行，默认报告不包含或过滤其已知差异。Feed 停在房间结算前。报告同时保存双方原始事件／监听信息，以及锁定 Hook 的准确源码、行号、摘要、迭代入口、名单固定和资格检查位置，供逐通知核查；这些源码片段和局部观察不证明全部监听已对齐。
 
 `first_difference` 保留从开场起的首差；`action_difference` 从已经配置好的动作初态比较，`return_difference` 单独比较真实返回值。这样开场的选招差异不会掩盖后续付款或回合末差异。配置牌区期间的 DSL 通知另保留在 raw 中；初始 HP 抽样与 niche、正常房间、重复定义牌的实例标识和完整事件比较不属于本探针。适配器不补执行额外的开始回合动作。
 

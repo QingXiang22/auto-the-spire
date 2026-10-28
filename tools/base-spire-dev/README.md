@@ -11,13 +11,15 @@ dotnet run --project tools/base-spire-dev -- sync-content
 dotnet run --project tools/base-spire-dev -- check --report .artifacts/base-dsl/behavior
 ```
 
-`validate` 检查文件边界、引用、严格静态数据与公开元数据，并实际启动 DSL Session。`describe` 输出包摘要、规则标识、scope 和已加载 DSL 定义计数。`check` 执行当前 base 的代表性行为、边界与非法输入检查；它是包外的 C# 检查脚手架，不提供玩法实现。`--report` 写入实际通过场景及卡牌／遗物等行为执行结果，供 [DSL 遗物覆盖检查](../ci/check_relic_coverage.py)与[卡牌完整覆盖检查](../ci/check_card_coverage.py)消费。正常开局及10组源池／地图独立向量使用 `check --normal-run-only`，CI base 组单独执行该命令；它不生成整包覆盖报告。内容模型定向验证可用 `check --content-model-only`；铁甲战士定向调试可用 `check --ironclad-only`，卡牌及普通完整奖励（含药水、有序源向量与暂停续接）可用 `check --card-rewards-only`，原版随机源向量可用 `check --rng-only`，它不生成整包覆盖报告；完整 `check --report` 由批次PR CI执行。
+`validate` 检查文件边界、引用、严格静态数据与公开元数据，并实际启动 DSL Session。`describe` 输出包摘要、规则标识、scope 和已加载 DSL 定义计数。`check` 执行当前 base 的代表性行为；它是包外的 C# 检查脚手架，不提供玩法实现。`--report` 写入实际通过场景及卡牌／遗物等行为执行结果，供 [DSL 遗物覆盖检查](../ci/check_relic_coverage.py)与[卡牌完整覆盖检查](../ci/check_card_coverage.py)消费。正常开局及10组源池／地图独立向量使用 `check --normal-run-only`，CI base 组先执行完整报告，再用 `--normal-run-only --skip-dense-vegetation` 只去掉同次已执行的 DenseVegetation；单独调用仍包含该场景。它不生成整包覆盖报告。内容模型定向验证可用 `check --content-model-only`；铁甲战士定向调试可用 `check --ironclad-only`，卡牌及普通完整奖励（含药水、有序源向量与暂停续接）可用 `check --card-rewards-only`，原版随机源向量可用 `check --rng-only`，它不生成整包覆盖报告；完整 `check --report` 由批次PR CI执行。
 
 `sync-content`从实际CardLibrary／PowerLibrary及显式启动实例确定性派生这两类公开ID，只写public/metadata.json相应content_ids；公开可见性政策、生产定义目录及工具固定来源的池顺序继续显式维护。validate／check同时核对可执行ID、来源文件映射及公开列表，缺登记、错误映射和重复分别失败。该审计针对当前base的定义库形状，不是通用包的内容推断器。
 
 `check --content-model-only`包含共享Power改量与Artifact检查：新建／叠加／直接Modify、Given加法后乘法、正负增量／零量、临时力量同步、真实来源、移除后的修正者资格，以及暂停时隐藏计算上下文、续接一次与清理。它也保留原内容模型检查；受控行为不能替代[独立Power组件比较](../differential/README.md#power改量组件比较)或正常Run验收。
 
 行为迁移定向检查使用`check --card-behavior-only`，覆盖正文／执行、攻击／结果、费用／关键词、复制／附魔、Power来源、资源及开发事件。可加`--filter "LIFECYCLE "`或`--filter "VISIT "`按不区分大小写的名称前缀筛选；空筛选／零匹配返回2，不能与其他定向参数或report混用。它不生成整包覆盖报告。接口与未支持范围见[行为操作参考](../../docs/areas/base/reference/card-behavior.md)。
+
+包加载／编译边界使用`check --package-only`，在最小包数据上检查可执行文件、JSON程序、未知／重复字段、路径逃逸、预算配置／执行和内容模块限制，并核对生产包未知／缺失登记映射；它不执行内容行为，也不代替完整内容登记一致性检查。CI 只在包结构、编译器／登记器或该检查变化时运行 package 组。
 
 可在命令后传入其他 manifest 路径，再使用 `--scope <id>`。本版 `check` 用于当前 base 开发范围；`validate`同样核对当前base定义库，不把加载成功记作行为通过。退出码 0 为当前命令完成，2 为格式／加载失败，3 为未支持。旧 `play`、`probe` 和直接传卡牌 `.spire` 的入口明确返回 3。
 
@@ -37,7 +39,7 @@ AttackModifierRelicChecks随同一定向入口执行MiniatureCannon／PaperPhrog
 
 `base-spire-dsl-relic-draw-dev-v1` 是单玩家、全部解锁的机制开发范围，覆盖实际出牌／选敌／选牌、耗尽、X 费、费用修改、复制／生成／变换、自动与重复出牌、所需 Power 反应、已有敌人／遗物／药水、营火与金币奖励。铁甲战士以完整源池 87 项核对 85 张单人牌，保留两项多人排除；准确共享入口和未支持边界见[铁甲战士操作参考](../../docs/areas/base/reference/ironclad-shared-operations.md)。显式 Ironclad 基础初态、原版随机算法／流布局和自动起手已接入；独立的 `StartNormalRun` 动作提供同版本源 Neow、地图与首个已支持遭遇的开局路径，范围见[Run 与房间](../../docs/areas/base/how-to/run-and-rooms.md)；该机制包的名称不表示完整正常 Run 已验收。当前数量与交付验证记录从[路线图](../../docs/meta/roadmap.md#近期队列)定位。
 
-敌人招式图可定向运行 `dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only`，包含FuzzyWurmCrawler固定轮转、TwigSlimeM首招及随机限制、Slimed实际出牌、Wriggler四槽条件与Infection费用／回合末生命周期，以及共享图失败检查。该选项不能与其他定向参数或报告输出组合；完整报告仍使用普通check。正常遭遇和完整独立比较不由该定向检查验收。
+敌人招式图可定向运行 `dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only`，包含FuzzyWurmCrawler固定轮转、TwigSlimeM首招及随机限制、Slimed实际出牌、Wriggler四槽条件与Infection费用／回合末生命周期，以及合法图的实际行动。非法图矩阵、无合法分支与转移预算等图机制输入使用 `check --enemy-graph-only`，只在图 schema／规则或该检查变化时由 CI 选择，新增敌人不重复执行。这两个选项都不能与其他定向参数或报告输出组合；完整报告仍使用普通check。正常遭遇和完整独立比较不由这些定向检查验收。
 
 分阶段学习与实际公开结果见[base 开发教程](../../docs/areas/base/README.md)。教学驱动复用现有 Python 客户端，不修改正式包或原版行为执行结果。
 

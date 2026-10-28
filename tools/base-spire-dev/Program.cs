@@ -21,6 +21,9 @@ try
     var enemyMovesOnly = false;
     var normalRunOnly = false;
     var normalReturnOnly = false;
+    var packageOnly = false;
+    var enemyGraphOnly = false;
+    var skipDenseVegetation = false;
     for (var index = 1; index < args.Length; index++)
     {
         string Input() => index + 1 < args.Length ? args[++index] : throw new ArgumentException("Missing option value.");
@@ -28,6 +31,9 @@ try
         else if (args[index] == "--enemy-moves-only") enemyMovesOnly = true;
         else if (args[index] == "--normal-run-only") normalRunOnly = true;
         else if (args[index] == "--normal-return-only") { normalRunOnly = true; normalReturnOnly = true; }
+        else if (args[index] == "--package-only") packageOnly = true;
+        else if (args[index] == "--enemy-graph-only") enemyGraphOnly = true;
+        else if (args[index] == "--skip-dense-vegetation") skipDenseVegetation = true;
         else if (args[index] == "--card-behavior-only") cardBehaviorOnly = true;
         else if (args[index] == "--content-model-only") contentModelOnly = true;
         else if (args[index] == "--relic-content-only") relicContentOnly = true;
@@ -43,6 +49,20 @@ try
         throw new ArgumentException("--filter requires a nonempty name and check --relic-content-only or --card-behavior-only without other focused flags or --report.");
     if (Path.GetExtension(manifest) != ".json") throw new NotSupportedException("unsupported_capability: the DSL package tool requires a package.json manifest; legacy card probes are retired.");
     var package = DslPackage.Load(manifest, scope);
+    if (packageOnly)
+    {
+        if (command != "check" || report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || enemyMovesOnly || normalRunOnly || enemyGraphOnly || skipDenseVegetation)
+            throw new ArgumentException("--package-only requires check without other focused flags, report or normal-run options.");
+        return PackageChecks.RunPackageOnly(package);
+    }
+    if (enemyGraphOnly)
+    {
+        if (command != "check" || report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || enemyMovesOnly || normalRunOnly || packageOnly || skipDenseVegetation)
+            throw new ArgumentException("--enemy-graph-only requires check without other focused flags, report or normal-run options.");
+        return PackageChecks.RunEnemyGraphOnly(package);
+    }
+    if (skipDenseVegetation && !normalRunOnly)
+        throw new ArgumentException("--skip-dense-vegetation requires --normal-run-only; standalone normal runs must retain the DenseVegetation path.");
     if (command == "sync-content")
     {
         if (report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || enemyMovesOnly || normalRunOnly)
@@ -65,7 +85,7 @@ try
         if (command != "check" || report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || enemyMovesOnly)
             throw new ArgumentException("--normal-run-only requires check without other focused flags or report.");
         if (metadata.ScenarioProfile != package.Scope) throw new FormatException("Package and public scope disagree.");
-        return normalReturnOnly ? PackageChecks.RunNormalReturnOnly(package) : PackageChecks.RunNormalRunOnly(package);
+        return normalReturnOnly ? PackageChecks.RunNormalReturnOnly(package, !skipDenseVegetation) : PackageChecks.RunNormalRunOnly(package, !skipDenseVegetation);
     }
     if (cardBehaviorOnly)
     {
