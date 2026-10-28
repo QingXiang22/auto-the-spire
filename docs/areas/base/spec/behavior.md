@@ -24,17 +24,17 @@ base 声明正文分派，参数为 owner／card／target／play。每个已执�
 
 首个攻击开发场景在 DSL 中增加 Attack 与 DamageResult 隐藏实体。Attack 保存攻击者、card／play、目标策略、段数及当前击；DamageResult 保存 Attack／hit、来源、受击者、格挡／实际失血／超杀与致死事实。命中先提交本批全部目标，再按结果发布通知，最后按本批致死事实发布死亡通知。Before／AfterAttack 每个命令一次，段数修正后逐击重新取得目标；随机目标仅在实际有候选的命中消费目标流。直接伤害可以没有 Attack 和卡来源，不能从 CurrentPlay 自动推断为卡牌伤害。
 
-攻击深度与出牌深度共同保护外层结算；结果历史在下一战重建牌组前先于出牌记录清理。Vigor 的攻击引用仅在 Before 至 After 内有效并清理；Rupture 的卡伤害消费显式结果来源，仍按本轮已支持的玩家／敌人持有者边界。未接死亡防止、召唤／复活或其他角色消费者时明确保留未支持，不把结果模型当作这些玩法已经完成。
+攻击深度与出牌深度共同保护外层结算；结果历史在下一战重建牌组前先于出牌记录清理。Vigor 的攻击引用仅在 Before 至 After 内有效并清理；Rupture 的卡伤害消费显式结果来源。死亡和复活资格由所属内容及共享敌人生命周期处理。
 
 直接群伤另有DamageBatch，不创建伪Attack。MercuryHourglass、Inferno、LetterOpener与StoneCalendar一次固定目标，先提交全部结果，再通知与处理死亡；DamageDepth保护批次内嵌套回调不能提前提交胜利。Thorns、Juggernaut与FirePotion等明确传玩家攻击者，card／play保持none，不因正在出牌就取得卡来源。未提供来源的开发兼容DamageEnemy仍保留未知来源。
 
-普通动态伤害由每张牌的 ReadCardDamage case 提供，CardBaseDamage 不再枚举 DamageScale；预览与实际伤害修正共用纯过程。当前百分比乘法仍沿用四位整数中间值，尚未校准为原版完整 decimal；本包的结果模型不关闭 G05 的数值精度条件。
+普通动态伤害由每张牌的 ReadCardDamage case 提供，CardBaseDamage 不再枚举 DamageScale；预览与实际伤害修正共用纯过程。乘法链使用10000为缩放基准，表示范围及Shrink组合的精度问题见[伤害规格](combat-damage.md)。新增比例、重复实例或读取小数的HP修正按G05核对。
 
 ## 费用、牌区与实例能力
 
 费用修正作为独立 CardCostModifier 保存 card、source、set／add、amount 和 turn／play／turn-or-play／combat 寿命，按插入顺序折叠；临时费用不再依靠三个覆盖开关。公开 Cost 是命令维护的缓存，读取和预览不写缓存。克隆复制独立修正，新战清除临时费用，永久基础费用与临时费用分开。
 
-MoveCombatCard 处理已有战斗牌的异步移动、拥有者与目的区校验、满手和移动通知；来源生成、同步结果移牌及Remove各用自己的入口。主动弃牌使用同步移牌并发CardDiscarded，不发异步CardMoved；回合末整批 flush 和打出结果区不冒充主动弃牌。FinishTurnHand 固定 Ethereal 批次，再处理 BeforeHandFlush、Retain／ShouldFlushHand 筛选、整批提交与通知。新抽到的牌不混入旧消耗批次。当前未接带独有回合末手牌正文的牌与完整有序多选消费者。
+MoveCombatCard 处理已有战斗牌的异步移动、拥有者与目的区校验、满手和移动通知；来源生成、同步结果移牌及Remove各用自己的入口。主动弃牌使用同步移牌并发CardDiscarded，不发异步CardMoved；回合末整批 flush 和打出结果区不冒充主动弃牌。FinishTurnHand 固定无末效果的 Ethereal 批次及末效果牌批次，先耗尽前者，再逐张处理后者的入执行区、正文与结果区，之后处理 BeforeHandFlush、Retain／ShouldFlushHand 筛选、整批提交与通知。新抽到的牌不混入旧批次。Infection 已有末效果正文；多张效果牌挂起时的参考 Task 交错及完整有序多选尚未接入。
 
 生成与已有卡牌移动分开。锁定来源 `CardPileCmd.Generate` 接受持有者、可为空的生成者、新建且尚无牌堆的卡及目的区。先校验战斗、持有者和目的区；满手生成到弃牌堆。普通情况先入堆，再记录生成者本场生成数，然后发 `CardEnteredCombat`、`AfterCardGenerated` 和 `AfterCardGeneratedForCombat`；生成不发异步 `CardMoved` 或耗尽通知。战斗潜在结束时仍创建实例并记录非空生成者，但不入堆、不发入场通知；来源虽调用两个生成Hook，其战斗监听迭代器在结束中为空，不执行监听。每个生成通知都独立重新检查结束状态。空生成者不增加玩家计数；LeafSlimeS／M、TwigSlimeM与Wriggler生成状态牌传none，InfernalBlade／Stoke传玩家。入场监听失败时来源移除新牌、回滚生成数并向已执行监听器发中止补偿；现有DSL在监听器失败时终止Session，不能执行来源的异常补偿；该边界尚未支持。当前加载内容没有两个生成通知的实际玩法监听者，不将通知声明等同于所有监听资格与失效时点已迁移。
 
@@ -101,7 +101,7 @@ core 文本分派进入编译标识 dispatch/1；依附标识投影、pure 显�
 
 每次命中的目标处理分为“按目标执行修正及状态提交”和“按结果发布伤害后通知／统一死亡处理”；具体站点按原版 CreatureCmd 核对。不能在群体伤害刚打死第一个目标时，提前发全部死亡反应并改变其余目标的同批结算。普通伤害、不可阻挡失血、无加成伤害共享必要底层步骤，各自保留正确通知资格。
 
-胜负、永久写回与奖励由外层动作／效果结算边界负责。HP 到零的事实、死亡防止、真正死亡和战斗结束分别建模；本轮不因此恢复已暂停的召唤／复活内容。
+胜负、永久写回与奖励由外层动作／效果结算边界负责。HP 到零、死亡防止、真正死亡和战斗结束分别建模。
 
 **完成判据**：Feed 的收益能关联实际致死结果；Rupture 能识别真正的来源，SelfFormingClay 能读取实际正失血；全阻挡、超杀、反击杀死攻击者、群体同时击杀各有明确结果，且查询不触发这些效果。
 

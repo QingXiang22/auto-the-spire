@@ -6,7 +6,7 @@
 
 Power由所属内容模块登记定义并注册实例监听，调用方显式传definition、持有者、层数和可用来源，不传Kind。共享创建／改量／移除、定义类型、实例模式、临时寿命与死亡清理见[Power参考](../reference/powers.md)。源目录中的条目不等于已加载定义，不用旧迁移数量或空定义表示当前支持范围。
 
-攻击使用当前Attack／DamageResult流程：加法、乘法、格挡吸收、生命结果与通知分别处理，不能把Bash／Uppercut的正文伤害和随后施加Power倒置。现有攻击修正仍使用四位整数中间量；完整decimal精度由伤害领域独立校准，格挡组件通过不代表伤害全量对齐。
+攻击使用当前Attack／DamageResult流程，依次处理加法、乘法、格挡吸收、生命结果与通知；Bash／Uppercut先伤害，再施加Power。数值表示与精度边界见[伤害规格](combat-damage.md)。
 
 双方格挡使用同一命令：Dexterity按牌源所有者或无牌时的实际目标贡献加法；Frail仅乘目标的powered Move；Unmovable排除怪物目标并按其他play的正Move格挡历史判断。加法、乘法完成后才非负截断和取整，不能在Frail之后提前丢掉分数。现有无加成入口的Unpowered且无Move组合绕过这三个修正。实际修正者在计算后只回调一次，前后通知保留零量、分数、来源和旗标，详见[双方格挡约定](combat-turn-resources.md#双方格挡命令)。
 
