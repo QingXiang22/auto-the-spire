@@ -14,6 +14,11 @@ procedure EnemyIsHittable {
   return = { value = foldEvent(ShouldAllowHittingEnemy, true, target) }
  }
 }
+# Victory waits only for a live enemy or a retained zero-HP illusion that is about to revive.
+procedure EnemyBlocksVictory {
+ pure = true parameters = { target = Ref(Enemy) } result = Bool
+ body = { return = { value = and(pureCall(EnemyIsOnSide, target), or(pureCall(EnemyIsActive, target), field(target, Enemy.Reviving))) } }
+}
 
 # Compatibility operations use the same result pipeline. A missing source stays missing;
 # direct damage never acquires card attribution merely because a card is currently resolving.

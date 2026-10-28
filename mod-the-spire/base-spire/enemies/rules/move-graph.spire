@@ -171,6 +171,13 @@ procedure ResetCombatEnemyMoves {
 procedure PerformEnemyMove {
   parameters = { owner = Ref(Player) target = Ref(Enemy) } locals = { state = Binding node = Binding }
   body = {
+    if = { condition = field(target, Enemy.Reviving) then = {
+      set = { target = target field = Enemy.Hp value = field(target, Enemy.MaxHp) }
+      set = { target = target field = Enemy.Reviving value = false }
+      set = { target = target field = Enemy.MoveId value = "DISTRACT_MOVE" }
+      set = { target = target field = Enemy.Intent value = "status" }
+      return = {}
+    } }
     let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
     if = { condition = isNone(state) then = { return = {} } }
     if = { condition = or(not(pureCall(EnemyIsActive, target)), lessOrEqual(field(owner, Player.Hp), 0)) then = { return = {} } }

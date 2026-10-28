@@ -90,6 +90,10 @@ entity Enemy {
     MoveId = { type = String(length = 64) default = "none" }
     # Public development intent name ("none", "attack", "buff", ...); no intent damage value is published.
     Intent = { type = String(length = 32) default = "none" }
+    # Source IllusionPower/MinionPower marker: a zero-HP illusion stays on the side and revives once on its
+    # next enemy turn instead of being removed.
+    Illusion = { type = Bool default = false visibility = Hidden }
+    Reviving = { type = Bool default = false visibility = Hidden }
   }
 }
 

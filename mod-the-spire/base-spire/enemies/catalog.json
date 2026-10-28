@@ -43,8 +43,16 @@
       "definition": "enemies/shared/flyconid.spire"
     },
     {
+      "id": "base-spire:fogmog",
+      "definition": "enemies/shared/fogmog.spire"
+    },
+    {
       "id": "base-spire:fuzzy-wurm-crawler",
       "definition": "enemies/shared/fuzzy-wurm-crawler.spire"
+    },
+    {
+      "id": "base-spire:eye-with-teeth",
+      "definition": "enemies/shared/eye-with-teeth.spire"
     },
     {
       "id": "base-spire:inklet",

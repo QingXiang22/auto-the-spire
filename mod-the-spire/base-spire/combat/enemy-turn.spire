@@ -44,7 +44,7 @@ procedure RunEnemyTurn {
       if = { condition = not(exists(where(type(Enemy), e, equal(e, enemy)))) then = { fail = { message = "unsupported_capability: fully removed enemy in captured action list" } } }
       if = { condition = field(enemy, Enemy.Escaped) then = { fail = { message = "unsupported_capability: live escape from captured action list" } } }
       if = { condition = pureCall(EnemyIsOnSide, enemy) then = {
-        if = { condition = and(not(pureCall(CombatIsOverOrEnding)), and(pureCall(EnemyIsActive, enemy), not(field(enemy, Enemy.SpawnedThisTurn)))) then = {
+        if = { condition = and(not(pureCall(CombatIsOverOrEnding)), and(or(pureCall(EnemyIsActive, enemy), field(enemy, Enemy.Reviving)), not(field(enemy, Enemy.SpawnedThisTurn)))) then = {
           emit = { event = EnemyTurnStarted payload = { owner = owner target = enemy } }
         } }
       } }

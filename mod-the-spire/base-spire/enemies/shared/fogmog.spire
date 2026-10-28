@@ -1,0 +1,35 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Fogmog.cs, A0: HP 74. Illusion summons EyeWithTeeth into the reserved slot, Swipe deals 8 and gains
+# Strength 1, then a random Swipe (0.4) / Headbutt 14 (0.6) branch returns to Swipe.
+template FogmogContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:fogmog" initial = "ILLUSION_MOVE" } }
+  use Illusion { template = EnemyMoveNodeDefinition args = { definition = "base-spire:fogmog" id = "ILLUSION_MOVE" next = "SWIPE_MOVE" intent = "summon" index = 0 } }
+  use Swipe { template = EnemyMoveNodeDefinition args = { definition = "base-spire:fogmog" id = "SWIPE_MOVE" next = "BRANCH" intent = "attack,buff" index = 1 } }
+  use SwipeRandom { template = EnemyMoveNodeDefinition args = { definition = "base-spire:fogmog" id = "SWIPE_RANDOM_MOVE" next = "HEADBUTT_MOVE" intent = "attack,buff" index = 2 } }
+  use Headbutt { template = EnemyMoveNodeDefinition args = { definition = "base-spire:fogmog" id = "HEADBUTT_MOVE" next = "SWIPE_MOVE" intent = "attack" index = 3 } }
+  use Branch { template = EnemyMoveNodeDefinition args = { definition = "base-spire:fogmog" id = "BRANCH" kind = "random" } }
+  use SwipeBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:fogmog" node = "BRANCH" target = "SWIPE_RANDOM_MOVE" maxRepeats = 1 weight = 0.4 } }
+  use HeadbuttBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:fogmog" node = "BRANCH" target = "HEADBUTT_MOVE" maxRepeats = 1 weight = 0.6 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "ILLUSION_MOVE") then = {
+        if = { condition = not(pureCall(CombatIsOverOrEnding)) then = {
+          call = { procedure = SummonCombatEnemy args = { definition = "base-spire:eye-with-teeth" hp = 6 slot = 0 illusion = true } }
+        } }
+      } }
+      if = { condition = or(equal(field(node, EnemyMoveNode.Id), "SWIPE_MOVE"), equal(field(node, EnemyMoveNode.Id), "SWIPE_RANDOM_MOVE")) then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 8 } }
+        call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 1 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "HEADBUTT_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 14 } }
+      } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:fogmog" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:fogmog" hp = 74 } } } }
+} }
+use Fogmog { template = FogmogContent }

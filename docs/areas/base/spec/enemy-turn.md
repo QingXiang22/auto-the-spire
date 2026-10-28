@@ -14,7 +14,7 @@
 
 ### 固定轮转与完整敌人攻击
 
-七个既有敌人按锁定参考的节点和后继登记同一共享图，正文由各自内容模块提供，不再由内容订阅EnemyTurnStarted自行改MoveIndex。Assassin的KILLSHOT_MOVE、BowlbugEgg的BITE_MOVE及Stabbot的STAB_MOVE各自循环；Axe为SWING_1→SWING_2→BIG_SWING→SWING_1；Brute为BEAT_MOVE与ROAR_MOVE交替；Crossbow从RELOAD_MOVE开始与FIRE_MOVE交替；Tracker从TRACK_MOVE进入HOUNDS_MOVE并保持。固定后继不消费monster_ai，首次准备、跨战重置和StunEnemy沿用共享图操作。
+七个既有开发敌人和首幕普通敌人均按锁定参考的节点和后继登记同一共享图，正文由各自内容模块提供，不再由内容订阅EnemyTurnStarted自行改MoveIndex。Assassin的KILLSHOT_MOVE、BowlbugEgg的BITE_MOVE及Stabbot的STAB_MOVE各自循环；Axe为SWING_1→SWING_2→BIG_SWING→SWING_1；Brute为BEAT_MOVE与ROAR_MOVE交替；Crossbow从RELOAD_MOVE开始与FIRE_MOVE交替；Tracker从TRACK_MOVE进入HOUNDS_MOVE并保持。首幕普通敌人另保留 Cubex 的 Charge→Blast→Blast→Expel、Mawler/Flyconid 的随机分支与冷却、Nibbit/Inklet 的出生条件、Shrinker 的 Shrink、Snapping 的单节点、SlitheringStrangler 的 Constrict、VineShambler 的 Tangled 以及 Fogmog 的 EyeWithTeeth 召唤/幻象复活。固定后继不消费monster_ai，首次准备、跨战重置和StunEnemy沿用共享图操作。
 
 Axe的两次普通挥击及BowlbugEgg公布attack,defend，Stabbot公布attack,debuff，顺序与源Intents一致。开发Spawn保留原动作ID和A0最小HP；这不包含正常编队的出生抽样或选招时点验收。
 
@@ -93,6 +93,6 @@ dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only
 dotnet run --project tools/base-spire-dev -c Release -- check --enemy-graph-only
 ```
 
-定向检查包括两个真实消费者、Slimed执行、同定义双实例／双会话、跨战重置、查询只读及暂停续接。非法图、无合法分支和迁移循环预算属于图机制输入，只在 `--enemy-graph-only` 或图 schema／规则变化时执行，新增敌人不重复全部损坏图变体。固定源向量的生成入口见[随机神谕](../../../../tools/rng-oracle/README.md)。完整包检查另核对原来源条目、全部已声明卡牌及既有敌人行为。
+定向检查包括既有开发敌人、首幕普通敌人编队、Slimed执行、同定义双实例／双会话、跨战重置、查询只读及暂停续接。首幕正常 dispatch 覆盖全部 16 个目标 Monster 遭遇，并由真实 seed 进入 NibbitsWeak；非法图、无合法分支和迁移循环预算属于图机制输入，只在 `--enemy-graph-only` 或图 schema／规则变化时执行，新增敌人不重复全部损坏图变体。固定源向量的生成入口见[随机神谕](../../../../tools/rng-oracle/README.md)。完整包检查另核对原来源条目、全部已声明卡牌及既有敌人行为。
 
 公共CI检查core、base、net、migration、docs及按影响选择的package／enemy-graph；正常Run和完整参考模拟器行为仍按各自工单验收。

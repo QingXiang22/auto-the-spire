@@ -219,6 +219,28 @@ procedure BeginNormalMapVisit {
     return = { value = visit }
   }
 }
+procedure SpawnNormalEncounter {
+  parameters = { encounter = String(length = 64) totalFloor = Int }
+  body = {
+    if = { condition = equal(encounter, "base-spire:cubex-construct-normal") then = { call = { procedure = SpawnCubexConstructNormal } return = {} } }
+    if = { condition = equal(encounter, "base-spire:flyconid-normal") then = { call = { procedure = SpawnFlyconidNormal args = { totalFloor = totalFloor } } return = {} } }
+    if = { condition = equal(encounter, "base-spire:fogmog-normal") then = { call = { procedure = SpawnFogmogNormal } return = {} } }
+    if = { condition = equal(encounter, "base-spire:fuzzy-wurm-crawler-weak") then = { call = { procedure = SpawnFuzzyWurmCrawlerWeak } return = {} } }
+    if = { condition = equal(encounter, "base-spire:inklets-normal") then = { call = { procedure = SpawnInkletsNormal } return = {} } }
+    if = { condition = equal(encounter, "base-spire:mawler-normal") then = { call = { procedure = SpawnMawlerNormal } return = {} } }
+    if = { condition = equal(encounter, "base-spire:nibbits-normal") then = { call = { procedure = SpawnNibbitsNormal } return = {} } }
+    if = { condition = equal(encounter, "base-spire:nibbits-weak") then = { call = { procedure = SpawnNibbitsWeak } return = {} } }
+    if = { condition = equal(encounter, "base-spire:overgrowth-crawlers") then = { call = { procedure = SpawnOvergrowthCrawlers } return = {} } }
+    if = { condition = equal(encounter, "base-spire:ruby-raiders-normal") then = { call = { procedure = SpawnSourceRubyRaidersNormal args = { totalFloor = totalFloor } } return = {} } }
+    if = { condition = equal(encounter, "base-spire:shrinker-beetle-weak") then = { call = { procedure = SpawnShrinkerBeetleWeak } return = {} } }
+    if = { condition = equal(encounter, "base-spire:slimes-normal") then = { call = { procedure = SpawnSourceSlimesNormal args = { totalFloor = totalFloor } } return = {} } }
+    if = { condition = equal(encounter, "base-spire:slimes-weak") then = { call = { procedure = SpawnSourceSlimesWeak args = { totalFloor = totalFloor } } return = {} } }
+    if = { condition = equal(encounter, "base-spire:slithering-strangler-normal") then = { call = { procedure = SpawnSlitheringStranglerNormal args = { totalFloor = totalFloor } } return = {} } }
+    if = { condition = equal(encounter, "base-spire:snapping-jaxfruit-normal") then = { call = { procedure = SpawnSnappingJaxfruitNormal } return = {} } }
+    if = { condition = equal(encounter, "base-spire:vine-shambler-normal") then = { call = { procedure = SpawnVineShamblerNormal } return = {} } }
+    fail = { message = "unsupported_capability: selected source normal encounter has not been migrated" }
+  }
+}
 procedure EnterNormalMapPoint {
   parameters = { owner = Ref(Player) run = Ref(Run) node = Ref(MapNode) }
   locals = { visit = Binding plan = Binding encounter = String(length = 64) target = Binding room = String(length = 16) }
@@ -239,7 +261,6 @@ procedure EnterNormalMapPoint {
     let = { into = plan value = first(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), field(run, Run.ActIndex)), and(equal(field(p, RunRoomPlan.Room), "Monster"), equal(field(p, RunRoomPlan.Position), field(run, Run.NormalEncounterIndex))))))) }
     if = { condition = isNone(plan) then = { fail = { message = "Normal room has no source encounter queue entry" } } }
     let = { into = encounter value = field(field(plan, RunRoomPlan.Definition), OpeningDefinition.DefinitionId) }
-    if = { condition = not(or(equal(encounter, "base-spire:fuzzy-wurm-crawler-weak"), equal(encounter, "base-spire:slimes-weak"))) then = { fail = { message = "unsupported_capability: selected source normal encounter has not been migrated" } } }
     call = { procedure = BeginNormalMapVisit args = { run = run node = node } into = visit }
 
     set = { target = visit field = RunVisit.RoomType value = "monster" }
@@ -249,11 +270,7 @@ procedure EnterNormalMapPoint {
     set = { target = run field = Run.Phase value = "combat" }
     set = { target = owner field = Player.Room value = "none" }
     call = { procedure = PrepareEnemyBirthContext }
-    if = { condition = equal(encounter, "base-spire:slimes-weak") then = {
-      call = { procedure = SpawnSourceSlimesWeak args = { totalFloor = field(run, Run.TotalFloor) } }
-    } else = {
-      call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" min = 55 max = 57 } into = target }
-    } }
+    call = { procedure = SpawnNormalEncounter args = { encounter = encounter totalFloor = field(run, Run.TotalFloor) } }
     call = { procedure = BeginDevelopmentCombat args = { owner = owner } }
     call = { procedure = BeginDevelopmentTurn args = { owner = owner } }
   }
