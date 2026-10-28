@@ -1,3 +1,3 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
-includes = ["schema.spire", "rules/single-enemy-encounter.spire", "rules/ruby-raiders-normal.spire", "shared/fuzzy-wurm-crawler-weak.spire", "shared/slimes-weak.spire", "shared/ruby-raiders-normal.spire"]
+includes = ["schema.spire", "rules/single-enemy-encounter.spire", "rules/ruby-raiders-normal.spire", "shared/fuzzy-wurm-crawler-weak.spire", "shared/slimes-weak.spire", "shared/ruby-raiders-normal.spire", "shared/cubex-construct-normal.spire", "shared/flyconid-normal.spire", "shared/fogmog-normal.spire", "shared/inklets-normal.spire", "shared/mawler-normal.spire", "shared/nibbits-normal.spire", "shared/nibbits-weak.spire", "shared/overgrowth-crawlers.spire", "shared/shrinker-beetle-weak.spire", "shared/slimes-normal.spire", "shared/slithering-strangler-normal.spire", "shared/snapping-jaxfruit-normal.spire", "shared/vine-shambler-normal.spire"]

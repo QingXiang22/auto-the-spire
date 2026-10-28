@@ -3,16 +3,68 @@
   "kind": "encounter",
   "entries": [
     {
+      "id": "base-spire:cubex-construct-normal",
+      "definition": "encounters/shared/cubex-construct-normal.spire"
+    },
+    {
+      "id": "base-spire:flyconid-normal",
+      "definition": "encounters/shared/flyconid-normal.spire"
+    },
+    {
+      "id": "base-spire:fogmog-normal",
+      "definition": "encounters/shared/fogmog-normal.spire"
+    },
+    {
       "id": "base-spire:fuzzy-wurm-crawler-weak",
       "definition": "encounters/shared/fuzzy-wurm-crawler-weak.spire"
+    },
+    {
+      "id": "base-spire:inklets-normal",
+      "definition": "encounters/shared/inklets-normal.spire"
+    },
+    {
+      "id": "base-spire:mawler-normal",
+      "definition": "encounters/shared/mawler-normal.spire"
+    },
+    {
+      "id": "base-spire:nibbits-normal",
+      "definition": "encounters/shared/nibbits-normal.spire"
+    },
+    {
+      "id": "base-spire:nibbits-weak",
+      "definition": "encounters/shared/nibbits-weak.spire"
+    },
+    {
+      "id": "base-spire:overgrowth-crawlers",
+      "definition": "encounters/shared/overgrowth-crawlers.spire"
     },
     {
       "id": "base-spire:ruby-raiders-normal",
       "definition": "encounters/shared/ruby-raiders-normal.spire"
     },
     {
+      "id": "base-spire:shrinker-beetle-weak",
+      "definition": "encounters/shared/shrinker-beetle-weak.spire"
+    },
+    {
+      "id": "base-spire:slimes-normal",
+      "definition": "encounters/shared/slimes-normal.spire"
+    },
+    {
       "id": "base-spire:slimes-weak",
       "definition": "encounters/shared/slimes-weak.spire"
+    },
+    {
+      "id": "base-spire:slithering-strangler-normal",
+      "definition": "encounters/shared/slithering-strangler-normal.spire"
+    },
+    {
+      "id": "base-spire:snapping-jaxfruit-normal",
+      "definition": "encounters/shared/snapping-jaxfruit-normal.spire"
+    },
+    {
+      "id": "base-spire:vine-shambler-normal",
+      "definition": "encounters/shared/vine-shambler-normal.spire"
     }
   ]
 }

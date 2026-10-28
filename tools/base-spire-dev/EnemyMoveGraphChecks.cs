@@ -74,7 +74,7 @@ internal static partial class PackageChecks
             var seed = vector.GetProperty("seed").GetString()!;
             Case("MOVE source candidates, weights, raw draws, history and effects: " + seed, () =>
             {
-                var s = observedPackage.CreateSession(1, ["player"], seed, new SessionDebugOptions(MaxRecords: 100_000)); s.Start(); Healthy(s);
+                var s = observedPackage.CreateSession(1, ["player"], seed, new SessionDebugOptions(MaxRecords: 200_000)); s.Start(); Healthy(s);
                 Submit(s, "TwigSlimeM.Spawn"); var enemy = FirstTarget(s);
                 Equal(26L, EnemyHp(s), "A0 minimum HP, no HP RNG claim");
                 Equal("none", MoveText(s, enemy, "Enemy", "MoveId"), "creation has no selected move");

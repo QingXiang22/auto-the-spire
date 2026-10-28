@@ -1,0 +1,9 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Overgrowth MonsterEncounters: VineShamblerNormal, fixed A0 HP 61.
+procedure SpawnVineShamblerNormal {
+  locals = { target = Binding }
+  body = { call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:vine-shambler" min = 61 max = 61 } into = target } }
+}
+use VineShamblerNormal { template = SingleEnemyEncounterRange args = { definition = "base-spire:vine-shambler-normal" enemyDefinition = "base-spire:vine-shambler" min = 61 max = 61 } }

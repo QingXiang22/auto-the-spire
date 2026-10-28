@@ -38,6 +38,7 @@ event AfterBlockBroken { payload = { result = Ref(DamageResult) } }
 event AfterDamageHpLost { payload = { result = Ref(DamageResult) } }
 event AfterDamageGiven { payload = { result = Ref(DamageResult) } }
 event AfterDamageReceived { payload = { result = Ref(DamageResult) } }
+event ModifyHpLoss { payload = { value = Int result = Ref(DamageResult) } }
 
 # Current loaded consumers do not override ModifyHpLost; preserve the fractional input for
 # their source identity path. Transfer, prevention and future HP-loss modifiers remain unsupported.
@@ -59,6 +60,8 @@ procedure CommitDamageResult {
     if = { condition = not(field(result, DamageResult.Unblockable)) then = { let = { into = blocked value = minimum(multiply(block, 10000), scaled) } } }
     set = { target = result field = DamageResult.BlockedScaled value = blocked }
     set = { target = result field = DamageResult.HpLossScaled value = maximum(0, subtract(scaled, blocked)) }
+    let = { into = scaled value = foldEvent(ModifyHpLoss, field(result, DamageResult.HpLossScaled), result) }
+    set = { target = result field = DamageResult.HpLossScaled value = maximum(0, scaled) }
     let = { into = loss value = minimum(999999999, divide(field(result, DamageResult.HpLossScaled), 10000)) }
     set = { target = result field = DamageResult.Blocked value = divide(blocked, 10000) }
     set = { target = result field = DamageResult.Unblocked value = minimum(before, loss) }

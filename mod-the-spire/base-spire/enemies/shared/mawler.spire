@@ -1,0 +1,32 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Mawler.cs, A0: HP 72, initial Claw (4x2), then random RipAndTear 14 / Roar Vulnerable 3 / Claw.
+# CannotRepeat maps to maxRepeats=1; UseOnlyOnce maps to once=true.
+template MawlerContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:mawler" initial = "CLAW_MOVE" } }
+  use Rip { template = EnemyMoveNodeDefinition args = { definition = "base-spire:mawler" id = "RIP_AND_TEAR_MOVE" next = "RAND" intent = "attack" index = 0 } }
+  use Roar { template = EnemyMoveNodeDefinition args = { definition = "base-spire:mawler" id = "ROAR_MOVE" next = "RAND" intent = "debuff" index = 1 } }
+  use Claw { template = EnemyMoveNodeDefinition args = { definition = "base-spire:mawler" id = "CLAW_MOVE" next = "RAND" intent = "attack" index = 2 } }
+  use Random { template = EnemyMoveNodeDefinition args = { definition = "base-spire:mawler" id = "RAND" kind = "random" } }
+  use RipBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:mawler" node = "RAND" target = "RIP_AND_TEAR_MOVE" maxRepeats = 1 } }
+  use RoarBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:mawler" node = "RAND" target = "ROAR_MOVE" once = true } }
+  use ClawBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:mawler" node = "RAND" target = "CLAW_MOVE" maxRepeats = 1 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "RIP_AND_TEAR_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 14 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "ROAR_MOVE") then = {
+        call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:vulnerable-power" stacks = 3 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "CLAW_MOVE") then = {
+        call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 4 hits = 2 } }
+      } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:mawler" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:mawler" hp = 72 } } } }
+} }
+use Mawler { template = MawlerContent }

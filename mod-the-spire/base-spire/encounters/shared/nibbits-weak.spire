@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Overgrowth MonsterEncounters: NibbitsWeak, one lone Nibbit with A0 HP 42..46.
+procedure SpawnNibbitsWeak {
+  locals = { target = Binding }
+  body = { call = { procedure = Nibbit.CreateNibbit args = { variant = "alone" } into = target } }
+}
+use NibbitsWeak { template = NibbitsWeakFormation }
+
+template NibbitsWeakFormation { body = {
+  action Spawn {
+    role = player
+    requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
+    body = { call = { procedure = SpawnNibbitsWeak } }
+  }
+} }

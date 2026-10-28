@@ -1,0 +1,20 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Overgrowth MonsterEncounters: NibbitsNormal, front and back with A0 HP 42..46.
+procedure SpawnNibbitsNormal {
+  locals = { target = Binding }
+  body = {
+    call = { procedure = Nibbit.CreateNibbit args = { variant = "front" } into = target }
+    call = { procedure = Nibbit.CreateNibbit args = { variant = "back" } into = target }
+  }
+}
+use NibbitsNormal { template = NibbitsNormalFormation }
+
+template NibbitsNormalFormation { body = {
+  action Spawn {
+    role = player
+    requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
+    body = { call = { procedure = SpawnNibbitsNormal } }
+  }
+} }

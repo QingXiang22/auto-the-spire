@@ -1,0 +1,36 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Flyconid.cs, A0: HP 47..49. Initial random chooses Frail Spores (8 + Frail 2, cooldown 2)
+# or Smash 11; later random offers Vulnerable Spores 2 (cooldown 3), Frail Spores, Smash.
+template FlyconidContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:flyconid" initial = "INITIAL" } }
+  use VulnerableSpores { template = EnemyMoveNodeDefinition args = { definition = "base-spire:flyconid" id = "VULNERABLE_SPORES_MOVE" next = "RAND" intent = "debuff" index = 0 } }
+  use FrailSpores { template = EnemyMoveNodeDefinition args = { definition = "base-spire:flyconid" id = "FRAIL_SPORES_MOVE" next = "RAND" intent = "attack,debuff" index = 1 } }
+  use Smash { template = EnemyMoveNodeDefinition args = { definition = "base-spire:flyconid" id = "SMASH_MOVE" next = "RAND" intent = "attack" index = 2 } }
+  use Random { template = EnemyMoveNodeDefinition args = { definition = "base-spire:flyconid" id = "RAND" kind = "random" } }
+  use Initial { template = EnemyMoveNodeDefinition args = { definition = "base-spire:flyconid" id = "INITIAL" kind = "random" } }
+  use VulnerableBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:flyconid" node = "RAND" target = "VULNERABLE_SPORES_MOVE" maxRepeats = 1 cooldown = 3 } }
+  use FrailRandomBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:flyconid" node = "RAND" target = "FRAIL_SPORES_MOVE" maxRepeats = 1 cooldown = 2 } }
+  use SmashRandomBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:flyconid" node = "RAND" target = "SMASH_MOVE" maxRepeats = 1 } }
+  use FrailInitialBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:flyconid" node = "INITIAL" target = "FRAIL_SPORES_MOVE" maxRepeats = 1 cooldown = 2 } }
+  use SmashInitialBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:flyconid" node = "INITIAL" target = "SMASH_MOVE" maxRepeats = 1 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "VULNERABLE_SPORES_MOVE") then = {
+        call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:vulnerable-power" stacks = 2 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "FRAIL_SPORES_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 8 } }
+        call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:frail-power" stacks = 2 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "SMASH_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 11 } }
+      } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:flyconid" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:flyconid" hp = 47 } } } }
+} }
+use Flyconid { template = FlyconidContent }

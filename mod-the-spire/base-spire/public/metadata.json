@@ -123,6 +123,7 @@
         "base-spire:crimson-mantle",
         "base-spire:cruelty",
         "base-spire:dark-embrace",
+        "base-spire:dazed",
         "base-spire:defend-ironclad",
         "base-spire:demon-form",
         "base-spire:development-card",
@@ -138,6 +139,7 @@
         "base-spire:flame-barrier",
         "base-spire:forgotten-ritual",
         "base-spire:giant-rock",
+        "base-spire:greed",
         "base-spire:havoc",
         "base-spire:headbutt",
         "base-spire:hellraiser",
@@ -189,8 +191,7 @@
         "base-spire:uppercut",
         "base-spire:vicious",
         "base-spire:whirlwind",
-        "base-spire:whistle",
-        "base-spire:greed"
+        "base-spire:whistle"
       ]
     },
     "base-spire:Potion": {
@@ -254,6 +255,7 @@
         "base-spire:barricade",
         "base-spire:battleworn-dummy-time-limit-power",
         "base-spire:colossus-power",
+        "base-spire:constrict-power",
         "base-spire:corruption-power",
         "base-spire:crimson-mantle-power",
         "base-spire:cruelty-power",
@@ -261,6 +263,7 @@
         "base-spire:demon-form",
         "base-spire:dexterity-power",
         "base-spire:feel-no-pain-power",
+        "base-spire:flex-potion-power",
         "base-spire:frail-power",
         "base-spire:free-attack-power",
         "base-spire:hellraiser-power",
@@ -277,15 +280,17 @@
         "base-spire:rupture-power",
         "base-spire:self-forming-clay",
         "base-spire:setup-strike-power",
+        "base-spire:shrink-power",
+        "base-spire:slippery-power",
         "base-spire:stampede-power",
         "base-spire:strength-power",
+        "base-spire:tangled-power",
         "base-spire:thorns-power",
         "base-spire:unmovable-power",
         "base-spire:vicious-power",
         "base-spire:vigor-power",
         "base-spire:vulnerable-power",
-        "base-spire:weak-power",
-        "base-spire:flex-potion-power"
+        "base-spire:weak-power"
       ]
     },
     "base-spire:CardAttachment": {

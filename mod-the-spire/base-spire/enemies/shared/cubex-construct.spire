@@ -1,0 +1,38 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source CubexConstruct.cs, A0: HP 65, added with 13 block and Artifact 1. Charge applies Strength 2;
+# two Repeater Blasts deal 7 and then Strength 2; Expel deals 5x2.
+template CubexConstructContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:cubex-construct" initial = "CHARGE_UP_MOVE" } }
+  use Charge { template = EnemyMoveNodeDefinition args = { definition = "base-spire:cubex-construct" id = "CHARGE_UP_MOVE" next = "REPEATER_BLAST_MOVE" intent = "buff" index = 0 } }
+  use BlastOne { template = EnemyMoveNodeDefinition args = { definition = "base-spire:cubex-construct" id = "REPEATER_BLAST_MOVE" next = "REPEATER_BLAST_MOVE_2" intent = "attack,buff" index = 1 } }
+  use BlastTwo { template = EnemyMoveNodeDefinition args = { definition = "base-spire:cubex-construct" id = "REPEATER_BLAST_MOVE_2" next = "EXPEL_MOVE" intent = "attack,buff" index = 2 } }
+  use Expel { template = EnemyMoveNodeDefinition args = { definition = "base-spire:cubex-construct" id = "EXPEL_MOVE" next = "REPEATER_BLAST_MOVE" intent = "attack" index = 3 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "CHARGE_UP_MOVE") then = {
+        call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 2 } }
+      } }
+      if = { condition = or(equal(field(node, EnemyMoveNode.Id), "REPEATER_BLAST_MOVE"), equal(field(node, EnemyMoveNode.Id), "REPEATER_BLAST_MOVE_2")) then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 7 } }
+        call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 2 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "EXPEL_MOVE") then = {
+        call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 5 hits = 2 } }
+      } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:cubex-construct" procedure = Execute }
+  procedure Added {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) }
+    body = { if = { condition = equal(field(target, Enemy.DefinitionId), "base-spire:cubex-construct") then = {
+      call = { procedure = GainEnemyBlock args = { target = target amount = 13 } }
+      call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:artifact-power" stacks = 1 } }
+    } } }
+  }
+  subscription Added { event = EnemyAddedToCombat reaction = Added }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:cubex-construct" hp = 65 } } } }
+} }
+use CubexConstruct { template = CubexConstructContent }

@@ -104,3 +104,19 @@ template SingleEnemyEncounter {
     }
   }
 }
+template SingleEnemyEncounterRange {
+  parameters = {
+    definition = { type = String(length = 64) }
+    enemyDefinition = { type = String(length = 64) }
+    min = { type = Int(min = 1, max = 9999) }
+    max = { type = Int(min = 1, max = 9999) }
+  }
+  body = {
+    action Spawn {
+      role = player
+      requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
+      locals = { target = Binding }
+      body = { call = { procedure = CreateSourceEncounterEnemy args = { definition = arg(enemyDefinition) min = arg(min) max = arg(max) } into = target } }
+    }
+  }
+}
