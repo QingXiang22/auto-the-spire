@@ -12,4 +12,4 @@ AI 消费 net 的公开观察与合法候选，维护编码、概率输出、采
 | 理解模型与接口设计的理由 | [AI 架构](../../understand/ai-architecture.md)、[论文说明](../../understand/ai-literature.md) |
 | 核对需求与验收场景 | [共同验收](../../specs/ai-net/verification.md) |
 
-遵循 [AI 模块规则](../../../ai-the-spire/AGENTS.md)。既有组件和历史检查不代表完整游戏训练已经可用；本页不提供新的实验授权。
+模块开发要求见 [AI 模块规则](../../../ai-the-spire/AGENTS.md)。

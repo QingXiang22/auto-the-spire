@@ -3,7 +3,7 @@ using System.Text.Json;
 
 internal static partial class PackageChecks
 {
-    public static int RunNormalReturnOnly(DslPackage package)
+    public static int RunNormalReturnOnly(DslPackage package, bool includeDenseVegetation = true)
     {
         var development = Start(package);
         Submit(development, "Strike.AddToHand");
@@ -106,7 +106,7 @@ internal static partial class PackageChecks
         RunNormalUnknownRoom(package);
         RunNormalEventSelection(package);
         RunNormalSapphireSeed(package);
-        RunNormalDenseVegetation(package);
+        if (includeDenseVegetation) RunNormalDenseVegetation(package);
         return 0;
     }
 

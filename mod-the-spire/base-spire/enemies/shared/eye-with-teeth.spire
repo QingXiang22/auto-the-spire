@@ -1,0 +1,24 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source EyeWithTeeth.cs: HP 6, Illusion/Minion, one repeating Distract that creates three Dazed in discard.
+template EyeWithTeethContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:eye-with-teeth" initial = "DISTRACT_MOVE" } }
+  use Distract { template = EnemyMoveNodeDefinition args = { definition = "base-spire:eye-with-teeth" id = "DISTRACT_MOVE" next = "DISTRACT_MOVE" intent = "status" index = 0 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    locals = { card = Binding }
+    body = {
+      repeat = { count = 3 body = {
+        call = { procedure = CreateCardInstance args = { owner = owner definition = "base-spire:dazed" } into = card }
+        call = { procedure = GenerateCardIntoCombat args = { owner = owner card = card creator = none to = "discard" clone = false } }
+      } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:eye-with-teeth" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) locals = { target = Binding } body = {
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:eye-with-teeth" min = 6 max = 6 } into = target }
+    set = { target = target field = Enemy.Illusion value = true }
+  } }
+} }
+use EyeWithTeeth { template = EyeWithTeethContent }

@@ -3,14 +3,14 @@ using System.Text.Json;
 
 internal static partial class PackageChecks
 {
-    public static int RunNormalRunOnly(DslPackage package)
+    public static int RunNormalRunOnly(DslPackage package, bool includeDenseVegetation = true)
     {
         RunNormalOpeningGuardChecks(package);
         RunSourceOpeningChecks(package);
         RunMapGaussianChecks(package);
         RunSourceMapChecks(package);
         RunNormalOpeningChecks(package);
-        RunNormalReturnOnly(package);
+        RunNormalReturnOnly(package, includeDenseVegetation);
         RunUnsupportedNormalOpeningChecks(package);
         return 0;
     }
@@ -263,11 +263,12 @@ internal static partial class PackageChecks
             if (seed == "1234")
             {
                 var choose = s.LegalActions(s.Participant(0)).Single(a => a.Definition.QualifiedId == "base-spire:ChooseMapPoint");
-                var state = s.State.StateHash(); var draws = s.Random.TotalDraws;
-                Throws<EngineFaultException>(() => s.Submit(choose.Definition, s.Participant(0), choose.Bindings[0]));
-                True(s.Fault!.Message.Contains("unsupported_capability", StringComparison.Ordinal), "source queue keeps its unmigrated first encounter");
-                Equal(state, s.State.StateHash(), "unsupported encounter leaves the current node and visit untouched");
-                Equal(draws, s.Random.TotalDraws, "unsupported encounter draws no spawn randomness");
+                s.Submit(choose.Definition, s.Participant(0), choose.Bindings[0]); Healthy(s);
+                True(s.State.GetField(Player(s), s.RuleSet.TypeByQualifiedId("base-spire:Player").FieldIndex("CombatActive")).AsBool(),
+                    "the migrated first source Monster enters real combat");
+                Equal("base-spire:nibbits-weak", TextField(s, Members(s, "RunVisits").Single(), "RunVisit", "EncounterId"), "source queue encounter");
+                Equal(1, Targets(s).Count, "lone Nibbit formation"); Equal("base-spire:nibbit", TargetId(s), "source monster");
+                True(EnemyHp(s) is >= 42 and <= 46, "source A0 HP range"); Equal("attack", EnemyIntent(s), "real initial move");
             }
             Console.WriteLine("ok   ENV-T05 map source port: final cells, types, edges and cursor: " + seed);
         }

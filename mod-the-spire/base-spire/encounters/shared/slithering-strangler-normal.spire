@@ -1,0 +1,48 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Overgrowth MonsterEncounters: SlitheringStranglerNormal. One secondary from
+# SnappingJaxfruit / medium slime / two small slimes, then SlitheringStrangler.
+procedure SpawnSlitheringStranglerNormal {
+  parameters = { totalFloor = Int }
+  locals = { secondary = Int medium = Int firstSmall = Int secondSmall = Int target = Binding }
+  body = {
+    seedStream64 = { stream = "base-spire:encounter:monsters" seed = pureCall(SourceContentSeed, totalFloor, "SLITHERING_STRANGLER_NORMAL", 0) }
+    sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 3 into = secondary }
+    if = { condition = equal(secondary, 0) then = {
+      call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:snapping-jaxfruit" min = 31 max = 33 } into = target }
+    } }
+    if = { condition = equal(secondary, 1) then = {
+      sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 2 into = medium }
+      if = { condition = equal(medium, 0) then = {
+        call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:leaf-slime-m" min = 32 max = 35 } into = target }
+      } else = {
+        call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:twig-slime-m" min = 26 max = 28 } into = target }
+      } }
+    } }
+    if = { condition = equal(secondary, 2) then = {
+      sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 2 into = firstSmall }
+      sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 2 into = secondSmall }
+      if = { condition = equal(firstSmall, 0) then = {
+        call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:leaf-slime-s" min = 11 max = 15 } into = target }
+      } else = {
+        call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:twig-slime-s" min = 7 max = 11 } into = target }
+      } }
+      if = { condition = equal(secondSmall, 0) then = {
+        call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:leaf-slime-s" min = 11 max = 15 } into = target }
+      } else = {
+        call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:twig-slime-s" min = 7 max = 11 } into = target }
+      } }
+    } }
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:slithering-strangler" min = 53 max = 55 } into = target }
+  }
+}
+use SlitheringStranglerNormal { template = SlitheringStranglerNormalFormation }
+
+template SlitheringStranglerNormalFormation { body = {
+  action Spawn {
+    role = player
+    requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
+    body = { call = { procedure = SpawnSlitheringStranglerNormal args = { totalFloor = 0 } } }
+  }
+} }

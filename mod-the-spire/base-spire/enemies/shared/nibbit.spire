@@ -1,0 +1,61 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Nibbit.cs, A0: HP 42..46. Front starts Slice (6 + block 5), back starts Hiss (+2 Strength),
+# and the lone Nibbit starts Butt 12. The three sequence through Slice -> Hiss -> Butt.
+template NibbitContent { body = {
+  entity State { fields = {
+    Enemy = { type = Ref(Enemy) visibility = Hidden }
+    Variant = { type = String(length = 8) visibility = Hidden }
+  } }
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:nibbit" initial = "INIT_MOVE" } }
+  use Initial { template = EnemyMoveNodeDefinition args = { definition = "base-spire:nibbit" id = "INIT_MOVE" kind = "conditional" } }
+  use Butt { template = EnemyMoveNodeDefinition args = { definition = "base-spire:nibbit" id = "BUTT_MOVE" next = "SLICE_MOVE" intent = "attack" index = 0 } }
+  use Slice { template = EnemyMoveNodeDefinition args = { definition = "base-spire:nibbit" id = "SLICE_MOVE" next = "HISS_MOVE" intent = "attack,defend" index = 1 } }
+  use Hiss { template = EnemyMoveNodeDefinition args = { definition = "base-spire:nibbit" id = "HISS_MOVE" next = "BUTT_MOVE" intent = "buff" index = 2 } }
+  procedure Condition {
+    pure = true parameters = { state = Ref(EnemyMoveState) node = Ref(EnemyMoveNode) } result = Binding
+    locals = { own = Binding }
+    body = {
+      let = { into = own value = first(where(type(State), s, equal(field(s, State.Enemy), field(state, EnemyMoveState.Enemy)))) }
+      if = { condition = isNone(own) then = { fail = { message = "Nibbit: missing birth variant" } } }
+      if = { condition = equal(field(own, State.Variant), "alone") then = { return = { value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "BUTT_MOVE") } } }
+      if = { condition = equal(field(own, State.Variant), "back") then = { return = { value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "HISS_MOVE") } } }
+      if = { condition = equal(field(own, State.Variant), "front") then = { return = { value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "SLICE_MOVE") } } }
+      fail = { message = "Nibbit: unsupported birth variant" }
+    }
+  }
+  dispatchCase Condition { dispatch = ResolveEnemyMoveCondition key = "base-spire:nibbit" procedure = Condition }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "BUTT_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 12 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "SLICE_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 6 } }
+        call = { procedure = GainEnemyBlock args = { target = target amount = 5 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "HISS_MOVE") then = {
+        call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 2 } }
+      } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:nibbit" procedure = Execute }
+  procedure CreateNibbit {
+    parameters = { variant = String(length = 8) } result = Binding
+    locals = { target = Binding own = Binding }
+    body = {
+      if = { condition = not(or(equal(variant, "front"), or(equal(variant, "back"), equal(variant, "alone")))) then = { fail = { message = "Nibbit: unsupported variant" } } }
+      call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:nibbit" min = 42 max = 46 } into = target }
+      create = { type = State scope = entityScope(target) into = own fields = { Enemy = target Variant = variant } }
+      return = { value = target }
+    }
+  }
+  procedure Remove { parameters = { target = Ref(Enemy) } body = {
+    forEach = { query = where(type(State), s, equal(field(s, State.Enemy), target)) item = own body = { destroy = { target = own } } }
+  } }
+  subscription Remove { event = EnemyRemoving reaction = Remove }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) locals = { target = Binding } body = { call = { procedure = CreateNibbit args = { variant = "front" } into = target } } }
+} }
+use Nibbit { template = NibbitContent }

@@ -2,6 +2,10 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Source: FuzzyWurmCrawlerWeak.cs; Monster room, IsWeak, spawns exactly one FuzzyWurmCrawler (A0 HP 55..57).
+procedure SpawnFuzzyWurmCrawlerWeak {
+  locals = { target = Binding }
+  body = { call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" min = 55 max = 57 } into = target } }
+}
 use FuzzyWurmCrawlerWeak {
   template = SingleEnemyEncounter
   args = { definition = "base-spire:fuzzy-wurm-crawler-weak" enemyDefinition = "base-spire:fuzzy-wurm-crawler" hp = 55 }

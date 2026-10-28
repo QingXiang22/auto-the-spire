@@ -1,0 +1,20 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Overgrowth MonsterEncounters: OvergrowthCrawlers, ShrinkerBeetle then FuzzyWurmCrawler.
+procedure SpawnOvergrowthCrawlers {
+  locals = { target = Binding }
+  body = {
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:shrinker-beetle" min = 38 max = 40 } into = target }
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:fuzzy-wurm-crawler" min = 55 max = 57 } into = target }
+  }
+}
+use OvergrowthCrawlers { template = OvergrowthCrawlersFormation }
+
+template OvergrowthCrawlersFormation { body = {
+  action Spawn {
+    role = player
+    requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
+    body = { call = { procedure = SpawnOvergrowthCrawlers } }
+  }
+} }

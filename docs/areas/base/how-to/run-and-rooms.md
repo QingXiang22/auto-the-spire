@@ -44,7 +44,7 @@ BurningBlood 在实际胜利时治疗 6 并封顶；跨战保留永久牌组、�
 
 在 characters 的内容配置保存角色标识、源池归属及参数，在 run 的 DSL 初始化流程创建权威角色／永久牌组／遗物／药水／资源与源随机状态。区分基础角色配置、进阶修正和 Neow 等正常开局选项。
 
-获得初始物品是否触发生命周期、随机队列的生成顺序、初始资源和跨幕持久字段均以源约定固定。五角色专属资源分别依赖共享机制；一种角色能开局不代表其他角色可玩。没有 Neow 和真实初态的开发开局不能冒用正常 scope。
+获得初始物品的生命周期、随机队列生成顺序、初始资源和跨幕持久字段按源约定实现。各角色通过对应共享机制初始化专属资源；开发初态与正常 Neow 入口分别使用各自 scope。
 
 ## 建地图与房间访问生命周期
 
@@ -56,7 +56,7 @@ maps 保存图结构、节点／边、原始节点类型与访问历史；run �
 
 正常`ChooseMapPoint`已接入问号房型抽取。每次合法Unknown选择只从`unknown_map_point`流抽一次；四类隐藏赔率按Monster／Elite／Treasure／Shop顺序更新。前一实际访问包含商店，或目标的非空后继全为Shop时排除Shop；资格和增长修正使用pure接缝。`ResetUnknownRoomOdds`恢复已配置base，不重置随机流；跨幕入口恢复时须调用它。
 
-实际抽到Monster才消费正常遭遇队列、建立新访问并开战，地图和访问的原始MapType保持Unknown。Event使用上文的完整选择器；选到未实现效果或抽中Elite／Treasure／Shop后具名报未支持。分类已消费的随机与赔率更新会保留，不承诺动作级回滚。非法、过期或其他Run的节点在抽样前拒绝。正常seed `unknown-normal-354`可选择GoldenPearl，从(3,1)正常胜利并关闭奖励，再走(3,2)问号进入下一场FuzzyWurmCrawlerWeak；这条可运行前缀不代表完整Run已开放。
+实际抽到Monster才消费正常遭遇队列、建立新访问并开战，地图和访问的原始MapType保持Unknown。Event使用上文的完整选择器；选到未实现效果或抽中Elite／Treasure／Shop后具名报未支持，保留分类已消费的随机与赔率更新。非法、过期或其他Run的节点在抽样前拒绝。正常seed `unknown-normal-354`可选择GoldenPearl，从(3,1)正常胜利并关闭奖励，再走(3,2)问号进入下一场FuzzyWurmCrawlerWeak。
 
 ## 实现各类房间
 

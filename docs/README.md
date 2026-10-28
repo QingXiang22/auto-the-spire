@@ -16,4 +16,4 @@
 | 构建、运行检查或准备独立参考比较 | [CI 与本地检查](../tools/ci/README.md)、[参考依赖](../reference/README.md)、[差异测试工具](../tools/differential/README.md) |
 | 查当前任务、里程碑、用词与委派流程 | [任务入口](meta/roadmap.md)、[术语规范](meta/glossary.md)、[远端委派](meta/workflow/remote-delegation.md) |
 
-教程用于受控练习，操作指南帮助完成具体任务，参考供准确查询，解释说明关系与原因。规范标明要求的权威位置，不能据此推断功能已经实现。模块 README 保留局部索引；[文档维护规则](AGENTS.md)随文档适用。历史变更查 Git／PR，运行结果查 CI，任务状态只在 GitHub Issues 维护。
+教程用于练习，操作指南帮助完成任务，参考供准确查询，解释说明关系与原因。模块 README 保留局部索引。历史变更查 Git／PR，运行结果查 CI，任务状态查 GitHub Issues；写作要求见[文档维护规则](AGENTS.md)。

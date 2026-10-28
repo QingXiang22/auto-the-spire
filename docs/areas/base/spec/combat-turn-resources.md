@@ -41,7 +41,7 @@ Lantern在首次玩家侧开始加能量，BloodVial在首次玩家Late回复生
 
 换边时对当前敌侧成员清除SpawnedThisTurn。敌方开始按源顺序先发BeforeEnemySideTurnStart，逐个查询／清格挡或通知阻止者，全体完成后再逐个发AfterEnemyBlockCleared，最后AfterEnemySideTurnStart。每轮采用当前侧成员；在BeforeSideTurnStart之后新增的Power不补做已经结束的开始量快照。
 
-敌方行动循环在AfterEnemySideTurnStart之后按槽位顺序查询一次，复用Engine已有forEach名单快照与续接游标；依次复核在场、存活和SpawnedThisTurn，后加入名单的敌人不追溯参与。执行中已确认死亡者跳过；活体从已保存名单直接detach、已死亡但不移除、召唤／复活等尚无正式消费者的路径仍不声明完成，不能推断原生会安静跳过失效引用。暂停保留原名单与游标，不另建重复执行器或名单实体。支持的玩家→敌方、敌方→玩家换边均更新出生资格标志；正常EndTurn自动进入下一回合独立验收。
+敌方行动循环在AfterEnemySideTurnStart之后按槽位顺序查询一次，复用Engine的forEach名单快照与续接游标；行动资格为仍在敌侧、存活或Reviving且非SpawnedThisTurn，后加入名单的敌人不追溯参与。确认死亡且不等待复活者跳过；名单中实例被完整移除或活体逃离时报未支持。暂停保留原名单与游标。两次换边均更新出生资格标志，正常EndTurn自动进入下一玩家回合。
 
 ## 清格挡查询和阻止者
 
@@ -63,4 +63,4 @@ Plating的敌方消费者在第一轮玩家开始前获得无加成格挡；本�
 
 以固定源和实际独立执行分别验证首回合、普通清挡、首阻止者及回调顺序、两敌人先清完再通知／行动、Power开始量与迟加Power、行动名单／出生资格和暂停续接。双方真实怪物动作与直接命令分别覆盖Frail、正负Dexterity、无加成Plating、Entrench的Move历史、分数通知、零量和上限，以及纯预览的完整状态／版本／随机不变。
 
-保留原回合组件、敌人组件、正常四路径、公开stdio、原11份suite和严格非零。工具专用监听与受控新成员只证明本页阶段／资格，不登记未迁移内容或宣称正常召唤、额外回合和整局完成。验证命令与实际结果在PR／CI维护。
+验证覆盖回合组件、敌人行动资格、正常四路径、公开stdio与原11份suite。工具专用监听用于检查阶段和资格；命令见[验证指南](../how-to/verify-and-debug.md)，运行结果保存在PR／CI。

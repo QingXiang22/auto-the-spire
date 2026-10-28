@@ -31,24 +31,24 @@ BlockEffect仍有block／upgradedBlock；按实际模板签名修改，不批量
 
 ## 3. 运行对应判别
 
-先完成同一批内容及对应预期的修改，再调用一次批处理检查：
+先完成同一批内容及对应预期的修改，再按[验证指南](verify-and-debug.md)选择相关行为组。以下以SelfFormingClay为例：
 
 ```powershell
-python tools/ci/check.py base docs
+python tools/ci/check.py content --focus relic:CLAY
 ```
 
-入口自动构建并执行加载、行为、正常流程、覆盖与文档检查，最后统一汇总；需要公开或独立比较检查时，在同次调用追加net或migration。无需在每张牌修改后分别调用validate、定向组与覆盖脚本。失败定位到具体机制后，可复用已构建工具定向排障，例如SelfFormingClay：
+入口构建一次并执行所选行为组，默认只显示摘要、耗时和日志位置。多个相关组可重复传入focus；新增内容要加入对应组，旧组不自动验证新内容。完整行为与覆盖报告由批次PR CI生成。修改文档另运行docs；公开接口或独立比较适配改变时，才按影响追加相关检查。失败后可复用已构建工具排障，例如：
 
 ```powershell
-dotnet run --no-build --project tools/base-spire-dev -- check --relic-content-only --filter CLAY
+dotnet run --no-build -c Release --project tools/base-spire-dev -- check --relic-content-only --filter CLAY
 ```
 
 正式数值改变后，同步更新对应的显式行为预期；不能原样运行旧数值断言再把失败解释为工具不通用。CLAY组中的数值实验自行创建副本，将3改为4并检查实际层数和格挡；它不会把正式遗物改成4。
 
-新增判别应区分本次可能出错的行为，例如普通／升级、层数归零、移除、两个实例或嵌套出牌。定向组不生成全包覆盖报告；批处理的base组已生成实际覆盖报告，不另行重复执行。仅修改内容数值时，无需重写项目级设计或逐次运行全部Engine／公开路径检查。
+新增判别应区分本次可能出错的行为，例如普通／升级、层数归零、移除、两个实例或嵌套出牌；已有共享机制检查不逐内容复制。定向组不生成全包覆盖报告，本地不为生成该报告重跑base全套。仅修改内容数值时，无需重写项目级设计或逐次运行全部Engine／公开路径检查。
 
 ## 4. 核对修改范围
 
 保持标识和来源不变时，修改一个公式通常只涉及所属玩法文件及对应判别；不需要重新登记index或公开ID。若必须同时修改多个内容调用方、公共schema和共享生命周期，先确认是在补真实共享能力，还是把该内容的规则放错了位置。
 
-PR 说明实际改动和限制；共用接口变化才更新接口参考。任务状态更新路线图或对应 PR。
+PR按[批次规则](../../../../CONTRIBUTING.md#base-内容按批次交付)说明实际改动和限制；共用接口变化才更新接口参考。任务状态只更新对应Issue。

@@ -1,0 +1,9 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Overgrowth MonsterEncounters: CubexConstructNormal, fixed A0 HP 65.
+procedure SpawnCubexConstructNormal {
+  locals = { target = Binding }
+  body = { call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:cubex-construct" min = 65 max = 65 } into = target } }
+}
+use CubexConstructNormal { template = SingleEnemyEncounterRange args = { definition = "base-spire:cubex-construct-normal" enemyDefinition = "base-spire:cubex-construct" min = 65 max = 65 } }

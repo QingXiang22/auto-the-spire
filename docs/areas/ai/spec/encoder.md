@@ -201,7 +201,7 @@ ObservedSequence 的 ordinal 从 0 起且同一序列连续；KnownCardPosition 
 
 接口边界：实现者负责 `ai-the-spire` 与必要的该模块文档；不修改 core、内容 DSL 或 base-spire。[net 协议](../../net/reference/protocol.md)同时待评审，以公开样例消费该约定；不得新增直接读取内核的捷径。完整阶段及依赖见[实施计划](../../../meta/roadmap.md)，本节仅细化第一批任务。
 
-建议验证方式为在 `ai-the-spire` 目录执行 `python -m unittest discover -s tests -v`。这是后续实现的建议命令，本次未执行，也不是当前已存在的测试项目。
+编码器检查命令见[AI模块说明](../../../../ai-the-spire/README.md)。
 
 建议最小调用面为 `build_manifest(public_catalog, encoding_config)`、`save_manifest(manifest, path)`、`load_manifest(path, expected_identity=None)`、`validate_snapshot(snapshot, manifest)`、`tensorize(snapshot, manifest)`、`collate(encoded_samples)`。单次编码不依赖其他快照，重复编码同一输入不积累状态。校验与编码需完整成功或明确失败；错误带种类和输入路径，失败不返回可供评分的部分编码。collate 拒绝不同 Manifest/布局/数值配置混批，并在补齐前核对资源上限；可以混合 decision 和 terminal，后者 candidate_mask 全 false。新增真实传输、事件流、异步调用与重试策略不属于此阶段。
 

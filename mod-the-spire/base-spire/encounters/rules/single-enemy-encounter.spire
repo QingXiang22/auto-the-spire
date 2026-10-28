@@ -88,6 +88,19 @@ procedure SpawnDevelopmentEnemy {
     call = { procedure = CreateEncounterEnemy args = { definition = definition hp = hp } into = target }
   }
 }
+# Mid-combat source CreatureCmd.Add: create a real enemy, reserve its slot, initialize its graph and run the
+# EnemyAddedToCombat hooks. SpawnedThisTurn prevents it acting in the phase that summoned it.
+procedure SummonCombatEnemy {
+  parameters = { definition = String(length = 64) hp = Int(min = 1, max = 9999) slot = Int(min = -1) illusion = Bool }
+  locals = { target = Binding }
+  body = {
+    call = { procedure = CreateEncounterEnemy args = { definition = definition hp = hp } into = target }
+    set = { target = target field = Enemy.SlotIndex value = slot }
+    set = { target = target field = Enemy.Illusion value = illusion }
+    call = { procedure = ResetEnemyMoves args = { target = target } }
+    emit = { event = EnemyAddedToCombat payload = { owner = first(type(Player)) target = target } }
+  }
+}
 # definition is the encounter identity (it names the generated symbols); enemyDefinition and hp describe the
 # single monster the source encounter spawns.
 template SingleEnemyEncounter {
@@ -101,6 +114,22 @@ template SingleEnemyEncounter {
       role = player
       requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
       body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = arg(enemyDefinition) hp = arg(hp) } } }
+    }
+  }
+}
+template SingleEnemyEncounterRange {
+  parameters = {
+    definition = { type = String(length = 64) }
+    enemyDefinition = { type = String(length = 64) }
+    min = { type = Int(min = 1, max = 9999) }
+    max = { type = Int(min = 1, max = 9999) }
+  }
+  body = {
+    action Spawn {
+      role = player
+      requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player)))
+      locals = { target = Binding }
+      body = { call = { procedure = CreateSourceEncounterEnemy args = { definition = arg(enemyDefinition) min = arg(min) max = arg(max) } into = target } }
     }
   }
 }

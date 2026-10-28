@@ -1,0 +1,18 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source SnappingJaxfruit.cs, A0: HP 31..33, one repeating attack for 3 plus Strength 2.
+template SnappingJaxfruitContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:snapping-jaxfruit" initial = "ENERGY_ORB_MOVE" } }
+  use Orb { template = EnemyMoveNodeDefinition args = { definition = "base-spire:snapping-jaxfruit" id = "ENERGY_ORB_MOVE" next = "ENERGY_ORB_MOVE" intent = "attack,buff" index = 0 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    body = {
+      call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 3 } }
+      call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 2 } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:snapping-jaxfruit" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:snapping-jaxfruit" hp = 31 } } } }
+} }
+use SnappingJaxfruit { template = SnappingJaxfruitContent }

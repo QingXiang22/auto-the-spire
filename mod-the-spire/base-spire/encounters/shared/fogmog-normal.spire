@@ -1,0 +1,10 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Overgrowth MonsterEncounters: FogmogNormal, fixed A0 HP 74. The source reserves an illusion slot;
+# the EyeWithTeeth summon is emitted by Fogmog's Illusion move, not created here.
+procedure SpawnFogmogNormal {
+  locals = { target = Binding }
+  body = { call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:fogmog" min = 74 max = 74 } into = target } }
+}
+use FogmogNormal { template = SingleEnemyEncounterRange args = { definition = "base-spire:fogmog-normal" enemyDefinition = "base-spire:fogmog" min = 74 max = 74 } }

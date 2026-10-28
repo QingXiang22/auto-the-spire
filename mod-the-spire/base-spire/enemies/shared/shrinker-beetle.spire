@@ -1,0 +1,28 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source ShrinkerBeetle.cs, A0: HP 38..40; Shrink (permanent -1), Chomp 7, Stomp 13, then Chomp again.
+template ShrinkerBeetleContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:shrinker-beetle" initial = "SHRINKER_MOVE" } }
+  use Shrink { template = EnemyMoveNodeDefinition args = { definition = "base-spire:shrinker-beetle" id = "SHRINKER_MOVE" next = "CHOMP_MOVE" intent = "debuff" index = 0 } }
+  use Chomp { template = EnemyMoveNodeDefinition args = { definition = "base-spire:shrinker-beetle" id = "CHOMP_MOVE" next = "STOMP_MOVE" intent = "attack" index = 1 } }
+  use Stomp { template = EnemyMoveNodeDefinition args = { definition = "base-spire:shrinker-beetle" id = "STOMP_MOVE" next = "CHOMP_MOVE" intent = "attack" index = 2 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    locals = { applied = Binding }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "SHRINKER_MOVE") then = {
+        call = { procedure = ApplyPowerWithSource args = { player = owner enemy = none definition = "base-spire:shrink-power" stacks = -1 untilTurnEnd = false applierPlayer = none applierEnemy = target card = none play = none } into = applied }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "CHOMP_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 7 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "STOMP_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 13 } }
+      } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:shrinker-beetle" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:shrinker-beetle" hp = 38 } } } }
+} }
+use ShrinkerBeetle { template = ShrinkerBeetleContent }

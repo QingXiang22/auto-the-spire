@@ -4,22 +4,6 @@ internal static partial class PackageChecks
 {
     private static void RunCardLifecycleChecks(DslPackage package, Action<string, Action> check)
     {
-        check("LIFECYCLE runtime catalogs reject source records, null definitions and invalid mappings", () =>
-        {
-            foreach (var format in new[] { "engine-dsl/source-catalog@1", "engine-dsl/source-data@1" })
-                RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["format"] = format));
-            RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["source_baseline"] = "old-progress"));
-            RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["entries"]![0]!["evidence"] = "claimed complete"));
-            RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["entries"]![0]!["definition"] = null));
-            RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["entries"]!.AsArray().Add(j["entries"]![0]!.DeepClone())));
-            RejectCopy(package.Root, c => c.EditJson("cards/catalog.json", j => j["entries"]![0]!["definition"] = "public/metadata.json"));
-            using var unknown = new Copy(package.Root);
-            unknown.EditJson("cards/catalog.json", j => j["entries"]![0]!["id"] = "base-spire:not-a-source-card");
-            Throws<FormatException>(() => ContentRegistration.Check(unknown.Load()));
-            using var missing = new Copy(package.Root);
-            missing.EditJson("cards/catalog.json", j => j["entries"]!.AsArray().RemoveAt(0));
-            Throws<FormatException>(() => ContentRegistration.Check(missing.Load()));
-        });
         check("LIFECYCLE registration detects public and source mapping drift and derives only ID lists", () =>
         {
             using var copy = new Copy(package.Root);

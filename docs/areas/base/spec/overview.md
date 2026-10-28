@@ -12,7 +12,7 @@ mod 承载游戏规则包及其扩展，core 提供通用引擎。base 使用完
 - 根入口显式装配，定义、依赖、命名空间和启动顺序确定；未知字段、冲突声明、缺引用、包外文件及执行型 JSON 均明确失败。
 - 规则构建后不可变，每局可变状态由同一个 Engine Session 持有。扩展、替换和组合必须显式声明，不能采用最后加载者静默覆盖。
 
-行为要求见[内容行为约定](behavior.md)，完整环境验收见[ENV 规格](../../../specs/environment.md)与[实现约束](../../../specs/environment-constraints.md)。开发 scope、加载和局部行为通过不代表正常 Run 已恢复。
+行为要求见[内容行为约定](behavior.md)，完整环境验收见[ENV 规格](../../../specs/environment.md)与[实现约束](../../../specs/environment-constraints.md)，可运行入口见[Run 指南](../how-to/run-and-rooms.md)。
 
 ## 永久状态与战斗副本
 

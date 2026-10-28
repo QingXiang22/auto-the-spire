@@ -1,0 +1,19 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Locked ConstrictPower: damages its owner for the stack amount at the end of the owner's side turn and
+# disappears when the applier dies.
+template ConstrictPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:constrict-power" powerType = "debuff" } }
+  procedure Damage { parameters = { owner = Ref(Player) listener = Ref(Power) } body = {
+    if = { condition = equal(field(listener, Power.HolderPlayer), owner) then = {
+      call = { procedure = DamagePlayer args = { owner = owner amount = field(listener, Power.Stacks) } }
+    } }
+  } }
+  subscription Damage { event = AfterPlayerSideTurnEnd reaction = Damage instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:constrict-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+  procedure Remove { parameters = { target = Ref(Enemy) } body = {
+    forEach = { query = where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), "base-spire:constrict-power"), equal(field(p, Power.ApplierEnemy), target))) item = power body = { call = { procedure = RemovePower args = { power = power } } } }
+  } }
+  subscription Remove { event = EnemyDied reaction = Remove }
+} }
+use ConstrictPower { template = ConstrictPowerModule }

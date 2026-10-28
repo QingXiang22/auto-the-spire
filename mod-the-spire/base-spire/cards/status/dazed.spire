@@ -1,0 +1,20 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Dazed.cs: status, unplayable, ethereal, no upgrade and no playable effect.
+use Dazed { template = CardDefinition args = { definition = "base-spire:dazed" sourceEntry = "DAZED" kind = "status" rarity = "status" cost = -1 upgradedCost = -1 targeted = false exhausts = false leavesPlay = false } }
+template DazedContent { body = {
+  procedure Created { parameters = { card = Ref(Card) } body = {
+    if = { condition = equal(field(card, Card.DefinitionId), "base-spire:dazed") then = { set = { target = card field = Card.CanUpgrade value = false } } }
+  } }
+  subscription Created { event = CardCreated reaction = Created }
+  procedure Keyword { pure = true parameters = { value = Bool card = Ref(Card) keyword = String(length = 16) } result = Bool body = {
+    return = { value = or(value, and(equal(field(card, Card.DefinitionId), "base-spire:dazed"), or(equal(keyword, "unplayable"), equal(keyword, "ethereal")))) }
+  } }
+  subscription Keyword { event = ModifyCardKeyword reaction = Keyword }
+  procedure Execute { parameters = { owner = Ref(Player) card = Ref(Card) target = Binding play = Ref(CardPlayRecord) } body = { fail = { message = "Dazed cannot be played" } } }
+  dispatchCase Execute { dispatch = ExecuteCardBody key = "base-spire:dazed" procedure = Execute }
+  procedure Damage { pure = true parameters = { owner = Ref(Player) card = Ref(Card) target = Binding } result = Int body = { return = { value = 0 } } }
+  dispatchCase Damage { dispatch = ReadCardDamage key = "base-spire:dazed" procedure = Damage }
+} }
+use DazedBehavior { template = DazedContent }

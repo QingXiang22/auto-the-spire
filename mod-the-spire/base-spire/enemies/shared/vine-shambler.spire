@@ -1,0 +1,29 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source VineShambler.cs, A0: HP 61; Swipe 6x2, Grasping Vines 8 + Tangled 1, Chomp 16, then Swipe.
+template VineShamblerContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:vine-shambler" initial = "SWIPE_MOVE" } }
+  use Swipe { template = EnemyMoveNodeDefinition args = { definition = "base-spire:vine-shambler" id = "SWIPE_MOVE" next = "GRASPING_VINES_MOVE" intent = "attack" index = 0 } }
+  use Grasping { template = EnemyMoveNodeDefinition args = { definition = "base-spire:vine-shambler" id = "GRASPING_VINES_MOVE" next = "CHOMP_MOVE" intent = "attack,debuff" index = 1 } }
+  use Chomp { template = EnemyMoveNodeDefinition args = { definition = "base-spire:vine-shambler" id = "CHOMP_MOVE" next = "SWIPE_MOVE" intent = "attack" index = 2 } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    locals = { applied = Binding }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "SWIPE_MOVE") then = {
+        call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 6 hits = 2 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "GRASPING_VINES_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 8 } }
+        call = { procedure = ApplyPowerWithSource args = { player = owner enemy = none definition = "base-spire:tangled-power" stacks = 1 untilTurnEnd = false applierPlayer = none applierEnemy = target card = none play = none } into = applied }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "CHOMP_MOVE") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 16 } }
+      } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:vine-shambler" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:vine-shambler" hp = 61 } } } }
+} }
+use VineShambler { template = VineShamblerContent }

@@ -46,6 +46,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--configuration", choices=["Debug", "Release"], default="Release")
     parser.add_argument("--output", type=Path, default=ROOT / ".artifacts/ci/migration")
+    parser.add_argument("--paused-schedule", action="store_true", help="Run only the retained #147 paused effect-card probes; not part of daily migration selection.")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     try:
@@ -122,6 +123,27 @@ def main() -> int:
                 if process.returncode != (0 if report["status"] == "passed" else 1):
                     raise ValueError(f"{name}: exit code contradicts the actual diagnostic result")
             return report
+
+        if args.paused_schedule:
+            paused_ids = ["777:two-end-effects-paused", "A😀B:two-end-effects-paused"]
+            paused = run("paused-schedule", ["combat-boundary-compare", "--output", str(args.output / "paused-schedule"), "--paused-schedule"], (0, 1))
+            if (paused is None or paused["schema"] != "dsl-migration/combat-boundaries@1"
+                    or paused["paused_schedule"] is not True
+                    or paused["executed"] != len(paused_ids) or paused["expected_case_ids"] != paused_ids
+                    or paused["status"] != "diverged" or paused["complete"] is not False
+                    or [c["id"] for c in paused["cases"]] != paused_ids):
+                raise ValueError("Paused schedule specialty must retain both known effect-card cases and its unverified scope")
+            for case in paused["cases"]:
+                if (case["status"] != "diverged" or case["first_difference"] is None
+                        or case["return_difference"] is not None or case["diagnostics_read_only"] is not True):
+                    raise ValueError("Paused schedule case must retain the measured #147 difference and stable action return")
+                for side in ("left", "right"):
+                    trace = case[side]
+                    if (not trace["final_state"] or sum(p["phase"] == "paused" for p in trace["points"]) != 1
+                            or trace["points"][-1]["phase"] != "action-return"):
+                        raise ValueError("Paused schedule trace must suspend once and return the real action")
+            print("Paused schedule specialty: retained both #147 effect-card probes; not part of daily migration or a complete pass.")
+            return 0
 
         dummy = run("battle-friend", ["battle-friend-compare", "--output", str(args.output / "battle-friend")], 0)
         if (dummy is None or dummy["status"] != "passed" or dummy["independent_verified"] is not True
@@ -473,13 +495,14 @@ def main() -> int:
                 raise ValueError("Lethal snapshot must retain entered-listener counting and suppress later draws")
 
         run("combat-boundary-self-test", ["combat-boundary-self-test"], 0)
-        boundaries = run("combat-boundaries", ["combat-boundary-compare", "--output", str(args.output / "combat-boundaries")], (0, 1))
-        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "two-end-effects-paused", "feed-ending", "ending-move", "anger-ending", "anger-upgraded", "zero-card", "free-x", "repeat-card", "corruption", "juggling", "juggling-full", "juggling-stomp")
+        boundaries = run("combat-boundaries", ["combat-boundary-compare", "--output", str(args.output / "combat-boundaries")], 0)
+        boundary_plans = ("turn-return", "paid-card", "two-end-effects", "feed-ending", "ending-move", "anger-ending", "anger-upgraded", "zero-card", "free-x", "repeat-card", "corruption", "juggling", "juggling-full", "juggling-stomp")
         boundary_ids = [seed + ":" + plan for seed in ("777", "A😀B") for plan in boundary_plans]
         point_fields = {"phase", "card", "turn", "energy", "hp", "max_hp", "block", "enemy_hp", "move", "ending", "piles", "spent", "generated", "stomp_hand_cost", "anger_discard_upgraded"}
         if (boundaries is None or boundaries["schema"] != "dsl-migration/combat-boundaries@1"
                 or boundaries["executed"] != len(boundary_ids) or boundaries["expected_case_ids"] != boundary_ids
                 or [c["id"] for c in boundaries["cases"]] != boundary_ids
+                or boundaries["paused_schedule"] is not False
                 or any(boundaries[k] is not False for k in ("complete", "independent_verified", "normal_run_verified"))
                 or boundaries["reference"]["commit"] != lock["commit"] or not boundaries["hook_sources"]):
             raise ValueError("Boundary diagnostics must retain all controlled scenarios and unverified full-game scope")
@@ -494,9 +517,9 @@ def main() -> int:
                 raise ValueError("Boundary diagnostics changed gameplay or failed to execute")
             if case["return_difference"] is not None:
                 raise ValueError("Complete combat actions must return the same stable state without adapter continuation")
-            # #146 requires actual payment/draw/play boundaries to agree; the independently
-            # scoped paused effect-card batch remains #147's measured difference.
-            if not case["id"].endswith(":two-end-effects-paused") and case["status"] != "passed":
+            # The paused effect-card batch is #147's retained measured difference and runs
+            # only through check.py paused / --paused-schedule; daily migration must not see it.
+            if case["status"] != "passed":
                 raise ValueError("Ordinary and card-play boundaries must match the locked reference")
             if case["id"].endswith((":zero-card", ":anger-upgraded")):
                 for side in ("left", "right"):
@@ -542,8 +565,6 @@ def main() -> int:
                                for phase in ("combat-before", "player-before", "begin-return", "configured", "action-return"))
                         or any(set(p) != point_fields or len(p["piles"]) != 5 for p in trace["points"])):
                     raise ValueError("Boundary diagnostic omitted actual phases or fields")
-                if case["id"].endswith(":two-end-effects-paused") and sum(p["phase"] == "paused" for p in trace["points"]) != 1:
-                    raise ValueError("Both effect-card pipelines must really suspend and resume once")
             equal = case["left"]["points"] == case["right"]["points"]
             if equal != (case["status"] == "passed") or equal != (case["first_difference"] is None):
                 raise ValueError("Boundary diagnosis hid an actual difference or invented one")

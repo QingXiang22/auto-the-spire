@@ -27,6 +27,10 @@
       "definition": "powers/shared/colossus-power.spire"
     },
     {
+      "id": "base-spire:constrict-power",
+      "definition": "powers/shared/constrict-power.spire"
+    },
+    {
       "id": "base-spire:corruption-power",
       "definition": "powers/shared/corruption-power.spire"
     },
@@ -117,6 +121,18 @@
     {
       "id": "base-spire:setup-strike-power",
       "definition": "powers/shared/setup-strike-power.spire"
+    },
+    {
+      "id": "base-spire:shrink-power",
+      "definition": "powers/shared/shrink-power.spire"
+    },
+    {
+      "id": "base-spire:slippery-power",
+      "definition": "powers/shared/slippery-power.spire"
+    },
+    {
+      "id": "base-spire:tangled-power",
+      "definition": "powers/shared/tangled-power.spire"
     },
     {
       "id": "base-spire:stampede-power",

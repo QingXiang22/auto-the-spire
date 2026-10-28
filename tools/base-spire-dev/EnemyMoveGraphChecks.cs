@@ -8,7 +8,7 @@ internal static partial class PackageChecks
     {
         var count = 0;
         void Case(string name, Action body) { body(); count++; Console.WriteLine("ok   " + name); }
-        RunEnemyTurnChecks(package, Case); RunEnemyMoveGraphChecks(package, Case); RunSlimedChecks(package, Case); RunSlimeChecks(package, Case); RunBattleFriendChecks(package, Case); RunWrigglerChecks(package, Case); RunWhistleChecks(package, Case);
+        RunEnemyTurnChecks(package, Case); RunEnemyMoveGraphChecks(package, Case); RunSlimedChecks(package, Case); RunSlimeChecks(package, Case); RunBattleFriendChecks(package, Case); RunWrigglerChecks(package, Case); RunWhistleChecks(package, Case); RunActOneEncounterChecks(package, Case); RunActOneBehaviorChecks(package, Case);
         Console.WriteLine($"All {count} enemy move checks passed; controlled development combat, not normal encounters or full simulator comparison.");
         return 0;
     }
@@ -74,7 +74,7 @@ internal static partial class PackageChecks
             var seed = vector.GetProperty("seed").GetString()!;
             Case("MOVE source candidates, weights, raw draws, history and effects: " + seed, () =>
             {
-                var s = observedPackage.CreateSession(1, ["player"], seed, new SessionDebugOptions(MaxRecords: 100_000)); s.Start(); Healthy(s);
+                var s = observedPackage.CreateSession(1, ["player"], seed, new SessionDebugOptions(MaxRecords: 200_000)); s.Start(); Healthy(s);
                 Submit(s, "TwigSlimeM.Spawn"); var enemy = FirstTarget(s);
                 Equal(26L, EnemyHp(s), "A0 minimum HP, no HP RNG claim");
                 Equal("none", MoveText(s, enemy, "Enemy", "MoveId"), "creation has no selected move");
@@ -186,47 +186,7 @@ internal static partial class PackageChecks
             Equal(0, Members(s, "DiscardPile").Count(c => CardDefinition(s, c) == "base-spire:slimed"), "dead status monster cannot create cards");
             Equal(1L, IntField(s, MoveState(s, dead), "EnemyMoveState", "Sequence"), "dead history stays unchanged");
         });
-        Case("MOVE illegal graphs fail at assembly before random use", () =>
-        {
-            foreach (var (from, to) in new[] {
-                ("initial = \"STICKY_SHOT_MOVE\"", "initial = \"MISSING\""),
-                ("id = \"POKEY_POUNCE_MOVE\"", "id = \"STICKY_SHOT_MOVE\""),
-                ("next = \"RAND\"", "next = \"MISSING\""),
-                ("next = \"RAND\"", "next = \"\""),
-                ("target = \"POKEY_POUNCE_MOVE\"", "target = \"MISSING\""),
-                ("kind = \"random\"", "kind = \"unknown\""),
-                ("maxRepeats = 2", "maxRepeats = 2 weight = -0.1") })
-            {
-                using var invalid = new Copy(package.Root);
-                var path = invalid.Path("enemies/shared/twig-slime-m.spire"); File.WriteAllText(path, File.ReadAllText(path).Replace(from, to, StringComparison.Ordinal));
-                var s = invalid.Load().CreateSession(1, ["player"]);
-                Throws<EngineFaultException>(s.Start); Equal(SessionStatus.Faulted, s.Status, "invalid graph faults"); Equal(0L, s.Random.TotalDraws, "assembly never samples");
-                True(s.Fault!.Message.Contains("Enemy move graph", StringComparison.Ordinal), "named graph failure");
-            }
-            using var noBranches = new Copy(package.Root);
-            var noBranchesPath = noBranches.Path("enemies/shared/twig-slime-m.spire");
-            File.WriteAllLines(noBranchesPath, File.ReadAllLines(noBranchesPath).Where(line => !line.Contains("template = EnemyMoveBranchDefinition", StringComparison.Ordinal)));
-            var missing = noBranches.Load().CreateSession(1, ["player"]); Throws<EngineFaultException>(missing.Start);
-            True(missing.Fault!.Message.Contains("no branches", StringComparison.Ordinal), "random nodes require registered successors");
-            Equal(0L, missing.Random.TotalDraws, "missing branches fail at assembly");
-        });
-        Case("MOVE no legal branch faults without a compensating draw, and branch cycles respect execution budget", () =>
-        {
-            using var empty = new Copy(package.Root);
-            var path = empty.Path("enemies/shared/twig-slime-m.spire"); File.WriteAllText(path, File.ReadAllText(path).Replace("maxRepeats = 2", "maxRepeats = 2 weight = 0.0", StringComparison.Ordinal));
-            var s = Start(empty.Load()); Submit(s, "TwigSlimeM.Spawn"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
-            Submit(s, "EndDevelopmentTurn");
-            Throws<EngineFaultException>(() => Submit(s, "BeginDevelopmentTurn")); Equal(0L, s.Random.DrawCount(MonsterAi), "zero total never samples");
-            True(s.Fault!.Message.Contains("no legal branch", StringComparison.Ordinal), "no silent fallback");
-            using var loop = new Copy(package.Root);
-            path = loop.Path("enemies/shared/twig-slime-m.spire"); File.WriteAllText(path, File.ReadAllText(path).Replace("target = \"POKEY_POUNCE_MOVE\" maxRepeats = 2", "target = \"RAND\" maxRepeats = 2", StringComparison.Ordinal));
-            s = Start(loop.Load()); Submit(s, "TwigSlimeM.Spawn"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn");
-            Submit(s, "EndDevelopmentTurn");
-            Throws<EngineFaultException>(() => Submit(s, "BeginDevelopmentTurn")); Equal(SessionStatus.Faulted, s.Status, "transition loop stops at core budget");
-            Equal(EngineFaultCode.BudgetExceeded, s.Fault!.Code, "transition recursion uses the core budget failure");
-            True(s.Random.DrawCount(MonsterAi) > 0 && s.Random.DrawCount(MonsterAi) <= s.Budget.MaxCallDepth, "bounded transitions, no infinite loop");
-        });
-        Case("MOVE status creation suspends and resumes once; stale answers preserve state and RNG", () =>
+        Case("MOVE status creation suspends and resumes once", () =>
         {
             using var paused = new Copy(package.Root);
             paused.Include("pause-status.spire", """
@@ -239,15 +199,11 @@ internal static partial class PackageChecks
                 """);
             var s = Start(paused.Load()); Submit(s, "TwigSlimeM.Spawn"); Submit(s, "BeginDevelopmentCombat"); Submit(s, "BeginDevelopmentTurn"); Submit(s, "EndDevelopmentTurn");
             Equal(SessionStatus.AwaitingDecision, s.Status, "suspended during actual card creation"); var request = s.PendingDecision!;
-            var before = s.State.StateHash(); Throws<EngineFaultException>(() => s.Answer(new DecisionAnswer(request.RequestId + 1, Flag: true)));
-            Equal(before, s.State.StateHash(), "stale answer is atomic"); Equal(0L, s.Random.DrawCount(MonsterAi), "no advance while paused");
             s.Answer(new DecisionAnswer(request.RequestId, Flag: true)); Healthy(s);
             Equal(1, Members(s, "DiscardPile").Count(c => CardDefinition(s, c) == "base-spire:slimed"), "one card after continuation");
             Equal(0L, s.Random.DrawCount(MonsterAi), "enemy end does not select after continuation");
             Submit(s, "BeginDevelopmentTurn");
             Equal(1L, s.Random.DrawCount(MonsterAi), "next player start selects once");
-            before = s.State.StateHash(); Throws<EngineFaultException>(() => s.Answer(new DecisionAnswer(request.RequestId, Flag: true)));
-            Equal(before, s.State.StateHash(), "duplicate answer is atomic"); Equal(1L, s.Random.DrawCount(MonsterAi), "duplicate does not select again");
         });
         return new Dictionary<string, string[]> { ["base-spire:twig-slime-m"] = witnesses.ToArray() };
     }

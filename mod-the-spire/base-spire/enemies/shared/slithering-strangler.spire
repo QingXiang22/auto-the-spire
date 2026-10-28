@@ -1,0 +1,33 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source SlitheringStrangler.cs, A0: HP 53..55. Constrict 3, then random Thwack 7 + block 5 / Lash 12,
+# both repeatable, returning to Constrict.
+template SlitheringStranglerContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:slithering-strangler" initial = "CONSTRICT" } }
+  use Constrict { template = EnemyMoveNodeDefinition args = { definition = "base-spire:slithering-strangler" id = "CONSTRICT" next = "RAND" intent = "debuff" index = 0 } }
+  use Thwack { template = EnemyMoveNodeDefinition args = { definition = "base-spire:slithering-strangler" id = "THWACK" next = "CONSTRICT" intent = "attack,defend" index = 1 } }
+  use Lash { template = EnemyMoveNodeDefinition args = { definition = "base-spire:slithering-strangler" id = "LASH" next = "CONSTRICT" intent = "attack" index = 2 } }
+  use Random { template = EnemyMoveNodeDefinition args = { definition = "base-spire:slithering-strangler" id = "RAND" kind = "random" } }
+  use ThwackBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:slithering-strangler" node = "RAND" target = "THWACK" } }
+  use LashBranch { template = EnemyMoveBranchDefinition args = { definition = "base-spire:slithering-strangler" node = "RAND" target = "LASH" } }
+  procedure Execute {
+    parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) }
+    locals = { applied = Binding }
+    body = {
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "CONSTRICT") then = {
+        call = { procedure = ApplyPowerWithSource args = { player = owner enemy = none definition = "base-spire:constrict-power" stacks = 3 untilTurnEnd = false applierPlayer = none applierEnemy = target card = none play = none } into = applied }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "THWACK") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 7 } }
+        call = { procedure = GainEnemyBlock args = { target = target amount = 5 } }
+      } }
+      if = { condition = equal(field(node, EnemyMoveNode.Id), "LASH") then = {
+        call = { procedure = DamagePlayerPowered args = { attacker = target owner = owner amount = 12 } }
+      } }
+    }
+  }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:slithering-strangler" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnDevelopmentEnemy args = { definition = "base-spire:slithering-strangler" hp = 53 } } } }
+} }
+use SlitheringStrangler { template = SlitheringStranglerContent }

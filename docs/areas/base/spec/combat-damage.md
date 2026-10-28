@@ -6,7 +6,7 @@
 
 规则依据为[锁定sts2-sim](../../../../reference/README.md)的 `Commands/CreatureCmd.cs::Damage`／`DamageSingle`、`Entities/Creatures/Creature.cs::DamageBlockInternal`／`LoseHpInternal`、`Hooks/Hook.cs::ModifyDamage`／`ModifyHpLost`。实现位于 `combat/card-damage.spire`、`damage-results.spire`、`damage.spire` 和 `attacks.spire`，由同一Engine执行。
 
-本页覆盖当前已加载卡牌、敌人、药水和反应的有加成攻击、无加成攻击、直接伤害及不可格挡失血。已有真实消费者包括Strength／Vigor、Weak／Vulnerable（PaperPhrog、PaperKrane、Cruelty）、PenNib、Thorns、Rupture和Feed；牌、攻击、逐击结果与明确来源不能互相替代。尚无获准消费者的承伤转移、防死、复活、召唤与多人分支保持未支持，不注册空效果或在Host补执行。
+本页覆盖当前已加载卡牌、敌人、药水和反应的有加成攻击、无加成攻击、直接伤害及不可格挡失血。已有消费者包括Strength／Vigor、Weak／Vulnerable（PaperPhrog、PaperKrane、Cruelty）、PenNib、Thorns、Rupture和Feed。承伤转移、防死与多人分支尚未接入；Fogmog的召唤与幻象复活见[敌人生命周期](enemy-turn.md)。
 
 ## 数值与结果要求
 
@@ -36,7 +36,9 @@
 
 ## 已核对的表示边界与监听迁移
 
-当前出牌方向的有理数比例为Weak的3/4、Vulnerable的整数百分比（含PaperPhrog／Cruelty）和PenNib的整数倍；敌方方向为Weak的整数百分比、Vulnerable的3/2及Colossus的1/2。当前单实例比例链中的精度均可用10000为缩放基准精确表示。BodySlam合法大格挡值与当前层数上限的中间乘积在Int64范围内。此结论不覆盖任意重复实例、任意mod比例或未迁移内容；这些扩展需重新核对表示和溢出。
+已核对的原乘法链包含玩家Weak的3/4、Vulnerable的整数百分比（含PaperPhrog／Cruelty）、PenNib的整数倍，以及敌方Weak的整数百分比、Vulnerable的3/2和Colossus的1/2；这些单实例链可用10000缩放精确表示。BodySlam合法大格挡值与原层数上限的中间乘积在Int64范围内。
+
+首幕批次新增的Shrink使用7/10。基础伤害1叠加Weak、PaperPhrog修正的Vulnerable和Shrink时，系数为0.91875，当前10000缩放的整数计算保留为0.9187。因此原链的精度结论不覆盖该组合；其最终伤害与结果字段需按DD03核对。
 
 四位缩放贯穿修正、格挡分数和HP输入；最终仅在源实际转换处截断。已确认并修复的差异是加性链中提前截零，以及未按LoseHpInternal限制loss而夸大的超杀。当前已核对消费者没有ModifyHpLost覆写，因此HP输入经过其源中性路径；TheBoot、TungstenRod、Intangible等未迁移族的四阶段修正、实际参与者回调、转移及防死仍未支持，不用中性Hook计作内容完成。
 

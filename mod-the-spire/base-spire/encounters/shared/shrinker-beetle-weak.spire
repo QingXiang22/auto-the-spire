@@ -1,0 +1,9 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Source Overgrowth MonsterEncounters: ShrinkerBeetleWeak, A0 HP 38..40.
+procedure SpawnShrinkerBeetleWeak {
+  locals = { target = Binding }
+  body = { call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:shrinker-beetle" min = 38 max = 40 } into = target } }
+}
+use ShrinkerBeetleWeak { template = SingleEnemyEncounterRange args = { definition = "base-spire:shrinker-beetle-weak" enemyDefinition = "base-spire:shrinker-beetle" min = 38 max = 40 } }

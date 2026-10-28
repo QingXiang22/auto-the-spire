@@ -1,0 +1,26 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# Locked SlipperyPower: each unblocked damaging hit against the holder loses at most 1 HP, then consumes
+# one stack. The stack itself is visible and can be removed by the source artifact/power rules.
+template SlipperyPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:slippery-power" } }
+  procedure Cap {
+    pure = true parameters = { value = Int result = Ref(DamageResult) listener = Ref(Power) } result = Int
+    body = {
+      if = { condition = and(equal(field(listener, Power.HolderEnemy), field(result, DamageResult.Enemy)), greater(value, 10000)) then = {
+        return = { value = 10000 }
+      } }
+      return = { value = value }
+    }
+  }
+  subscription Cap { event = ModifyHpLoss reaction = Cap instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:slippery-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+  procedure Consume {
+    parameters = { result = Ref(DamageResult) listener = Ref(Power) }
+    body = { if = { condition = and(equal(field(listener, Power.HolderEnemy), field(result, DamageResult.Enemy)), greaterOrEqual(field(result, DamageResult.Unblocked), 1)) then = {
+      call = { procedure = ConsumePower args = { power = listener } }
+    } } }
+  }
+  subscription Consume { event = AfterDamageReceived reaction = Consume instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:slippery-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+} }
+use SlipperyPower { template = SlipperyPowerModule }

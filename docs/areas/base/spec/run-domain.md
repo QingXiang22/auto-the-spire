@@ -138,7 +138,7 @@ AfterObtained／AfterRemoved 表示获得与移除的通知阶段，准确 DSL �
 
 ## 战斗副本来源与结算写回
 
-正常遭遇使用跨幕累计的 `Run.TotalFloor`：Neow访问为1，每次合法地图访问加1，不能用当前幕行号代替。SlimesWeak以根seed加累计楼层、再加 `SLIMES_WEAK` 的UTF-8 XxHash64派生独立编队流；按源顺序抽小型A、剩余单候选B、中型，三次抽样均消费，出生顺序为A、中型、B。各怪HP按出生顺序消费Niche，开战统一初始化招式，不能在创建和开战各滚一次。未迁移遭遇在访问、HP及编队抽样之前失败。
+正常遭遇使用跨幕累计的 `Run.TotalFloor`：Neow访问为1，每次合法地图访问加1，不能用当前幕行号代替。SlimesWeak 以根seed加累计楼层、再加 `SLIMES_WEAK` 的 UTF-8 XxHash64 派生独立编队流；按源顺序抽小型A、剩余单候选B、中型，三次抽样均消费，出生顺序为A、中型、B。首幕 16 个 Monster 遭遇都按 `SourceContentSeed(totalFloor, IdEntry, 0)` 派生自己的编队流和源顺序；`SpawnNormalEncounter` 是唯一正常 Monster 分派入口，其他幕、Elite、Boss 及未迁移效果仍在访问、HP及编队抽样之前具名失败。各怪HP按出生顺序消费Niche，开战统一初始化招式，不能在创建和开战各滚一次。
 
 `SpawnDevelopmentEnemy` 供受控单敌入口立即发布意图；正常批量出生调用只创建实例的 `CreateEncounterEnemy`，由 `BeforeCombatStart` 对全体按序初始化。LeafSlimeS初始RAND且两个等权分支不能连用；LeafSlimeM固定状态与攻击交替；TwigSlimeS固定TACKLE_MOVE。三者复用共享图及状态牌生成操作。
 

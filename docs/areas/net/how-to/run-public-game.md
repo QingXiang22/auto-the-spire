@@ -36,8 +36,8 @@ base 包将 Hand、DrawPile、DiscardPile、ExhaustPile、InPlay、RemovedFromCo
 
 读取 `total_count` 获取真实数量，通过 `visible_members` 读取当前公开成员，并检查 `members_complete`。DrawPile 的成员与内部顺序隐藏，只发布总数；其余牌区发布完整成员。不能把 `visible_members` 的数组顺序当作游戏位置。RunDeck 的成员只从 `piles` 读取，旧 `net:group_type:base-spire:RunDeck` 已移除；重新获取目录和 identity 后启动会话。
 
-当前包没有登记已知牌顶的位置事实，`known_positions` 为空；这项限制仍需后续规则记忆支持。正常开局和局部牌区事实可调用，不代表完整 Run 或完整公开观察已经验收。
+当前包没有登记已知牌顶的位置事实，`known_positions` 为空；发布这些位置需要对应的规则记忆支持。
 
 ## 扩展为正常 Run
 
-正常开局、地图和完整房间生命周期恢复后，再将 [整局驱动](../../../../net-the-spire/client/run_game.md)接到相同正式包。未支持的 scope 应明确拒绝；当前开发动作的成功不能证明整局可运行。验证入口及覆盖范围以 [CI 说明](../../../../tools/ci/README.md)为准。
+正常开局、地图和完整房间生命周期恢复后，将 [整局驱动](../../../../net-the-spire/client/run_game.md)接到相同正式包。未支持的 scope 明确拒绝；验证入口及覆盖范围见 [CI 说明](../../../../tools/ci/README.md)。
