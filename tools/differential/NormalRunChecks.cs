@@ -129,6 +129,30 @@ internal static class NormalRunChecks
         }
         NormalScalarChecks.Run(left.DebugRecords, victory, right.Capture("victory"));
         NormalRandomStateChecks.Run(left.DebugRecords, left.RandomSnapshot, victory, right.Capture("victory"));
+        var shuffleCalls = System.Text.Json.JsonSerializer.Deserialize<NormalShuffleCall[]>(victory.Values["random.shuffle_candidates"])!;
+        Require(shuffleCalls.Length == 19 && victory.Values["random.shuffle_candidates"] == right.Capture("victory").Values["random.shuffle_candidates"],
+            "both actual shuffles retain all 19 ordered candidate lists");
+        var alteredShuffle = shuffleCalls.ToArray();
+        alteredShuffle[0] = alteredShuffle[0] with { Candidates = alteredShuffle[0].Candidates.Reverse().ToArray() };
+        foreach (var injected in new[] { shuffleCalls[..^1], shuffleCalls.Reverse().ToArray(), alteredShuffle,
+            new[] { shuffleCalls[0] with { Selected = (shuffleCalls[0].Selected + 1) % shuffleCalls[0].Candidates.Length } }.Concat(shuffleCalls.Skip(1)).ToArray() })
+        {
+            var changed = new SortedDictionary<string, string>(victory.Values, StringComparer.Ordinal)
+                { ["random.shuffle_candidates"] = NormalPreflight.Json(injected) };
+            Require(NormalRunComparison.First(0, victory, victory with { Values = changed })?.Path == "random.shuffle_candidates",
+                "missing, reordered or altered shuffle candidate calls must report a difference");
+            var rejected = false;
+            try { NormalShuffleTrace.Canonical(injected); } catch (NotSupportedException) { rejected = true; }
+            Require(rejected, "incomplete shuffles and candidates inconsistent with actual swaps must fail normalization");
+        }
+        foreach (var invalid in new[] { shuffleCalls[0] with { Candidates = [shuffleCalls[0].Candidates[0], shuffleCalls[0].Candidates[0]] },
+            shuffleCalls[0] with { Selected = -1 }, shuffleCalls[0] with { Selected = shuffleCalls[0].Candidates.Length },
+            shuffleCalls[0] with { After = 2 } })
+        {
+            var rejected = false;
+            try { NormalShuffleTrace.Canonical([invalid, .. shuffleCalls.Skip(1)]); } catch (NotSupportedException) { rejected = true; }
+            Require(rejected, "duplicate card origins, invalid indices and discontinuous shuffle cursors must fail");
+        }
         NormalWeightedChecks.Run(left.DebugRecords, victory);
         NormalOpeningAttemptChecks.Run(left.DebugRecords, victory);
         CheckNativeEventCoverage(right.Capture("victory"));

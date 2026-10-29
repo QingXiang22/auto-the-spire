@@ -250,6 +250,7 @@ internal sealed class NormalDslRun : IDisposable
         var scalars = trace is null ? null : NormalScalarTrace.Dsl(trace.Capture(), trace.DroppedRecords);
         if (scalars is not null) Put("random.scalar_calls", scalars.Calls);
         if (trace is not null) Put("random.weighted_candidates", NormalWeightedTrace.Dsl(trace.Capture(), trace.DroppedRecords));
+        if (trace is not null) Put("random.shuffle_candidates", NormalShuffleTrace.Dsl(trace.Capture(), trace.DroppedRecords, identities));
         if (trace is not null)
         {
             var records = trace.Capture();
