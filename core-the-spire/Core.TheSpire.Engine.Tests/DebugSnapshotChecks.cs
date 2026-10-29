@@ -32,6 +32,67 @@ internal static class DebugSnapshotChecks
 
     public static void Run()
     {
+        Check.Run("DEBUG selected procedure arguments retain transient relations before mutation and destruction", () =>
+        {
+            var linked = new RuleSetBuilder().Add(EngineDslCompiler.Compile("""
+                using namespace procedure-copy; dsl_version = "core/0.3"
+                entity Node { fields = { Number = { type = Int default = 7 } } }
+                relation Children { target = Node }
+                procedure Inspect { parameters = { owner = Ref(Node) child = Ref(Node) position = Int } body = {} }
+                procedure Other { parameters = { node = Ref(Node) } body = {} }
+                action Run { locals = { owner = Binding child = Binding roll = Int } body = {
+                  create = { type = Node scope = frameScope() into = owner }
+                  create = { type = Node scope = frameScope() into = child }
+                  addRelation = { relation = Children owner = owner target = child }
+                  call = { procedure = Other args = { node = owner } }
+                  call = { procedure = Inspect args = { owner = owner child = child position = 2 } }
+                  set = { target = child field = Node.Number value = 99 }
+                  sampleInt = { stream = "test" min = 0 max = 2 into = roll }
+                  destroy = { target = child } destroy = { target = owner }
+                } }
+                """)).Build();
+            Session Execute(SessionDebugOptions? options)
+            {
+                var s = new Session(linked, 42, ["player"], debug: options); s.Start();
+                s.Submit(linked.Actions.Single(), s.Participant(0), []); return s;
+            }
+            var plain = Execute(null);
+            var names = new[] { "procedure-copy:Inspect" };
+            var fixedSelection = new Session(linked, 42, ["player"], debug: new(CaptureValues: true, CaptureProcedures: names));
+            names[0] = "procedure-copy:Other";
+            fixedSelection.Start(); fixedSelection.Submit(linked.Actions.Single(), fixedSelection.Participant(0), []);
+            Check.True(fixedSelection.Debug!.Records.Single(r => r.Kind == SessionDebugKind.ProcedureEnter && r.Subject == "procedure-copy:Inspect").Snapshot is not null,
+                "procedure selection is copied at session creation");
+            Check.True(fixedSelection.Debug.Records.Single(r => r.Kind == SessionDebugKind.ProcedureEnter && r.Subject == "procedure-copy:Other").Snapshot is null,
+                "external collection mutation cannot select new in-session capture work");
+            foreach (var options in new[] { new SessionDebugOptions(CaptureValues: true),
+                new(CaptureValues: true, CaptureCandidateReferences: true, CaptureCandidateRelations: true, CaptureProcedures: ["procedure-copy:Inspect"]),
+                new(CaptureValues: true, CaptureCandidateRelations: true, CaptureProcedures: ["procedure-copy:Inspect"], MaxSnapshotEntities: 1),
+                new(CaptureValues: true, CaptureProcedures: ["procedure-copy:Inspect"], MaxSnapshotValues: 1),
+                new(CaptureProcedures: ["procedure-copy:Inspect"]), new(CaptureValues: true, CaptureProcedures: ["procedure-copy:Inspect"], MaxRecords: 1) })
+            {
+                var s = Execute(options);
+                Check.Equal(plain.Identity, s.Identity, "procedure snapshots preserve identity");
+                Check.Equal(plain.State.StateHash(), s.State.StateHash(), "procedure snapshots preserve real mutations and destruction");
+                Check.Sequence(plain.Random.Diagnostics(), s.Random.Diagnostics(), "procedure snapshots preserve actual random draws");
+                if (options.MaxRecords == 1)
+                { Check.True(s.Debug!.DroppedRecords > 0 && s.Debug.Records.All(r => r.Snapshot is null), "record exhaustion creates no argument snapshots"); continue; }
+                var record = s.Debug!.Records.Single(r => r.Kind == SessionDebugKind.ProcedureEnter && r.Subject == "procedure-copy:Inspect");
+                Check.True(s.Debug.Records.Single(r => r.Kind == SessionDebugKind.ProcedureEnter && r.Subject == "procedure-copy:Other").Snapshot is null,
+                    "unselected procedures keep their original diagnostics");
+                if (!options.CaptureValues || options.CaptureProcedures is null)
+                { Check.True(record.Snapshot is null, "procedure argument copying requires both explicit options"); continue; }
+                var snapshot = record.Snapshot!;
+                if (options.MaxSnapshotEntities == 1 || options.MaxSnapshotValues == 1)
+                { Check.False(snapshot.Complete, "argument and relation truncation remains explicit"); continue; }
+                Check.True(snapshot.Complete && snapshot.RelationsCaptured, "the selected call retains complete typed arguments and relations");
+                Check.Equal(3, snapshot.Values.Count, "all evaluated arguments copied");
+                Check.Equal("2", snapshot.Values[2].Scalar, "scalar argument retains actual value");
+                Check.Sequence(new[] { snapshot.Entities[1].Instance }, snapshot.Relations.Single().Targets, "actual transient relation order retained");
+                Check.True(snapshot.Entities.All(e => !s.State.Exists(e.Instance) && e.Fields.Single().Value.Scalar == "7"), "copies precede the body's later mutation and destruction");
+                Check.Throws<NotSupportedException>(() => ((IList<SessionDebugValueSnapshot>)snapshot.Values).Clear(), "argument snapshots are readonly");
+            }
+        });
         var rules = new RuleSetBuilder().Add(EngineDslCompiler.Compile(Source, "debug-copy.spire")).Build();
         Session New(SessionDebugOptions? options) => new(rules, 42, ["player"], debug: options);
         void Start(Session s)

@@ -169,6 +169,8 @@ Python 消费者使用 [load_report](../ci/normal_report.py) 按需读取引用�
 
 `random.initialization_candidates` 比较开局遗物袋／事件／共享Ancient的洗牌候选、共享Ancient子集分配，以及三幕Boss／Ancient直接抽样。DSL从实际`AddOpeningItem`与`ShuffleOpeningList`过程和随机记录重建诊断副本，直接抽样读取历史候选；参考从自身源池及实录索引重建副本。两侧都与真实遗物袋和已生成房间计划核对。原始来源分别保存在`dsl_initialization_sources`与`native_initialization_sources`；DSL必要过程记录和原始随机调用另行保留。固定四路径各含311次洗牌、两次共享分配及六次直接抽样；结合已有94次加权遭遇抽样，覆盖全部413次UpFront消费。单候选Ancient与空共享池的零项分配仍须保留实际消费；候选缺失、错序、分配与实际状态不符或消费不完整均失败。该结果不表示地图、Neow等其余候选、根／流派生或完整`random.trace`已经验收。
 
+`random.neow_candidates` 比较Neow的诅咒候选、条件二选一、完整正向洗牌与实际三选一。DSL只对`AddNeowOption`启用只读过程参数／关系快照，从临时池的实际资格、顺序和历史过程重建副本，并核对未选中条目及真实选项。参考使用自身源数组、资格查询与互斥处理，在诊断副本上应用实录索引，再核对真实选项；原始来源保存在`dsl_neow_sources`与`native_neow_sources`，多人专属的MassiveScroll排除依据仍保留。固定四路径各比较18次Neow消费：一次诅咒抽样、三次条件二选一和14次洗牌。缺快照／关系、未选中条目资格或顺序损坏、漏抽、错游标、错误追加与选项不一致均失败；诊断开关不得改变玩法、RNG或公开观察。地图、根／流派生及完整`random.trace`仍未验收。
+
 `random.float32_calls` 逐条比较正常路径中的浮点取样：具名流、调用前后游标、已求值的上下界及最终 binary32 位型。DSL 读取真实 `RandomCallDetails.Float32`，参考读取自身 `NextFloat` 参数和实际结果；原始 double 记录保留在诊断中。比较按流名与流内游标规范化，不要求独立流有相同的全局初始化顺序。缺附加数据、截断、丢失、重复或流内错序均失败。固定首战有敌人三次与奖励八次浮点调用；这部分一致不代表离散候选、权重及拒绝过程已经比较，完整 `random.trace` 仍为必需维度。
 
 `random.scalar_calls` 比较实际整数上下界、结果及流内游标。原生无参 `NextBool` 的 true／false 对应 DSL `[0,2)` 的 0／1；地图 Gaussian 的四次输入将 DSL `[0,2^53)` 整数除以 `2^53`，与原生单位区间 `NextDouble` 的 binary64 位型比较。94 次开局加权抽样读取 core 0.9.5 在实际抽样时保留的 `SingleRawWord`，按 vanilla 公式 `(raw >> 11) * 2^-53` 规范化，同时校验实际离散结果确为该单位值乘候选数后的截断。缺字或多字消费明确失败，不从选中索引反推或重跑生成器。

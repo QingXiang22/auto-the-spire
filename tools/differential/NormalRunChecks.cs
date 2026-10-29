@@ -131,6 +131,7 @@ internal static class NormalRunChecks
         NormalRandomStateChecks.Run(left.DebugRecords, left.RandomSnapshot, victory, right.Capture("victory"));
         NormalRewardCandidateChecks.Run(left.DebugRecords, victory, right.Capture("victory"));
         NormalInitializationChecks.Run(left.DebugRecords, left.InitializationSources, victory, right.Capture("victory"));
+        NormalNeowChecks.Run(left.DebugRecords, victory, right.Capture("victory"), left.IsLive);
         var shuffleCalls = System.Text.Json.JsonSerializer.Deserialize<NormalShuffleCall[]>(victory.Values["random.shuffle_candidates"])!;
         Require(shuffleCalls.Length == 19 && victory.Values["random.shuffle_candidates"] == right.Capture("victory").Values["random.shuffle_candidates"],
             "both actual shuffles retain all 19 ordered candidate lists");

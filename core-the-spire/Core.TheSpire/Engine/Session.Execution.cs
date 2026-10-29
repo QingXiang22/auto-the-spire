@@ -112,7 +112,8 @@ public sealed partial class Session
         _stack.Add(activation);
         if (Debug is not null)
             Trace(SessionDebugKind.ProcedureEnter, procedure.QualifiedId,
-                $"scope={scope}; arguments=[{string.Join(',', arguments)}]", procedure.Body.SourceLocation);
+                $"scope={scope}; arguments=[{string.Join(',', arguments)}]", procedure.Body.SourceLocation,
+                payload: Debug.CapturesProcedure(procedure.QualifiedId) ? arguments : null);
         var depth = 0;
         foreach (var item in _stack)
         {

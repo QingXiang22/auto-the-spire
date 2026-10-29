@@ -3,7 +3,7 @@ namespace CoreTheSpire.Engine;
 public sealed record SessionDebugOptions(int MaxRecords = 10_000, bool IncludeInstructions = false,
     int MaxTextLength = 1024, int MaxCandidates = 256, bool CaptureValues = false,
     int MaxSnapshotEntities = 256, int MaxSnapshotValues = 4096, bool CaptureCandidateReferences = false,
-    bool CaptureCandidateRelations = false);
+    bool CaptureCandidateRelations = false, IReadOnlyList<string>? CaptureProcedures = null);
 
 public enum SessionDebugKind
 {
@@ -39,6 +39,7 @@ public sealed partial class SessionDebugTrace
 {
     private readonly SessionDebugOptions _options;
     private readonly Session _session;
+    private readonly HashSet<string>? _captureProcedures;
     private readonly List<SessionDebugRecord> _records = [];
     private long _sequence;
     private SessionDebugRecord? _randomContext;
@@ -50,12 +51,14 @@ public sealed partial class SessionDebugTrace
             throw Faults.Schema("debug record, text, candidate and snapshot limits must be positive");
         _session = session;
         _options = options;
+        _captureProcedures = options.CaptureProcedures?.ToHashSet(StringComparer.Ordinal);
     }
 
     public long DroppedRecords { get; private set; }
     public SessionDebugRecord? FirstFault { get; private set; }
     public IReadOnlyList<SessionDebugRecord> Records => _records.AsReadOnly();
     public IReadOnlyList<SessionDebugRecord> Capture() => Array.AsReadOnly(_records.ToArray());
+    internal bool CapturesProcedure(string name) => _options.CaptureValues && _captureProcedures?.Contains(name) == true;
 
     internal void BeginRandom(Session session, DslSourceLocation? source) =>
         _randomContext = new(0, SessionDebugKind.RandomCall, null, null, source,
@@ -108,7 +111,9 @@ public sealed partial class SessionDebugTrace
             session.StateVersion, session.Status, session.DebugInstructions)
         {
             TextTruncated = subject?.Length > _options.MaxTextLength || detail?.Length > _options.MaxTextLength,
-            Snapshot = payload is null || _records.Count >= _options.MaxRecords ? null : CaptureSnapshot(payload)
+            Snapshot = payload is null || _records.Count >= _options.MaxRecords ? null : CaptureSnapshot(payload,
+                captureCandidateReferences: kind == SessionDebugKind.ProcedureEnter && _options.CaptureCandidateReferences,
+                captureCandidateRelations: kind == SessionDebugKind.ProcedureEnter && _options.CaptureCandidateRelations)
         };
         if (kind == SessionDebugKind.Fault) FirstFault ??= record;
         if (_records.Count < _options.MaxRecords) _records.Add(record);
