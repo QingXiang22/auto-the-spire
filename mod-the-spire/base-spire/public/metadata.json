@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.65",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.82",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -93,7 +93,18 @@
         "base-spire:battle-friend-v1",
         "base-spire:battle-friend-v2",
         "base-spire:battle-friend-v3",
-        "base-spire:wriggler"
+        "base-spire:wriggler",
+        "base-spire:cubex-construct",
+        "base-spire:flyconid",
+        "base-spire:fogmog",
+        "base-spire:eye-with-teeth",
+        "base-spire:inklet",
+        "base-spire:mawler",
+        "base-spire:nibbit",
+        "base-spire:shrinker-beetle",
+        "base-spire:slithering-strangler",
+        "base-spire:snapping-jaxfruit",
+        "base-spire:vine-shambler"
       ]
     },
     "base-spire:Card": {
@@ -416,6 +427,15 @@
     "base-spire:RunVisits": {
       "use": "sequence",
       "owner_kind_type_id": "base-spire:Run"
+    },
+    "base-spire:MerchantInventory": {
+      "use": "sequence",
+      "owner_kind_type_id": "base-spire:Player"
+    },
+    "base-spire:MerchantSourceCards": {
+      "use": "not_published",
+      "rule_id": "ROOM-SOURCE-CARDS",
+      "reason": "Static locked merchant source metadata; actual stock is published separately."
     }
   },
   "terminal_outcomes": {},

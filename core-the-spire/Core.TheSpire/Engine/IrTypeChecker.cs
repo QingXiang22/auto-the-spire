@@ -808,7 +808,7 @@ internal static class IrTypeChecker
                     return text.Op == TextOp.StartsWith ? Ty.Bool : Ty.String;
                 case RandomValueExpr randomValue:
                 {
-                    var count = randomValue.Op == RandomValueOp.GameSeed ? 0 : randomValue.Op is RandomValueOp.Hash32 or RandomValueOp.Float32 ? 1 : 2;
+                    var count = randomValue.Op == RandomValueOp.GameSeed ? 0 : randomValue.Op is RandomValueOp.Hash32 or RandomValueOp.Float32 or RandomValueOp.Float32RoundToInt ? 1 : 2;
                     if (randomValue.Arguments.Count != count) throw Faults.TypeError($"{where}: invalid random value argument count");
                     foreach (var argument in randomValue.Arguments)
                     {

@@ -13,6 +13,7 @@ internal static class NormalPublicTopology
     internal static readonly string[] Sequences = ["MapNodes", "RunVisits"];
     internal static string[] NativeOwnership() => Piles.Select(p => "pile:" + p + "View:player")
         .Concat(Groups.Select(g => "group:" + g + ":player")).Concat(Sequences.Select(s => "sequence:" + s + ":run"))
+        .Append("sequence:MerchantInventory:player")
         .Order(StringComparer.Ordinal).ToArray();
 
     internal static void Add(PublicSnapshotDto snapshot, SortedDictionary<string, string> values)

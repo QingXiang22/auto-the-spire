@@ -79,6 +79,9 @@ internal static class RandomDslChecks
                     procedure Setup { locals = { v = Int } body = {
                       sampleFloat32 = { stream = "s" min = {{min}} max = {{max}} into = v }
                       if = { condition = not(equal(v, float32(2))) then = { fail = { message = "equal bounds" } } }
+                      if = { condition = not(equal(float32Multiply(float32(150), float32(1.05)), float32(157.5))) then = { fail = { message = "multiply price" } } }
+                      if = { condition = not(equal(float32RoundToInt(float32(156.5)), 156)) then = { fail = { message = "even lower" } } }
+                      if = { condition = not(equal(float32RoundToInt(float32(157.5)), 158)) then = { fail = { message = "even upper" } } }
                       if = { condition = not(equal(float32Subtract(float32(0.5), float32(0.25)), float32(0.25))) then = { fail = { message = "subtract" } } }
                     } } start = [Setup]
                     """)).Build();

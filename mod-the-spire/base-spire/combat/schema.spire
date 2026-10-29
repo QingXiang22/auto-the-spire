@@ -92,6 +92,7 @@ entity Enemy {
     Intent = { type = String(length = 32) default = "none" }
     # Source IllusionPower/MinionPower marker: a zero-HP illusion stays on the side and revives once on its
     # next enemy turn instead of being removed.
+    SecondaryEnemy = { type = Bool default = false visibility = Hidden }
     Illusion = { type = Bool default = false visibility = Hidden }
     Reviving = { type = Bool default = false visibility = Hidden }
   }

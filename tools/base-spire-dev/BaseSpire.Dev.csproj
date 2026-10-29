@@ -7,6 +7,7 @@
     <LangVersion>13.0</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="fixtures/normal-room-vectors.json" />
     <EmbeddedResource Include="fixtures/source-catalogs.json" />
     <EmbeddedResource Include="fixtures/map-gaussian-vectors.json" />
     <EmbeddedResource Include="fixtures/normal-opening-vectors.json" />

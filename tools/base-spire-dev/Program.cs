@@ -19,6 +19,7 @@ try
     var contentModelOnly = false;
     var cardBehaviorOnly = false;
     var enemyMovesOnly = false;
+    var normalRoomsOnly = false;
     var normalRunOnly = false;
     var normalReturnOnly = false;
     var packageOnly = false;
@@ -29,6 +30,7 @@ try
         string Input() => index + 1 < args.Length ? args[++index] : throw new ArgumentException("Missing option value.");
         if (args[index] == "--ironclad-only") ironcladOnly = true;
         else if (args[index] == "--enemy-moves-only") enemyMovesOnly = true;
+        else if (args[index] == "--normal-rooms-only") normalRoomsOnly = true;
         else if (args[index] == "--normal-run-only") normalRunOnly = true;
         else if (args[index] == "--normal-return-only") { normalRunOnly = true; normalReturnOnly = true; }
         else if (args[index] == "--package-only") packageOnly = true;
@@ -49,6 +51,12 @@ try
         throw new ArgumentException("--filter requires a nonempty name and check --relic-content-only or --card-behavior-only without other focused flags or --report.");
     if (Path.GetExtension(manifest) != ".json") throw new NotSupportedException("unsupported_capability: the DSL package tool requires a package.json manifest; legacy card probes are retired.");
     var package = DslPackage.Load(manifest, scope);
+    if (normalRoomsOnly)
+    {
+        if (command != "check" || report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || enemyMovesOnly || normalRunOnly || packageOnly || enemyGraphOnly || skipDenseVegetation)
+            throw new ArgumentException("--normal-rooms-only requires check without other focused flags.");
+        return PackageChecks.RunNormalRoomsOnly(package);
+    }
     if (packageOnly)
     {
         if (command != "check" || report is not null || filter is not null || ironcladOnly || cardRewardsOnly || rngOnly || relicContentOnly || contentModelOnly || cardBehaviorOnly || enemyMovesOnly || normalRunOnly || enemyGraphOnly || skipDenseVegetation)

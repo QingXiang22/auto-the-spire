@@ -27,7 +27,7 @@ procedure SetupPublicPiles {
 
 projection PlayerView {
   role = player
-  types = { Player = {} Run = {} MapNode = {} RunVisit = {} NeowVisit = {} NeowOption = {} Card = {} CardAttachment = { identity_from = Card } Relic = {} Enemy = {} Power = {} Potion = {} CombatRewardSet = {} EventVisit = {} EventCombatVisit = {} BattlewornOption = {} HandView = {} DrawPileView = {} DiscardPileView = {} ExhaustPileView = {} InPlayView = {} RemovedFromCombatView = {} RunDeckView = {} }
+  types = { Player = {} MerchantStock = {} Run = {} MapNode = {} RunVisit = {} NeowVisit = {} NeowOption = {} Card = {} CardAttachment = { identity_from = Card } Relic = {} Enemy = {} Power = {} Potion = {} CombatRewardSet = {} EventVisit = {} EventCombatVisit = {} BattlewornOption = {} HandView = {} DrawPileView = {} DiscardPileView = {} ExhaustPileView = {} InPlayView = {} RemovedFromCombatView = {} RunDeckView = {} }
   collections = true
   relations = true
 }

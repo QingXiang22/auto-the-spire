@@ -1,6 +1,6 @@
 namespace CoreTheSpire.Engine;
 
-public enum RandomValueOp { GameSeed, Hash32, Float32, Float32Add, Float32Minimum, Float32Less, Float32LessOrEqual, Float32Subtract }
+public enum RandomValueOp { GameSeed, Hash32, Float32, Float32Add, Float32Minimum, Float32Less, Float32LessOrEqual, Float32Subtract, Float32Multiply, Float32RoundToInt }
 
 public sealed class RandomValueExpr(RandomValueOp op, params Expr[] arguments) : Expr
 {

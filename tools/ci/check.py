@@ -102,7 +102,11 @@ def main() -> int:
         commands = [build(project), run(project) + ["--", "check", "--enemy-graph-only"]]
     elif args.suite == "net":
         project = "net-the-spire/Net.TheSpire.Tests"
-        commands = [build(project), run(project)]
+        commands = [build(project), run(project)] + [
+            [sys.executable, "-X", "utf8", "tools/base-spire-dev/normal_rooms_smoke.py",
+             "--host-dll", f"net-the-spire/Net.TheSpire.Host/bin/{config}/net9.0/Net.TheSpire.Host.dll",
+             "--output", str(output / "normal-rooms"), "--room", room]
+            for room in ("Shop", "RestSite", "Treasure")]
     elif args.suite == "migration":
         commands = [[sys.executable, "-X", "utf8", "tools/differential/prepare_reference.py"],
                     build("tools/differential/Differential.csproj"),

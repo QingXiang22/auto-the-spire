@@ -73,6 +73,8 @@ public static partial class EngineDslCompiler
                     "substring" => new TextExpr(TextOp.Substring, E("text", 0), E("start", 1)),
                     "float32" => new RandomValueExpr(RandomValueOp.Float32, E("value", 0)),
                     "float32Add" => new RandomValueExpr(RandomValueOp.Float32Add, E("left", 0), E("right", 1)),
+                    "float32Multiply" => new RandomValueExpr(RandomValueOp.Float32Multiply, E("left", 0), E("right", 1)),
+                    "float32RoundToInt" => new RandomValueExpr(RandomValueOp.Float32RoundToInt, E("value", 0)),
                     "float32Subtract" => new RandomValueExpr(RandomValueOp.Float32Subtract, E("left", 0), E("right", 1)),
                     "float32Minimum" => new RandomValueExpr(RandomValueOp.Float32Minimum, E("left", 0), E("right", 1)),
                     "float32Less" => new RandomValueExpr(RandomValueOp.Float32Less, E("left", 0), E("right", 1)),

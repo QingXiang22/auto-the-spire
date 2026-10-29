@@ -24,7 +24,7 @@ SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选
 
 1. 回答 Neow 的真实三选一。入口已建立源初态、完整前置队列和真实首幕地图。
 2. 选择已支持的 GoldenPearl、NutritiousOyster、BoomingConch、WingedBoots 或 CursedPearl。其余源选项保留，选择后明确报未支持。
-3. 提交离开确认，再选择 `ChooseMapPoint` 的当前合法候选。源队列选到 SlimesWeak 或 FuzzyWurmCrawlerWeak 时，会按真实编队及 HP 抽样进入首战并自动开始首回合；其他遭遇明确报未支持。
+3. 提交离开确认，再选择 `ChooseMapPoint` 的当前合法候选。首幕 16 个普通遭遇均按来源编队及 HP 抽样进入战斗并自动开始首回合；其他幕和精英／Boss仍未接通。
 
 从base `0.7.0-dsl.64`开始，公开MapNodes按原生网格列优先、同列行序排列，随后是独立起点和Boss；MapNode.Index是该序列中的零基位置。使用坐标匹配节点并提交真实候选，不依赖旧创建索引或句柄排序。发布顺序在裁剪和坐标整理后确定，不改变地图抽样、节点实例或连接。
 
@@ -56,11 +56,11 @@ maps 保存图结构、节点／边、原始节点类型与访问历史；run �
 
 正常`ChooseMapPoint`已接入问号房型抽取。每次合法Unknown选择只从`unknown_map_point`流抽一次；四类隐藏赔率按Monster／Elite／Treasure／Shop顺序更新。前一实际访问包含商店，或目标的非空后继全为Shop时排除Shop；资格和增长修正使用pure接缝。`ResetUnknownRoomOdds`恢复已配置base，不重置随机流；跨幕入口恢复时须调用它。
 
-实际抽到Monster才消费正常遭遇队列、建立新访问并开战，地图和访问的原始MapType保持Unknown。Event使用上文的完整选择器；选到未实现效果或抽中Elite／Treasure／Shop后具名报未支持。分类已消费的随机与赔率更新会保留，不承诺动作级回滚。非法、过期或其他Run的节点在抽样前拒绝。正常seed `unknown-normal-354`可选择GoldenPearl，从(3,1)正常胜利并关闭奖励，再走(3,2)问号进入下一场FuzzyWurmCrawlerWeak；这条可运行前缀不代表完整Run已开放。
+实际抽到Monster才消费正常遭遇队列、建立新访问并开战，地图和访问的原始MapType保持Unknown。Event使用上文的完整选择器；选到未实现事件或抽中Elite后具名报未支持；Treasure／Shop已接入下述正常房间操作。分类已消费的随机与赔率更新会保留，不承诺动作级回滚。非法、过期或其他Run的节点在抽样前拒绝。正常seed `unknown-normal-354`可选择GoldenPearl，从(3,1)正常胜利并关闭奖励，再走(3,2)问号进入下一场FuzzyWurmCrawlerWeak；这条可运行前缀不代表完整Run已开放。
 
 ## 实现各类房间
 
-开发包的营火已可消费永久牌组：先在房间外通过 `Strike.Obtain` 等已迁移定义入口建立 `RunDeck`，再 `EnterDevelopmentRestSite`。`ForgeAtDevelopmentCampfire` 会发布可取消的单张选择；公开 `net.answer_decision` 中带实例字段的是选牌，空字段候选是取消。取消后仍可休息或重新锻造；成功后用 `LeaveDevelopmentRoom` 离场，升级进入后续战斗副本。没有永久可升级牌时不提供锻造，不能用手牌代替；同次访问不能靠重复进入重置选项。旧原稿 `ForgeCardInHand` 已移除。营火遗物修正、多个升级目标和正常地图入口仍未恢复；见[约定](../spec/permanent-deck-smith.md)。
+开发包的营火已可消费永久牌组：先在房间外通过 `Strike.Obtain` 等已迁移定义入口建立 `RunDeck`，再 `EnterDevelopmentRestSite`。`ForgeAtDevelopmentCampfire` 会发布可取消的单张选择；公开 `net.answer_decision` 中带实例字段的是选牌，空字段候选是取消。取消后仍可休息或重新锻造；成功后用 `LeaveDevelopmentRoom` 离场，升级进入后续战斗副本。没有永久可升级牌时不提供锻造，不能用手牌代替；同次访问不能靠重复进入重置选项。旧原稿 `ForgeCardInHand` 已移除。正常地图入口已接入；营火遗物新增选项和多个升级目标仍未恢复；见[约定](../spec/permanent-deck-smith.md)。
 
 | 房型／内容 | 先定义的局部行为 | 必须区分的结果 |
 | --- | --- | --- |
@@ -111,3 +111,25 @@ rewards 拥有奖励容器和待领取状态；卡牌／遗物／药水的完整
 Boss 奖励全部解决后才允许切幕。保留生命、金币、永久牌、物品实例和跨房计数；重置幕内访问计数与问号赔率，保留全局已访问事件。清理旧战斗与地图对象、临时牌和监听，重建玩家战斗副本，旧公开句柄失效；房间提交标识跨幕不重复。
 
 每幕使用独立地图流。普通房间数为15／14／13，Rest 计数依源使用 Gaussian(7)／Gaussian(6)／NextInt(5,7)，后两幕 Unknown 标准值减1。后续幕先进入实际古代人；效果或资格未支持时明确失败，不跳过为空事件。奖励升级率读取实际幕索引，TheArchitect 未实现时保持非全局胜利边界。
+
+## 使用正常营火、宝箱与商店
+
+`ChooseMapPoint` 已接通正常 RestSite、Treasure、Shop，包括问号实际抽中的宝箱／商店。营火使用 `RestAtDevelopmentCampfire`、`ForgeAtDevelopmentCampfire` 与 `LeaveDevelopmentRoom`；这些共享动作保留原名。升级取消不消耗本次选项，成功后关闭同一访问并返回地图。
+
+宝箱按锁定来源直接获得42～52金币并从共享遗物袋前端抽取／获得遗物，`LeaveNormalItemRoom` 离场。未实现遗物具名失败，访问上的 EncounterId 保存实际选中标识；不能把源池缩到已有遗物。已发生的来源随机与金币效果不回滚。
+
+商店公开 `MerchantInventory` 有序货架与 `MerchantStock` 的 Kind、DefinitionId、Price、Purchased、Implemented。保留五个角色卡槽、两个无色槽、三个遗物、三个药水和一个删牌项；未迁移的卡牌／遗物仍展示但不提供购买候选。`BuyMerchantStock(entry)` 只提供已实现、未售且可支付的商品，药水还要求空槽。`MerchantRemoveCard(card)` 提供可删除的永久牌，每店一次；A0价格75金币，每次实际删牌后后续商店上涨25金币。离店用 `LeaveNormalItemRoom`。价格、永久获得和扣款由DSL完成，客户端提交当前合法候选即可。
+
+本地房间行为与独立来源向量检查：
+
+```powershell
+dotnet run --project tools/base-spire-dev -c Release -- check --normal-rooms-only
+```
+
+正常公开路线检查使用已构建Host，固定seed777，选择WingedBoots后按公开节点坐标及合法候选推进。分别以Shop、RestSite、Treasure为终点；不注入资源、敌人或地图。示例：
+
+```powershell
+python tools/base-spire-dev/normal_rooms_smoke.py --host-dll net-the-spire/Net.TheSpire.Host/bin/Release/net9.0/Net.TheSpire.Host.dll --output .artifacts/normal-rooms --room Treasure
+```
+
+此路径仅证明固定路线的真实访问与返回。精英／Boss、后幕、完整事件与物品效果池、完整Run和完整独立比较仍未验收。
