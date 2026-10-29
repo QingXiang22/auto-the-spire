@@ -120,3 +120,9 @@ migration组另严格执行`exhaust-cause-compare`的30个耗尽原因组件，�
 先确认对应任务已完成，在仓库根目录运行 `./tools/ci/cleanup_worktrees.ps1` 预览。脚本只检查 `.artifacts/worktrees/` 中的已登记 worktree；未提交文件、未进入本地 main 的提交或脏参考检出均保留。squash 合并导致提交不在 main 历史中的 worktree 需人工核对，脚本不会据此推断已交付。
 
 确认本地 main 已更新且任务已结束后，用 `./tools/ci/cleanup_worktrees.ps1 -Name issue127 -Remove` 显式指定要回收的目录。清理包括该 worktree 内忽略的日志、报告、参考副本和构建输出，不删除分支，也不触碰仓库外的 worktree。不要对整个 `.artifacts` 执行递归删除。
+
+## 正常房间检查
+
+base完整行为组执行营火休息／升级／取消、原生商店货架／价格／随机游标与宝箱结果的受控检查。本地可用 `dotnet run --project tools/base-spire-dev -c Release -- check --normal-rooms-only` 定向运行。源向量由现有 `tools/rng-oracle/reference-vectors/` 从锁定参考独立生成。
+
+net组另用 `normal_rooms_smoke.py` 对同一Host构建执行固定seed777的商店、营火与宝箱公开路线，输出实际帧。路线从Neow开始，正常战斗和奖励后访问房间并返回地图，不依赖内部状态。行为向量、正常路线与完整独立比较分别证明各自范围，完整Run仍不在该组验收范围。

@@ -37,6 +37,8 @@ public sealed partial class Session
                     RandomValueOp.Hash32 => Value.Of(Binary32.Hash32(Arg(0).AsString())),
                     RandomValueOp.Float32 => Value.Of(Binary32.Bits(Arg(0).Kind == ValueKind.Fixed ? (float)Arg(0).AsDecimal() : (float)Arg(0).AsInt())),
                     RandomValueOp.Float32Add => Value.Of(Binary32.Bits(Float(0) + Float(1))),
+                    RandomValueOp.Float32Multiply => Value.Of(Binary32.Bits(Float(0) * Float(1))),
+                    RandomValueOp.Float32RoundToInt => Value.Of(Binary64.RoundToInt(Float(0))),
                     RandomValueOp.Float32Subtract => Value.Of(Binary32.Bits(Float(0) - Float(1))),
                     RandomValueOp.Float32Minimum => Value.Of(Binary32.Bits(MathF.Min(Float(0), Float(1)))),
                     RandomValueOp.Float32Less => Value.Of(Float(0) < Float(1)),

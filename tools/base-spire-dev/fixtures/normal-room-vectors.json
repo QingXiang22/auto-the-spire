@@ -1,0 +1,96 @@
+{
+  "reference_lock": {
+    "repository": "https://github.com/iRyougi/sts2-sim.git",
+    "commit": "611cea2b498ee1eba3743d185c210c6b2a4624a6",
+    "tree": "ee49effa72b2290bacfb2ef9974e34af3aa2f78e",
+    "status": "upstream-only; rule authority and comparison backend; main verified on 2026-10-22",
+    "declared_game_baseline": "v0.111.0",
+    "rule_source": "src/Sts2Sim.Core"
+  },
+  "source_hash_encoding": "utf8-lf",
+  "source_sha256": {
+    "reference/sts2-sim/src/Sts2Sim.Core/Entities/Merchant/MerchantInventory.cs": "a8171901cb039a35056a030b32a7e707e7c9b317feff422aecee73276d24d2e5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/TreasureRoom.cs": "094265a4eba50ddf1b52222b0fb21f236f4821a2dc8244444b1153a31764d69a",
+    "reference/sts2-sim/src/Sts2Sim.Core/Factories/RelicFactory.cs": "ee43ea9e97d27be1838a6eaec2f884006245aaa0072e572b1cb74b5cea8fd988",
+    "reference/sts2-sim/src/Sts2Sim.Core/Factories/PotionFactory.cs": "92f56f70f80279bd56a459c29378f14518a432b1c48e2a1e4d41bf5739633548",
+    "reference/sts2-sim/src/Sts2Sim.Core/Odds/CardRarityOdds.cs": "eff66507a40fde2f60a1a24d30a3ef5240750afb5dd8f6d740e10aa73bc2b31e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rooms/MerchantRoom.cs": "6d31b571beaad907fbe2143bcf03b6050a4d3812ebd10f3a4fe655139f2f3db4",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RelicGrabBag.cs": "e0ce9bae1377891e2b506142e5d4d39bd51fff0666ee3ceb40585ddeb6dad455"
+  },
+  "vectors": [
+    {
+      "kind": "shop",
+      "cards": [
+        {
+          "id": "base-spire:spite",
+          "price": 36
+        },
+        {
+          "id": "base-spire:thunderclap",
+          "price": 52
+        },
+        {
+          "id": "base-spire:shrug-it-off",
+          "price": 48
+        },
+        {
+          "id": "base-spire:armaments",
+          "price": 49
+        },
+        {
+          "id": "base-spire:feel-no-pain",
+          "price": 76
+        },
+        {
+          "id": "base-spire:fasten",
+          "price": 82
+        },
+        {
+          "id": "base-spire:beat-down",
+          "price": 179
+        }
+      ],
+      "relics": [
+        {
+          "id": "base-spire:lasting-candy",
+          "price": 221
+        },
+        {
+          "id": "base-spire:vajra",
+          "price": 185
+        },
+        {
+          "id": "base-spire:dingy-rug",
+          "price": 181
+        }
+      ],
+      "potions": [
+        {
+          "id": "base-spire:energy-potion",
+          "price": 51
+        },
+        {
+          "id": "base-spire:shackling-potion",
+          "price": 100
+        },
+        {
+          "id": "base-spire:explosive-ampoule",
+          "price": 48
+        }
+      ],
+      "rewards": 14,
+      "shops": 28
+    },
+    {
+      "kind": "treasure",
+      "gold": 144,
+      "relics": [
+        "base-spire:burning-blood",
+        "base-spire:booming-conch",
+        "base-spire:bronze-scales"
+      ],
+      "rewards": 1,
+      "treasure": 1
+    }
+  ]
+}

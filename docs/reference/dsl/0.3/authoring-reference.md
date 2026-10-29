@@ -104,3 +104,7 @@ base 的 `SourceGaussianInt` 组合上述运算与既有 `sampleInt`：在 vanil
 ## 错误定位与标识
 
 生成 IR 可递归附加 IrSource.At；更精确子节点位置保留，源位置不参与语义标识。标识变化需要核对最终规则、构建描述及公开 fixture，再迁移 golden；不能用重新抄 hash 掩盖行为失败。非 Running（包括 Paused）不发布 LegalActions，以避免暂停时 pure guard 干扰待决续接。
+
+## binary32 乘法与整数舍入
+
+`float32Multiply(left, right)` 接收两个 Int 位型，按 binary32 相乘并返回有限结果位型。`float32RoundToInt(value)` 接收一个 Int 位型，按最近整数、居中取偶数舍入为 Int；非有限值、非法位型及超出 Int64 范围失败。两者为纯运算，文本前端与 IR 共用同一执行语义。既有运算不变，使用新表达式的包需要本版前端／Engine重新构建。

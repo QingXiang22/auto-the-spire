@@ -75,6 +75,7 @@ procedure LeaveDevelopmentRoom {
       then = { fail = { message = "Finish the rest site option before leaving; rewards use CloseDevelopmentRewards" } }
     }
     set = { target = owner field = Player.Room value = "none" }
+    call = { procedure = CloseNormalNonCombatVisit args = { owner = owner } }
     set = { target = owner field = Player.RoomUsed value = false }
     set = { target = owner field = Player.PendingForge value = false }
   }
@@ -99,4 +100,20 @@ action LeaveDevelopmentRoom {
   role = player
   requires = and(equal(field(first(type(Player)), Player.Room), "rest-site"), and(field(first(type(Player)), Player.RoomUsed), and(not(field(first(type(Player)), Player.PendingForge)), not(field(first(type(Player)), Player.CombatActive)))))
   body = { call = { procedure = LeaveDevelopmentRoom args = { owner = first(type(Player)) } } }
+}
+
+procedure CloseNormalNonCombatVisit {
+  parameters = { owner = Ref(Player) }
+  locals = { run = Binding visit = Binding }
+  body = {
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    if = { condition = isNone(run) then = { return = {} } }
+    let = { into = visit value = field(run, Run.CurrentVisit) }
+    set = { target = visit field = RunVisit.Committed value = true }
+    set = { target = visit field = RunVisit.Phase value = "closed" }
+    set = { target = visit field = RunVisit.Status value = "closed" }
+    set = { target = run field = Run.Phase value = "map" }
+    set = { target = owner field = Player.Room value = "map" }
+    call = { procedure = RefreshNormalMapChoices args = { owner = owner run = run } }
+  }
 }

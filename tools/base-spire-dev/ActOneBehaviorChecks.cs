@@ -69,6 +69,12 @@ internal static partial class PackageChecks
             Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal(6L, EnemyHpAt(s, eye), "revive restores full HP");
             True(!s.State.GetField(eye, EnemyField(s, "Reviving")).AsBool(), "revive consumed");
+            var fog = Targets(s).Single(e => s.State.GetField(e, EnemyField(s, "DefinitionId")).AsString() == "base-spire:fogmog");
+            Set(s, fog, "Enemy", "Hp", Value.Of(1L));
+            Set(s, Player(s), "Player", "Energy", Value.Of(3L));
+            strike = IcAdd(s, "StrikeIronclad"); Submit(s, "PlayTargetedCard", strike);
+            s.Answer(new DecisionAnswer(s.PendingDecision!.RequestId, Instances: [fog])); Healthy(s);
+            Equal("victory", Outcome(s), "the surviving secondary illusion cannot prevent victory after Fogmog dies");
         });
     }
 }

@@ -144,6 +144,7 @@ internal static partial class PackageChecks
         Merge(RunCardBatch3Checks(package, Case), cards);
         Merge(RunCardBatch4Checks(package, Case), cards);
         Merge(RunIroncladChecks(package, Case), cards);
+        Case("NORMAL ROOM campfire choices and native shop/treasure vectors", () => RunNormalRoomsOnly(package));
         var enemies = RunEnemyTurnChecks(package, Case);
         Merge(RunEnemyMoveGraphChecks(package, Case), enemies);
         RunActOneBehaviorChecks(package, Case);

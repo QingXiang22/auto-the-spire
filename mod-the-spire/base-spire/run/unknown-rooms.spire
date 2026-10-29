@@ -97,6 +97,9 @@ procedure ResolveNormalRoomType {
   locals = { room = String(length = 16) }
   body = {
     if = { condition = equal(field(node, MapNode.Type), enum(MapPointType, Monster)) then = { return = { value = "monster" } } }
+    if = { condition = equal(field(node, MapNode.Type), enum(MapPointType, Shop)) then = { return = { value = "shop" } } }
+    if = { condition = equal(field(node, MapNode.Type), enum(MapPointType, Treasure)) then = { return = { value = "treasure" } } }
+    if = { condition = equal(field(node, MapNode.Type), enum(MapPointType, RestSite)) then = { return = { value = "rest-site" } } }
     if = { condition = equal(field(node, MapNode.Type), enum(MapPointType, Unknown)) then = {
       call = { procedure = RollUnknownRoom args = { run = run excludeShop = pureCall(UnknownShopIsExcluded, run, node) } into = room }
       return = { value = room }

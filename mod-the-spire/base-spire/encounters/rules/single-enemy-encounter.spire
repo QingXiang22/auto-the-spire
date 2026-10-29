@@ -97,6 +97,7 @@ procedure SummonCombatEnemy {
     call = { procedure = CreateEncounterEnemy args = { definition = definition hp = hp } into = target }
     set = { target = target field = Enemy.SlotIndex value = slot }
     set = { target = target field = Enemy.Illusion value = illusion }
+    set = { target = target field = Enemy.SecondaryEnemy value = illusion }
     call = { procedure = ResetEnemyMoves args = { target = target } }
     emit = { event = EnemyAddedToCombat payload = { owner = first(type(Player)) target = target } }
   }

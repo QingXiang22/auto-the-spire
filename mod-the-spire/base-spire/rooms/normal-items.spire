@@ -1,0 +1,204 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+entity MerchantStock { fields = {
+  Visit = { type = Ref(RunVisit) }
+  Kind = { type = String(length = 16) }
+  DefinitionId = { type = String(length = 64) }
+  Price = { type = Int }
+  Purchased = { type = Bool default = false }
+  Implemented = { type = Bool default = true }
+} }
+collection MerchantInventory { element = MerchantStock ordered = true }
+
+procedure RollRoomRelicRarity {
+  parameters = { stream = String(length = 128) } result = String(length = 16)
+  locals = { roll = Int }
+  body = {
+    sampleFloat32 = { stream = stream into = roll }
+    if = { condition = float32Less(roll, float32(0.5)) then = { return = { value = "Common" } } }
+    if = { condition = float32Less(roll, float32(0.83)) then = { return = { value = "Uncommon" } } }
+    return = { value = "Rare" }
+  }
+}
+procedure PullRoomRelic {
+  parameters = { run = Ref(Run) rarity = String(length = 16) shop = Bool }
+  result = String(length = 64)
+  locals = { bag = Binding item = Binding definition = String(length = 64) }
+  body = {
+    if = { condition = shop then = {
+      let = { into = bag value = first(where(type(OpeningList), b, and(equal(field(b, OpeningList.Run), run), and(equal(field(b, OpeningList.Category), "player-bag"), equal(field(b, OpeningList.Rarity), rarity))))) }
+      let = { into = item value = first(sort(where(relation(OpeningItems, bag), i, field(first(where(type(RoomRelicMetadata), m, equal(field(m, RoomRelicMetadata.DefinitionId), field(field(i, OpeningListItem.Definition), OpeningDefinition.DefinitionId)))), RoomRelicMetadata.ShopAllowed)), i, field(i, OpeningListItem.Position), true)) }
+    } else = {
+      let = { into = bag value = first(where(type(OpeningList), b, and(equal(field(b, OpeningList.Run), run), and(equal(field(b, OpeningList.Category), "shared-bag"), equal(field(b, OpeningList.Rarity), rarity))))) }
+      let = { into = item value = first(sort(relation(OpeningItems, bag), i, field(i, OpeningListItem.Position))) }
+    } }
+    if = { condition = isNone(item) then = { return = { value = "base-spire:circlet" } } }
+    let = { into = definition value = field(field(item, OpeningListItem.Definition), OpeningDefinition.DefinitionId) }
+    destroy = { target = item }
+    # Shop pulls remove the displayed item from both bags immediately.
+    if = { condition = shop then = {
+      forEach = { query = where(type(OpeningList), b, and(equal(field(b, OpeningList.Run), run), equal(field(b, OpeningList.Category), "shared-bag"))) item = shared body = {
+        forEach = { query = where(relation(OpeningItems, shared), i, equal(field(field(i, OpeningListItem.Definition), OpeningDefinition.DefinitionId), definition)) item = duplicate body = { destroy = { target = duplicate } } }
+      } }
+    } }
+    return = { value = definition }
+  }
+}
+procedure EnterNormalTreasure {
+  parameters = { owner = Ref(Player) run = Ref(Run) visit = Ref(RunVisit) }
+  locals = { gold = Int rarity = String(length = 16) definition = String(length = 64) }
+  body = {
+    sampleInt = { stream = "base-spire:player:rewards" min = 42 max = 53 into = gold }
+    call = { procedure = GainGoldWithSource args = { owner = owner amount = gold source = "base-spire:treasure" } }
+    call = { procedure = RollRoomRelicRarity args = { stream = "base-spire:run:treasure_room_relics" } into = rarity }
+    call = { procedure = PullRoomRelic args = { run = run rarity = rarity shop = false } into = definition }
+    set = { target = visit field = RunVisit.EncounterId value = definition }
+    if = { condition = not(field(first(where(type(RoomRelicMetadata), m, equal(field(m, RoomRelicMetadata.DefinitionId), definition))), RoomRelicMetadata.Implemented)) then = { fail = { message = "unsupported_capability: selected treasure relic has no executable effect" } } }
+    call = { procedure = ObtainRelic args = { owner = owner definition = definition } }
+  }
+}
+procedure AddMerchantStock {
+  parameters = { visit = Ref(RunVisit) kind = String(length = 16) definition = String(length = 64) basePrice = Int low = Int high = Int sale = Bool }
+  locals = { entry = Binding factor = Int price = Int implemented = Bool }
+  body = {
+    sampleFloat32 = { stream = "base-spire:player:shops" min = low max = high into = factor }
+    let = { into = price value = float32RoundToInt(float32Multiply(float32(basePrice), factor)) }
+    if = { condition = sale then = {
+      sampleFloat32 = { stream = "base-spire:player:shops" min = low max = high into = factor }
+      let = { into = price value = divide(float32RoundToInt(float32Multiply(float32(basePrice), factor)), 2) }
+    } }
+    let = { into = implemented value = true }
+    if = { condition = equal(kind, "card") then = { let = { into = implemented value = exists(where(collection(CardLibrary), c, equal(field(c, CardBlueprint.DefinitionId), definition))) } } }
+    if = { condition = equal(kind, "relic") then = { let = { into = implemented value = field(first(where(type(RoomRelicMetadata), m, equal(field(m, RoomRelicMetadata.DefinitionId), definition))), RoomRelicMetadata.Implemented) } } }
+    create = { type = MerchantStock scope = entityScope(visit) into = entry collection = MerchantInventory fields = { Visit = visit Kind = kind DefinitionId = definition Price = price Implemented = implemented } }
+  }
+}
+procedure ResolveMerchantCardRarity {
+  pure = true parameters = { visit = Ref(RunVisit) kind = String(length = 16) rarity = String(length = 16) colorless = Bool } result = String(length = 16)
+  locals = { available = String(length = 16) } body = {
+    let = { into = available value = rarity }
+    repeat = { count = 3 body = {
+      if = { condition = exists(where(collection(MerchantSourceCards), c, and(equal(field(c, MerchantSourceCard.Colorless), colorless), and(or(colorless, equal(field(c, MerchantSourceCard.Kind), kind)), and(equal(field(c, MerchantSourceCard.Rarity), available), not(exists(where(collection(MerchantInventory), e, and(equal(field(e, MerchantStock.Visit), visit), equal(field(e, MerchantStock.DefinitionId), field(c, MerchantSourceCard.DefinitionId))))))))))) then = { return = { value = available } } }
+      if = { condition = equal(available, "common") then = { let = { into = available value = "uncommon" } } else = { if = { condition = equal(available, "uncommon") then = { let = { into = available value = "rare" } } else = { let = { into = available value = "common" } } } } }
+    } }
+    fail = { message = "No merchant card candidate in the complete source pool" }
+  }
+}
+procedure RollMerchantCard {
+  parameters = { owner = Ref(Player) visit = Ref(RunVisit) kind = String(length = 16) rarity = String(length = 16) colorless = Bool sale = Bool }
+  locals = { chosen = Binding available = String(length = 16) roll = Int price = Int }
+  body = {
+    let = { into = available value = pureCall(ResolveMerchantCardRarity, visit, kind, rarity, colorless) }
+    samplePick = { stream = "base-spire:player:shops" candidates = where(collection(MerchantSourceCards), c, and(equal(field(c, MerchantSourceCard.Colorless), colorless), and(or(colorless, equal(field(c, MerchantSourceCard.Kind), kind)), and(equal(field(c, MerchantSourceCard.Rarity), available), not(exists(where(collection(MerchantInventory), e, and(equal(field(e, MerchantStock.Visit), visit), equal(field(e, MerchantStock.DefinitionId), field(c, MerchantSourceCard.DefinitionId)))))))))) into = chosen }
+    # Merchant upgrade chance is negative, but the source still consumes the Rewards draw.
+    sampleFloat32 = { stream = "base-spire:player:rewards" into = roll }
+    let = { into = price value = 50 }
+    if = { condition = equal(available, "uncommon") then = { let = { into = price value = 75 } } }
+    if = { condition = equal(available, "rare") then = { let = { into = price value = 150 } } }
+    if = { condition = colorless then = { let = { into = price value = float32RoundToInt(float32Multiply(float32(price), float32(1.15))) } } }
+    call = { procedure = AddMerchantStock args = { visit = visit kind = "card" definition = field(chosen, MerchantSourceCard.DefinitionId) basePrice = price low = float32(0.95) high = float32(1.05) sale = sale } }
+  }
+}
+procedure EnterNormalMerchant {
+  parameters = { owner = Ref(Player) run = Ref(Run) visit = Ref(RunVisit) }
+  locals = { discount = Int index = Int roll = Int rarity = String(length = 16) kind = String(length = 16) definition = String(length = 64) selected = Binding entry = Binding price = Int }
+  body = {
+    sampleInt = { stream = "base-spire:player:shops" min = 0 max = 5 into = discount }
+    let = { into = index value = 0 }
+    repeat = { count = 5 body = {
+      let = { into = kind value = "attack" }
+      if = { condition = greaterOrEqual(index, 2) then = { let = { into = kind value = "skill" } } }
+      if = { condition = equal(index, 4) then = { let = { into = kind value = "power" } } }
+      sampleFloat32 = { stream = "base-spire:player:rewards" into = roll }
+      let = { into = rarity value = "common" }
+      if = { condition = float32Less(roll, float32Add(float32(0.37), float32Add(float32(0.09), field(owner, Player.CardRarityOffset)))) then = { let = { into = rarity value = "uncommon" } } }
+      if = { condition = float32Less(roll, float32Add(float32(0.09), field(owner, Player.CardRarityOffset))) then = { let = { into = rarity value = "rare" } } }
+      call = { procedure = RollMerchantCard args = { owner = owner visit = visit kind = kind rarity = rarity colorless = false sale = equal(index, discount) } }
+      let = { into = index value = add(index, 1) }
+    } }
+    call = { procedure = RollMerchantCard args = { owner = owner visit = visit kind = "skill" rarity = "uncommon" colorless = true sale = false } }
+    call = { procedure = RollMerchantCard args = { owner = owner visit = visit kind = "skill" rarity = "rare" colorless = true sale = false } }
+    # Both rarity rolls precede the first relic price draw in native inventory generation.
+    call = { procedure = RollRoomRelicRarity args = { stream = "base-spire:player:rewards" } into = rarity }
+    call = { procedure = RollRoomRelicRarity args = { stream = "base-spire:player:rewards" } into = definition }
+    let = { into = index value = 0 }
+    repeat = { count = 3 body = {
+      if = { condition = equal(index, 1) then = { let = { into = rarity value = definition } } }
+      if = { condition = equal(index, 2) then = { let = { into = rarity value = "Shop" } } }
+      call = { procedure = PullRoomRelic args = { run = run rarity = rarity shop = true } into = kind }
+      let = { into = price value = field(first(where(type(RoomRelicMetadata), m, equal(field(m, RoomRelicMetadata.DefinitionId), kind))), RoomRelicMetadata.Price) }
+      call = { procedure = AddMerchantStock args = { visit = visit kind = "relic" definition = kind basePrice = price low = float32(0.85) high = float32(1.15) sale = false } }
+      let = { into = index value = add(index, 1) }
+    } }
+    # Pick all three distinct potions before any of their price draws.
+    repeat = { count = 3 body = {
+      sampleFloat32 = { stream = "base-spire:player:shops" into = roll }
+      let = { into = rarity value = pureCall(ClassifyPotionRewardRarity, roll) }
+      samplePick = { stream = "base-spire:player:shops" candidates = where(collection(PotionLibrary), p, and(equal(field(p, PotionBlueprint.Rarity), rarity), not(exists(where(collection(MerchantInventory), e, and(equal(field(e, MerchantStock.Visit), visit), equal(field(e, MerchantStock.DefinitionId), field(p, PotionBlueprint.DefinitionId)))))))) into = selected }
+      let = { into = price value = 50 }
+      if = { condition = equal(rarity, "uncommon") then = { let = { into = price value = 75 } } }
+      if = { condition = equal(rarity, "rare") then = { let = { into = price value = 100 } } }
+      create = { type = MerchantStock scope = entityScope(visit) into = entry collection = MerchantInventory fields = { Visit = visit Kind = "potion" DefinitionId = field(selected, PotionBlueprint.DefinitionId) Price = price } }
+    } }
+    forEach = { query = where(collection(MerchantInventory), e, and(equal(field(e, MerchantStock.Visit), visit), equal(field(e, MerchantStock.Kind), "potion"))) item = potion body = {
+      sampleFloat32 = { stream = "base-spire:player:shops" min = float32(0.95) max = float32(1.05) into = roll }
+      set = { target = potion field = MerchantStock.Price value = float32RoundToInt(float32Multiply(float32(field(potion, MerchantStock.Price)), roll)) }
+    } }
+    create = { type = MerchantStock scope = entityScope(visit) into = entry collection = MerchantInventory fields = { Visit = visit Kind = "remove" DefinitionId = "remove" Price = add(75, multiply(25, field(run, Run.CardRemovals))) } }
+    set = { target = run field = Run.CurrentPointHasShop value = true }
+  }
+}
+procedure CanBuyMerchantStock {
+  pure = true parameters = { owner = Ref(Player) entry = Ref(MerchantStock) } result = Bool
+  body = {
+    if = { condition = not(equal(field(owner, Player.Room), "shop")) then = { return = { value = false } } }
+    if = { condition = not(equal(field(field(owner, Player.CurrentRun), Run.CurrentVisit), field(entry, MerchantStock.Visit))) then = { return = { value = false } } }
+    if = { condition = or(field(entry, MerchantStock.Purchased), or(not(field(entry, MerchantStock.Implemented)), less(field(owner, Player.Gold), field(entry, MerchantStock.Price)))) then = { return = { value = false } } }
+    if = { condition = equal(field(entry, MerchantStock.Kind), "remove") then = { return = { value = false } } }
+    return = { value = not(and(equal(field(entry, MerchantStock.Kind), "potion"), greaterOrEqual(count(collection(Potions)), 3))) }
+  }
+}
+action BuyMerchantStock {
+  role = player parameters = { entry = Ref(MerchantStock) }
+  candidates = { parameter = entry query = where(collection(MerchantInventory), e, pureCall(CanBuyMerchantStock, first(type(Player)), e)) }
+  requires = pureCall(CanBuyMerchantStock, first(type(Player)), entry)
+  locals = { owner = Binding item = Binding }
+  body = {
+    let = { into = owner value = first(type(Player)) }
+    if = { condition = equal(field(entry, MerchantStock.Kind), "card") then = {
+      call = { procedure = CreateCardInstance args = { owner = owner definition = field(entry, MerchantStock.DefinitionId) } into = item }
+      call = { procedure = AcquirePermanentCard args = { owner = owner card = item } }
+    } }
+    if = { condition = equal(field(entry, MerchantStock.Kind), "relic") then = { call = { procedure = ObtainRelic args = { owner = owner definition = field(entry, MerchantStock.DefinitionId) } } } }
+    if = { condition = equal(field(entry, MerchantStock.Kind), "potion") then = {
+      call = { procedure = CreatePotionInstance args = { owner = owner definition = field(entry, MerchantStock.DefinitionId) } into = item }
+      call = { procedure = ObtainPotion args = { owner = owner potion = item } }
+    } }
+    call = { procedure = SpendGold args = { owner = owner amount = field(entry, MerchantStock.Price) source = "base-spire:merchant" } }
+    set = { target = entry field = MerchantStock.Purchased value = true }
+  }
+}
+action MerchantRemoveCard {
+  role = player parameters = { card = Ref(Card) }
+  candidates = { parameter = card query = where(collection(RunDeck), c, pureCall(PermanentCardEligible, first(type(Player)), c, "remove", "")) }
+  requires = and(equal(field(first(type(Player)), Player.Room), "shop"), exists(where(collection(MerchantInventory), e, and(equal(field(e, MerchantStock.Visit), field(field(first(type(Player)), Player.CurrentRun), Run.CurrentVisit)), and(equal(field(e, MerchantStock.Kind), "remove"), and(not(field(e, MerchantStock.Purchased)), lessOrEqual(field(e, MerchantStock.Price), field(first(type(Player)), Player.Gold))))))))
+  locals = { owner = Binding entry = Binding run = Binding }
+  body = {
+    let = { into = owner value = first(type(Player)) }
+    let = { into = run value = field(owner, Player.CurrentRun) }
+    let = { into = entry value = first(where(collection(MerchantInventory), e, and(equal(field(e, MerchantStock.Visit), field(run, Run.CurrentVisit)), equal(field(e, MerchantStock.Kind), "remove")))) }
+    call = { procedure = RemovePermanentCard args = { owner = owner card = card } }
+call = { procedure = SpendGold args = { owner = owner amount = field(entry, MerchantStock.Price) source = "base-spire:merchant-remove" } }
+    set = { target = entry field = MerchantStock.Purchased value = true }
+    set = { target = run field = Run.CardRemovals value = add(field(run, Run.CardRemovals), 1) }
+  }
+}
+action LeaveNormalItemRoom {
+  role = player
+  requires = or(equal(field(first(type(Player)), Player.Room), "shop"), equal(field(first(type(Player)), Player.Room), "treasure"))
+  body = {
+    forEach = { query = collection(MerchantInventory) item = entry body = { destroy = { target = entry } } }
+    call = { procedure = CloseNormalNonCombatVisit args = { owner = first(type(Player)) } }
+  }
+}
