@@ -56,6 +56,8 @@ internal sealed class NormalReferenceRun : IDisposable
     private object? rewardCandidateSources;
     private NormalInitializationCandidates? initialization;
     private object? initializationSources;
+    private NormalNeowCandidates? neowCandidates;
+    private object? neowSources;
     private CardModel? targetedCard;
     private PlayerCombatState? lastCombatState;
     private string[] neowOptions = [];
@@ -96,6 +98,12 @@ internal sealed class NormalReferenceRun : IDisposable
         random.Name(Neow.Rng, "base-spire:event:neow");
         neowOptions = Neow.CurrentOptions.Select(o => Relic(o.Key)).ToArray();
         neowPublicOptions = Neow.CurrentOptions.Select((o, index) => NormalReferenceNeow.Read(o, index)).ToArray();
+        if (diagnostics)
+        {
+            var observer = new NormalReferenceNeowCandidates(run);
+            neowSources = observer.Sources;
+            neowCandidates = observer.Capture(random.NeowDraws(), neowOptions);
+        }
     }
     private string Card(CardModel card)
     {
@@ -435,6 +443,7 @@ internal sealed class NormalReferenceRun : IDisposable
         if (diagnostics) Put("random.weighted_candidates", random.WeightedCalls());
         if (diagnostics) Put("random.reward_candidates", rewardCandidates);
         if (diagnostics) Put("random.initialization_candidates", initialization);
+        if (diagnostics) Put("random.neow_candidates", neowCandidates);
         if (diagnostics)
         {
             var attempts = random.OpeningAttempts(); var queues = NormalOpeningQueues.Reference(run);
@@ -461,6 +470,7 @@ internal sealed class NormalReferenceRun : IDisposable
                 native_reward_policies = rewardObservation?.Evidence,
                 native_reward_candidate_sources = rewardCandidateSources,
                 native_initialization_sources = initializationSources,
+                native_neow_sources = neowSources,
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = Array.Empty<string>(),
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
@@ -532,6 +542,12 @@ internal sealed class NormalReferenceRandom : IDisposable
     private readonly Dictionary<Call, NormalScalarCall> hpCalls = [];
     private NormalHpOrigin[] hpOrigins = [];
     internal int CallCount => calls.Count;
+    internal NormalInitializationDraw[] NeowDraws()
+    {
+        if (dropped != 0 || pending.Count != 0) throw NormalNeowTrace.Missing("incomplete native Neow diagnostics");
+        return calls.Where(c => Name(c.Rng) == NormalNeowTrace.Stream).Select(c => new NormalInitializationDraw(
+            c.Parameters.Operation, c.Before, c.After, c.Parameters.Minimum, c.Parameters.Maximum, c.Parameters.Arity, c.Result)).ToArray();
+    }
     internal NormalInitializationDraw[] InitializationDraws()
     {
         if (dropped != 0 || pending.Count != 0) throw NormalInitializationTrace.Missing("incomplete native initialization diagnostics");

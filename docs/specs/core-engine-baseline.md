@@ -45,6 +45,8 @@ RandomService 管命名流、消耗计数和快照；IRandomProfile 提供版本
 
 core 0.9.5 的开发诊断 `RandomCallDetails.SingleRawWord` 只在一次成功 API 调用确实消耗全局及当前流各一个原始随机字时，保留该次生成器实际返回的 UInt64。零消费、多字消费或跨流额外消费时为 null，不把末字当作完整抽样记录。诊断只记录已有抽样，不追加或重放随机；候选、游标、容量与历史快照约束保持，公开参与者投影不包含此字段。
 
+`SessionDebugOptions.CaptureProcedures` 可列出需要历史参数快照的限定过程名，名单在会话创建时复制固定。配合`CaptureValues=true`，在相应`ProcedureEnter`处复制实参及其引用的实体；既有`CaptureCandidateReferences`与`CaptureCandidateRelations`选项也控制这些快照的一层引用和出向关系。未选中的过程及事件快照保持原有范围；默认不复制过程参数。沿用现有记录、实体、值和文本预算，截断或丢弃必须显式报告。快照在过程正文运行前复制，后续改写或销毁实体不会改变历史副本；读取诊断不执行回调、不改变状态、随机消费或公开投影。Neow比较器用该能力读取选项生成时的真实临时池，core不包含玩法标识或专属分支。
+
 `engine/ir@0.9` 增加通用 `hash64(text)`、`uint64Add(left,right)` 与 `seedStream64`：64 位无符号字以 Int 的有符号位型保存，哈希采用 UTF-8 XxHash64、种子 0，加法按模 2^64 回绕。普通 Int 运算及 `seedStream` 的非负检查保持；只有显式 64 位指令解释完整位型。`startsWith(text,prefix)` 使用 ordinal 比较，`substring(text,start)` 按 UTF-16 下标取到结尾，越界显式失败。这些纯表达式不消费随机，具体游戏派生公式仍属于 DSL。编译器与 SDK 生成相同 IR；操作与参数进入规则标识，公开目录和回放须按新引擎标识重建，wire 值仍使用原有 Int 编码。
 
 规则、编译器、执行语义、包内容及随机配置共同决定兼容性。行为改变后重建包与相关回放，旧包或旧输入不自动续接新版本。数值精度、乘法次序和取整位置属于规则语义，不通过重录预期值掩盖变化。公开协议不提供 rollback／load／fork；开发者调试能力不产生外部回退权限。

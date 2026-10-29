@@ -22,6 +22,7 @@ internal sealed class NormalDslRun : IDisposable
     private NormalSettlement[]? settlement;
     private NormalInitializationCandidates? initialization;
     private NormalInitializationSources? initializationSources;
+    private NormalNeowEvidence? neowEvidence;
     private int actionIndex = -1;
     private int number;
     private RequestDto? lastStep;
@@ -48,7 +49,7 @@ internal sealed class NormalDslRun : IDisposable
         var setup = factory.GetMethod("CreatePackage")!.Invoke(null,
             [Path.Combine(repository, "mod-the-spire/base-spire/package.json"), null, 4096, null,
                 debug ? new SessionDebugOptions(MaxRecords: 200_000, MaxTextLength: 8192, MaxCandidates: 4096, CaptureValues: captureValues,
-                    CaptureCandidateReferences: true, CaptureCandidateRelations: true) : null])!;
+                    CaptureCandidateReferences: true, CaptureCandidateRelations: true, CaptureProcedures: [NormalNeowTrace.OptionProcedure]) : null])!;
         var configured = (ControlHost)setup.GetType().GetProperty("Host")!.GetValue(setup)!;
         // A fixed namespace is scoped to each isolated tool host. It makes on/off diagnostic
         // snapshots byte-comparable; protocol handles still never cross live sessions.
@@ -100,7 +101,12 @@ internal sealed class NormalDslRun : IDisposable
         if (!lastStepResponse.Ok) throw new InvalidOperationException("Public Host: " + lastStepResponse.Error?.Message);
         Snapshot = PublicSnapshotDto.FromWire(Get(Send(Operation.Observe, ("session_id", WireValue.Str(sessionId))), "snapshot"), NetProtocol.V02);
         Remember();
-        if (HasDebug && action.ActionType == "net:action:base-spire:StartNormalRun") CaptureInitialization();
+        if (HasDebug && action.ActionType == "net:action:base-spire:StartNormalRun")
+        {
+            CaptureInitialization();
+            neowEvidence = NormalNeowTrace.Dsl(DebugRecords, Engine.Debug!.DroppedRecords,
+                Instances("NeowOption").OrderBy(o => Field(o, "NeowOption", "Position").AsInt()).Select(o => Field(o, "NeowOption", "RelicId").AsString()).ToArray());
+        }
     }
     private void CaptureInitialization()
     {
@@ -288,6 +294,7 @@ internal sealed class NormalDslRun : IDisposable
         if (trace is not null) Put("random.float32_calls", NormalFloat32Trace.Dsl(trace.Capture(), trace.DroppedRecords));
         if (trace is not null) Put("random.reward_candidates", NormalRewardCandidateTrace.Dsl(trace.Capture(), trace.DroppedRecords));
         if (trace is not null) Put("random.initialization_candidates", initialization ?? throw NormalInitializationTrace.Missing("missing actual DSL initialization capture"));
+        if (trace is not null) Put("random.neow_candidates", neowEvidence?.Candidates ?? throw NormalNeowTrace.Missing("missing actual DSL Neow capture"));
         if (trace is not null)
         {
             var randomState = Engine.Random.Capture();
@@ -308,9 +315,12 @@ internal sealed class NormalDslRun : IDisposable
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = Array.Empty<string>(),
                 dsl_initialization_sources = initializationSources,
+                dsl_neow_sources = neowEvidence?.Sources,
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
-                    or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault || NormalInitializationTrace.Relevant(r))
-                    .Select(r => r with { Snapshot = r.Subject == NormalInitializationTrace.Stream && r.Random?.Operation == "pick"
+                    or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault || NormalInitializationTrace.Relevant(r) || NormalNeowTrace.Relevant(r))
+                    .Select(r => r with { Snapshot = r.Kind == SessionDebugKind.ProcedureEnter && r.Subject == NormalNeowTrace.OptionProcedure ? r.Snapshot
+                        : r.Subject == NormalNeowTrace.Stream && r.Random?.Operation == "pick" ? r.Snapshot
+                        : r.Subject == NormalInitializationTrace.Stream && r.Random?.Operation == "pick"
                         && r.Snapshot?.Entities.All(e => e.Type != "base-spire:OpeningListItem") == true ? r.Snapshot : null }).ToArray(), dropped = trace?.DroppedRecords,
                 streams = Engine.Random.Capture(), instance_mapping = identities.Select(p => new { instance = p.Key.Value, identity = p.Value }).ToArray() });
     }
