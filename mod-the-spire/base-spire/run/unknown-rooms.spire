@@ -104,6 +104,8 @@ procedure ResolveNormalRoomType {
       call = { procedure = RollUnknownRoom args = { run = run excludeShop = pureCall(UnknownShopIsExcluded, run, node) } into = room }
       return = { value = room }
     } }
+    if = { condition = equal(field(node, MapNode.Type), enum(MapPointType, Elite)) then = { return = { value = "elite" } } }
+    if = { condition = equal(field(node, MapNode.Type), enum(MapPointType, Boss)) then = { return = { value = "boss" } } }
     fail = { message = "unsupported_capability: this normal map type has not been connected" }
   }
 }

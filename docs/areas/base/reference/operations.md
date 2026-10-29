@@ -83,7 +83,8 @@ Power定义、施加命令、通知顺序及私有清理的准确签名见[Power
 | ClaimDevelopmentCardReward | owner: Ref(Player)、card: Ref(Card) | 公开 action 固定本玩家的 CardRewardOptions 候选；过程调用 ObtainCardReward，将同一实例入永久牌组并销毁未选项。保留金币与 rewards 房间 |
 | SkipDevelopmentCardReward | owner: Ref(Player) | 要求 rewards 且有待领卡；销毁所有候选，不抽随机、不增加永久牌，金币保持 |
 | CloseDevelopmentRewards | owner: Ref(Player) | 同时清理所有未领卡牌、药水及金币，关闭访问容器后离开奖励房；关闭前不得跨房 |
-| OfferNormalCombatRewards | owner、visitId、source、actIndex、ascension | 仅全部解锁无修正Ironclad首幕A0 Monster；访问唯一，创建CombatRewardSet，按药水判定→金币→适用药水→卡牌生成 |
+| OfferNormalCombatRewards | owner、visitId、source、actIndex、ascension | 仅全部解锁无修正Ironclad首幕A0 Monster／Elite／Boss；访问唯一，创建CombatRewardSet，按药水判定→金币→适用药水→卡牌→（Elite）遗物生成 |
+| ClaimCombatRelicReward | owner: Ref(Player) | 仅在 rewards、待领遗物已实现时可领取；复用 ObtainRelic 获得同一标识并清 RelicPending，不抽随机 |
 | ClaimDevelopmentPotionReward／SkipDevelopmentPotionReward | owner: Ref(Player) | 领取复用ObtainPotion；满栏保留同一待领实例；跳过仅销毁待领药水，不抽随机 |
 | ObtainPotion／DiscardPotion | owner: Ref(Player)、potion: Ref(Potion) | 首个空槽获得后发布PotionObtained；丢弃先移出库存再发布PotionDiscarded，最后销毁 |
 

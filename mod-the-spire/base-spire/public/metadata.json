@@ -1,6 +1,6 @@
 {
   "fixture_format": "net-the-spire/declaration-extension-metadata/1",
-  "static_build_id": "base-spire-dsl-0.7.0-dsl.82",
+  "static_build_id": "base-spire-dsl-0.7.0-dsl.83",
   "scenario_profile": "base-spire-dsl-relic-draw-dev-v1",
   "projection_id": "base-spire:PlayerView",
   "participant_role": "player",
@@ -104,7 +104,14 @@
         "base-spire:shrinker-beetle",
         "base-spire:slithering-strangler",
         "base-spire:snapping-jaxfruit",
-        "base-spire:vine-shambler"
+        "base-spire:vine-shambler",
+        "base-spire:bygone-effigy",
+        "base-spire:byrdonis",
+        "base-spire:phrog-parasite",
+        "base-spire:vantom",
+        "base-spire:kin-priest",
+        "base-spire:kin-follower",
+        "base-spire:ceremonial-beast"
       ]
     },
     "base-spire:Card": {
@@ -202,7 +209,8 @@
         "base-spire:uppercut",
         "base-spire:vicious",
         "base-spire:whirlwind",
-        "base-spire:whistle"
+        "base-spire:whistle",
+        "base-spire:wound"
       ]
     },
     "base-spire:Potion": {
@@ -279,23 +287,29 @@
         "base-spire:free-attack-power",
         "base-spire:hellraiser-power",
         "base-spire:inferno-power",
+        "base-spire:infested-power",
         "base-spire:juggernaut-power",
         "base-spire:juggling-power",
         "base-spire:mangle-power",
+        "base-spire:minion-power",
         "base-spire:no-draw-power",
         "base-spire:no-energy-gain",
         "base-spire:one-two-punch-power",
         "base-spire:plating-power",
+        "base-spire:plow-power",
         "base-spire:pyre-power",
         "base-spire:rage-power",
+        "base-spire:ringing-power",
         "base-spire:rupture-power",
         "base-spire:self-forming-clay",
         "base-spire:setup-strike-power",
         "base-spire:shrink-power",
         "base-spire:slippery-power",
+        "base-spire:slow-power",
         "base-spire:stampede-power",
         "base-spire:strength-power",
         "base-spire:tangled-power",
+        "base-spire:territorial-power",
         "base-spire:thorns-power",
         "base-spire:unmovable-power",
         "base-spire:vicious-power",
@@ -307,7 +321,9 @@
     "base-spire:CardAttachment": {
       "field_name": "DefinitionId",
       "content_ids": [
-        "base-spire:sown"
+        "base-spire:sown",
+        "base-spire:ringing",
+        "base-spire:entangled"
       ]
     },
     "base-spire:EventVisit": {
@@ -438,6 +454,8 @@
       "reason": "Static locked merchant source metadata; actual stock is published separately."
     }
   },
-  "terminal_outcomes": {},
+  "terminal_outcomes": {
+    "base-spire:NormalRunDefeat": "loss"
+  },
   "known_positions": {}
 }

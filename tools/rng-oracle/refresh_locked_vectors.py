@@ -22,7 +22,7 @@ def main():
     opening = read('normal-opening-vectors.json')
     opening['neow_pool'] = {kind: [r['id'] for r in metadata['neow'][kind] if r['name'] != 'MassiveScroll'] for kind in ['curse', 'positive']}
     write(fixtures / 'normal-opening-vectors.json', opening)
-    for name in ['act-one-map-vectors.json', 'map-gaussian-vectors.json', 'normal-combat-vectors.json', 'slimes-vectors.json', 'ironclad-source-metadata.json', 'normal-unknown-room-vector.json', 'normal-event-selection-vector.json', 'normal-sapphire-seed-vector.json', 'normal-dense-vegetation-vector.json', 'battleworn-continuation-vector.json', 'neow-effects-vector.json']:
+    for name in ['act-one-map-vectors.json', 'act-two-map-vectors.json', 'map-gaussian-vectors.json', 'normal-combat-vectors.json', 'slimes-vectors.json', 'ironclad-source-metadata.json', 'normal-unknown-room-vector.json', 'normal-event-selection-vector.json', 'normal-sapphire-seed-vector.json', 'normal-dense-vegetation-vector.json', 'battleworn-continuation-vector.json', 'neow-effects-vector.json']:
         write(fixtures / name, read(name))
     base = ROOT / 'mod-the-spire/base-spire/run'
     write_definitions(opening, base / 'opening-source.spire')

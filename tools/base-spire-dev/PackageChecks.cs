@@ -140,6 +140,7 @@ internal static partial class PackageChecks
         var rewards = RunRewardChecks(package, Case);
         Merge(RunCardRewardChecks(package, Case), rewards);
         Merge(RunNormalRewardChecks(package, Case), rewards);
+        Merge(RunActOneRewardChecks(package, Case), rewards);
         RunSourceRandomChecks(package, Case);
         Merge(RunCardBatch3Checks(package, Case), cards);
         Merge(RunCardBatch4Checks(package, Case), cards);
@@ -154,6 +155,11 @@ internal static partial class PackageChecks
         Merge(RunSlimedChecks(package, Case), cards);
         Merge(RunWhistleChecks(package, Case), cards);
         var encounters = RunEncounterChecks(package, Case);
+        foreach (var row in RunActOneBossChecks(package, Case))
+        {
+            var bucket = row.Key is "base-spire:wound" ? cards : row.Key.EndsWith("-elite", StringComparison.Ordinal) || row.Key.EndsWith("-boss", StringComparison.Ordinal) ? encounters : enemies;
+            bucket[row.Key] = bucket.TryGetValue(row.Key, out var existing) ? existing.Concat(row.Value).ToArray() : row.Value;
+        }
         foreach (var row in RunSlimeChecks(package, Case))
             (row.Key == "base-spire:slimes-weak" ? encounters : enemies).Add(row.Key, row.Value);
         witnesses.Add("base-spire:the-abacus", scenarios.Take(5).ToArray());

@@ -24,7 +24,7 @@ SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选
 
 1. 回答 Neow 的真实三选一。入口已建立源初态、完整前置队列和真实首幕地图。
 2. 选择已支持的 GoldenPearl、NutritiousOyster、BoomingConch、WingedBoots 或 CursedPearl。其余源选项保留，选择后明确报未支持。
-3. 提交离开确认，再选择 `ChooseMapPoint` 的当前合法候选。首幕 16 个普通遭遇均按来源编队及 HP 抽样进入战斗并自动开始首回合；其他幕和精英／Boss仍未接通。
+3. 提交离开确认，再选择 `ChooseMapPoint` 的当前合法候选。首幕 16 个普通遭遇、3 个精英与 3 个 Boss 均按来源编队及 HP 抽样进入战斗并自动开始首回合；Boss 奖励关闭后停在第二幕入口，尚不执行下一幕 Ancient。
 
 从base `0.7.0-dsl.64`开始，公开MapNodes按原生网格列优先、同列行序排列，随后是独立起点和Boss；MapNode.Index是该序列中的零基位置。使用坐标匹配节点并提交真实候选，不依赖旧创建索引或句柄排序。发布顺序在裁剪和坐标整理后确定，不改变地图抽样、节点实例或连接。
 
@@ -56,7 +56,7 @@ maps 保存图结构、节点／边、原始节点类型与访问历史；run �
 
 正常`ChooseMapPoint`已接入问号房型抽取。每次合法Unknown选择只从`unknown_map_point`流抽一次；四类隐藏赔率按Monster／Elite／Treasure／Shop顺序更新。前一实际访问包含商店，或目标的非空后继全为Shop时排除Shop；资格和增长修正使用pure接缝。`ResetUnknownRoomOdds`恢复已配置base，不重置随机流；跨幕入口恢复时须调用它。
 
-实际抽到Monster才消费正常遭遇队列、建立新访问并开战，地图和访问的原始MapType保持Unknown。Event使用上文的完整选择器；选到未实现事件或抽中Elite后具名报未支持；Treasure／Shop已接入下述正常房间操作。分类已消费的随机与赔率更新会保留，不承诺动作级回滚。非法、过期或其他Run的节点在抽样前拒绝。正常seed `unknown-normal-354`可选择GoldenPearl，从(3,1)正常胜利并关闭奖励，再走(3,2)问号进入下一场FuzzyWurmCrawlerWeak；这条可运行前缀不代表完整Run已开放。
+实际抽到Monster才消费正常遭遇队列、建立新访问并开战，地图和访问的原始MapType保持Unknown。Event使用上文的完整选择器；选到未实现事件后具名报未支持，选到Elite进入精英战斗；Treasure／Shop／精英／Boss已接入下述正常房间操作。分类已消费的随机与赔率更新会保留，不承诺动作级回滚。非法、过期或其他Run的节点在抽样前拒绝。正常seed `unknown-normal-354`可选择GoldenPearl，从(3,1)正常胜利并关闭奖励，再走(3,2)问号进入下一场FuzzyWurmCrawlerWeak；这条可运行前缀不代表完整Run已开放。
 
 ## 实现各类房间
 
@@ -82,7 +82,7 @@ maps 保存图结构、节点／边、原始节点类型与访问历史；run �
 
 显式初始化 Ironclad 后，首幕开发战斗胜利还会提供三张不同的卡牌奖励。公开 CardRewardOptions 和 ClaimDevelopmentCardReward 候选指向真实待领实例；提交所选候选后，该同一实例进入 RunDeck，其他候选销毁，金币奖励仍可独立领取。SkipDevelopmentCardReward 仅跳过卡牌；CloseDevelopmentRewards 同时丢弃未领取的卡牌和金币，之后才能进入下一战。候选生成一次，观察、领取和跳过不重抽；所选牌在下一战重建为独立副本。
 
-奖励使用完整单人 Ironclad 源池中的 80 张 Common／Uncommon／Rare 牌，包含 Feed／NotYet，区别于战斗生成池。基础稀有度、逐项偏移与去重已恢复；仍限首幕 A0、全部解锁、无奖励修正参与者。金币、稀有度、选牌和升级已共用原版玩家 Rewards 流及精确 binary32 抽样；普通来源已按药水掉落判定→金币→适用药水→卡牌的源顺序生成，48项药水候选保留完整源顺序。Elite／Boss、后幕升级率、替代奖励与正常 Run 未恢复。准确参数见[奖励约定](../spec/combat-rewards.md)。
+奖励使用完整单人 Ironclad 源池中的 80 张 Common／Uncommon／Rare 牌，包含 Feed／NotYet，区别于战斗生成池。基础稀有度、逐项偏移与去重已恢复；仍限首幕 A0、全部解锁、无奖励修正参与者。金币、稀有度、选牌和升级已共用原版玩家 Rewards 流及精确 binary32 抽样；普通、精英与 Boss 来源均按药水掉落判定→金币→适用药水→卡牌的源顺序生成（精英另加遗物稀有度与领取），48项药水候选保留完整源顺序。后幕升级率、替代奖励与完整正常 Run 未恢复。准确参数见[奖励约定](../spec/combat-rewards.md)。
 
 显式 Ironclad 胜利会建立带访问号的 CombatRewardSet，并公开固定 PotionRewardOptions。ClaimDevelopmentPotionReward 领取同一实例；满三栏时保留原候选，可用 DiscardPotion 腾出槽位后再次领取。SkipDevelopmentPotionReward 只跳过药水；关闭奖励清理全部未选实例。48项均可获得，EffectSupported=false 的药水尚不可使用；已有六种效果按窗口和目标提供使用动作。正常访问调用 OfferNormalCombatRewards 并传唯一 visitId，开发自动访问号不能充当正常地图路径。
 
@@ -94,7 +94,7 @@ rewards 拥有奖励容器和待领取状态；卡牌／遗物／药水的完整
 
 在 Run 模型中唯一维护永久 HP／最大 HP、金币、永久牌组、物品实例和跨房状态。战斗映射保存哪些变化可回写、何时回写，Fatal、失败、取消与重试分别约定。不要同时更新战斗镜像与长期字段两次获利。
 
-幕转换明确关闭 Boss 奖励、清理幕内寿命、保留长期实例、生成／切换队列、进入 Ancient 和下一幕地图。正常最终胜负必须来自 DSL 终局规则，在待结算余效和选择处理之后发生。受控强制清场或直接注入下一幕不能替代真实跨幕验收。
+幕转换明确关闭 Boss 奖励、清理幕内寿命、保留长期实例、生成／切换队列、进入 Ancient 和下一幕地图。首幕 Boss 奖励关闭后已按此过程生成第二幕地图并停在 `act-entry`，不执行下一幕 Ancient。正常最终胜负必须来自 DSL 终局规则，在待结算余效和选择处理之后发生；正常战斗死亡产生 `NormalRunDefeat` 终局。受控强制清场或直接注入下一幕不能替代真实跨幕验收。
 
 ## 验证一个可观察的流程
 
@@ -126,10 +126,12 @@ Boss 奖励全部解决后才允许切幕。保留生命、金币、永久牌、
 dotnet run --project tools/base-spire-dev -c Release -- check --normal-rooms-only
 ```
 
-正常公开路线检查使用已构建Host，固定seed777，选择WingedBoots后按公开节点坐标及合法候选推进。分别以Shop、RestSite、Treasure为终点；不注入资源、敌人或地图。示例：
+正常公开路线检查使用已构建Host，固定seed777，选择WingedBoots后按公开节点坐标及合法候选推进。房间检查分别以Shop、RestSite、Treasure为终点；首幕通关检查沿固定的173步参考路线走到第二幕入口。均不注入资源、敌人或地图。示例：
 
 ```powershell
 python tools/base-spire-dev/normal_rooms_smoke.py --host-dll net-the-spire/Net.TheSpire.Host/bin/Release/net9.0/Net.TheSpire.Host.dll --output .artifacts/normal-rooms --room Treasure
+python tools/base-spire-dev/normal_act_one_smoke.py --host-dll net-the-spire/Net.TheSpire.Host/bin/Release/net9.0/Net.TheSpire.Host.dll --output .artifacts/normal-act-one
+python tools/base-spire-dev/normal_defeat_smoke.py --host-dll net-the-spire/Net.TheSpire.Host/bin/Release/net9.0/Net.TheSpire.Host.dll --output .artifacts/normal-defeat
 ```
 
-此路径仅证明固定路线的真实访问与返回。精英／Boss、后幕、完整事件与物品效果池、完整Run和完整独立比较仍未验收。
+这三条路径分别证明固定路线的真实房间访问／返回、首幕固定路线到达第二幕入口，以及正常首战失败在公开快照中给出 `loss` 终局且不发布动作。精英／Boss组件由 `check --act-one-bosses-only` 与奖励向量单独验证，路线本身不经过精英；后幕、完整事件与物品效果池、完整Run和完整独立比较仍未验收。

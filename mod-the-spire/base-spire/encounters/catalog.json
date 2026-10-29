@@ -65,6 +65,30 @@
     {
       "id": "base-spire:vine-shambler-normal",
       "definition": "encounters/shared/vine-shambler-normal.spire"
+    },
+    {
+      "id": "base-spire:bygone-effigy-elite",
+      "definition": "encounters/shared/bygone-effigy-elite.spire"
+    },
+    {
+      "id": "base-spire:byrdonis-elite",
+      "definition": "encounters/shared/byrdonis-elite.spire"
+    },
+    {
+      "id": "base-spire:phrog-parasite-elite",
+      "definition": "encounters/shared/phrog-parasite-elite.spire"
+    },
+    {
+      "id": "base-spire:ceremonial-beast-boss",
+      "definition": "encounters/shared/ceremonial-beast-boss.spire"
+    },
+    {
+      "id": "base-spire:vantom-boss",
+      "definition": "encounters/shared/vantom-boss.spire"
+    },
+    {
+      "id": "base-spire:the-kin-boss",
+      "definition": "encounters/shared/the-kin-boss.spire"
     }
   ]
 }

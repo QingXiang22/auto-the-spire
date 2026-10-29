@@ -325,7 +325,7 @@ internal sealed class NormalReferenceRun : IDisposable
             Phase is "neow" or "map" && run.CurrentMapPoint!.Children.Contains(n) && !run.VisitedMapCoords.Contains(n.coord),
             n.Children.Select(Coord).Order(StringComparer.Ordinal).ToArray())).OrderBy(n => n.Coordinate, StringComparer.Ordinal).ToArray());
         Put("public.run", new NormalRunView(Phase, run.CurrentActIndex, run.CurrentMapCoord!.Value.row, run.TotalFloor,
-            Coord(run.CurrentMapPoint!), map.Length, Phase == "neow", NormalReferenceConfiguration.Profile(configuration)));
+            Coord(run.CurrentMapPoint!), map.Length, Phase == "neow", NormalReferenceConfiguration.Profile(configuration), Id(ModelDb.GetId(run.CurrentAncientEventType))));
         var active = combat?.Engine.IsInProgress ?? false;
         Put("public.player", new NormalPlayerView(player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, Id(player.Character.Id), player.MaxEnergy,
             active, combat is null || active ? "none" : combat.Engine.Won ? "victory" : "defeat", Phase == "combat" ? "battle" : Phase,
@@ -537,7 +537,8 @@ internal sealed class NormalReferenceRandom : IDisposable
         var candidates = calls.GroupBy(c => c.Rng).Where(g => !names.ContainsKey(g.Key) && g.Key.DiagnosticStreamName is null)
             .Where(g => g.First().Parameters.State == expected).Select(g => g.Key).ToArray();
         if (candidates.Length != 1) throw new NotSupportedException("Encounter RNG cannot be identified uniquely from its actual initial state.");
-        Name(candidates[0], "base-spire:encounter:monsters");
+        var sequence = names.Count(p => p.Value.StartsWith("base-spire:encounter:monsters", StringComparison.Ordinal));
+        Name(candidates[0], sequence == 0 ? "base-spire:encounter:monsters" : "base-spire:encounter:monsters:" + sequence);
     }
     public object ConsumedStates() => attached.OrderBy(Name, StringComparer.Ordinal).Select(r =>
     {
@@ -622,7 +623,7 @@ internal sealed class NormalReferenceRandom : IDisposable
     internal NormalOpeningAttempt[] OpeningAttempts() => (opening ?? throw NormalWeightedTrace.Missing("native opening attempt observer")).Attempts();
     // The factory-local generator is retained only by the enabled observer. Compare the
     // same run/player/event objects on both sides; per-call diagnostics retain its words.
-    public string KnownState() => System.Text.Json.JsonSerializer.Serialize(names.Where(p => p.Value != "base-spire:encounter:monsters").OrderBy(p => p.Value, StringComparer.Ordinal)
+    public string KnownState() => System.Text.Json.JsonSerializer.Serialize(names.Where(p => !p.Value.StartsWith("base-spire:encounter:monsters", StringComparison.Ordinal)).OrderBy(p => p.Value, StringComparer.Ordinal)
         .Select(p => new { name = p.Value, state = p.Key.ToSerializable() }), new System.Text.Json.JsonSerializerOptions { IncludeFields = true });
     public void Dispose()
     {

@@ -1,0 +1,24 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+template InfestedPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:infested-power" stackType = "single" } }
+  procedure StopEnding { pure = true parameters = { value = Bool listener = Ref(Power) } result = Bool body = { return = { value = true } } }
+  subscription StopEnding { event = ShouldStopCombatFromEnding reaction = StopEnding instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:infested-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+  procedure Hatch { parameters = { target = Ref(Enemy) listener = Ref(Power) } locals = { child = Binding slot = String(length = 16) index = Int } body = {
+    if = { condition = not(equal(field(listener, Power.HolderEnemy), target)) then = { return = {} } }
+    let = { into = index value = 1 }
+    repeat = { count = 4 body = {
+      let = { into = slot value = "wriggler1" }
+      if = { condition = equal(index, 2) then = { let = { into = slot value = "wriggler2" } } }
+      if = { condition = equal(index, 3) then = { let = { into = slot value = "wriggler3" } } }
+      if = { condition = equal(index, 4) then = { let = { into = slot value = "wriggler4" } } }
+      call = { procedure = Wriggler.Create args = { slot = slot startStunned = true } into = child }
+      call = { procedure = ResetEnemyMoves args = { target = child } }
+      emit = { event = EnemyAddedToCombat payload = { owner = first(type(Player)) target = child } }
+      call = { procedure = SelectNextEnemyMove args = { target = child } }
+      let = { into = index value = add(index, 1) }
+    } }
+  } }
+  subscription Hatch { event = EnemyDied reaction = Hatch instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:infested-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+} }
+use InfestedPower { template = InfestedPowerModule }

@@ -1,0 +1,10 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+template TerritorialPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:territorial-power" } }
+  procedure Grow { parameters = { owner = Ref(Player) listener = Ref(Power) } body = {
+    call = { procedure = ApplyEnemyPower args = { target = field(listener, Power.HolderEnemy) definition = "base-spire:strength-power" stacks = field(listener, Power.Stacks) } }
+  } }
+  subscription Grow { event = AfterEnemySideTurnEnd reaction = Grow instances = where(collection(Powers), p, and(equal(field(p, Power.DefinitionId), "base-spire:territorial-power"), not(isNone(field(p, Power.HolderEnemy))))) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+} }
+use TerritorialPower { template = TerritorialPowerModule }

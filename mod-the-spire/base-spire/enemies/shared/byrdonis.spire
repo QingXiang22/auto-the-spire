@@ -1,0 +1,21 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Locked sts2-sim 611cea2, Byrdonis.cs, single-player A0.
+template ByrdonisContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:byrdonis" initial = "SWOOP_MOVE" } }
+  use Move0 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:byrdonis" id = "SWOOP_MOVE" next = "PECK_MOVE" intent = "attack" index = 0 } }
+  use Move1 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:byrdonis" id = "PECK_MOVE" next = "SWOOP_MOVE" intent = "attack" index = 1 } }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } locals = { card = Binding } body = {
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "SWOOP_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 17 hits = 1 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "PECK_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 3 hits = 3 } } } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:byrdonis" procedure = Execute }
+  procedure Enter { parameters = { owner = Ref(Player) target = Ref(Enemy) } body = {
+    if = { condition = equal(field(target, Enemy.DefinitionId), "base-spire:byrdonis") then = { call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:territorial-power" stacks = 1 } } } }
+  } }
+  subscription Enter { event = EnemyAddedToCombat reaction = Enter }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) locals = { target = Binding } body = {
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:byrdonis" min = 81 max = 84 } into = target }
+  } }
+} }
+use Byrdonis { template = ByrdonisContent }

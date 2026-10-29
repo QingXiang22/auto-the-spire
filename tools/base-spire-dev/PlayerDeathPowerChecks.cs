@@ -98,17 +98,33 @@ internal static partial class PackageChecks
                 Equal(fromCard ? 1L : 3L, IntField(s, result, "DamageResult", "Overkill"), "overkill preserved");
             }
             var hash = s.State.StateHash();
-            Submit(s, "RepeatPlayerDeath"); Equal(hash, s.State.StateHash(), "repeat death check and cleanup are state-idempotent");
-            hash = s.State.StateHash(); var version = s.StateVersion;
-            for (var i = 0; i < 3; i++)
+            if (normal)
             {
-                var view = s.Observe(s.Participant(0), "base-spire:PlayerView"); s.LegalActions(s.Participant(0));
-                True(view.Instances.All(i => !removedPowers.Contains(i.Id)), "removed player Powers are absent from the public view");
-                True(Members(s, "Powers").All(p => view.Instances.Any(i => i.Id == p)), "live holders still publish their Powers");
+                Equal(SessionStatus.Terminal, s.Status, "normal defeat ends the session at a declared terminal result");
+                Equal("base-spire:NormalRunDefeat", s.Terminal!.Definition.QualifiedId, "declared defeat result");
+                Equal(0L, s.Terminal!.Fields[0].AsInt(), "terminal reports the resolved act");
+                True(s.Terminal!.Fields[1].AsInt() > 0, "terminal reports the total floor");
+                var repeat = s.RuleSet.Actions.Single(a => a.QualifiedId == "base-spire:RepeatPlayerDeath");
+                EngineFaultException? terminalFault = null;
+                try { s.Submit(repeat, s.Participant(0), []); } catch (EngineFaultException error) { terminalFault = error; }
+                True(terminalFault is not null && terminalFault.Message.Contains("terminal", StringComparison.Ordinal), "a terminal session accepts no further command");
+                Equal(hash, s.State.StateHash(), "repeat death check and cleanup are state-idempotent");
+                Equal(draws, s.Random.TotalDraws, "damage, nested death checks and cleanup consume no RNG");
             }
-            Equal(hash, s.State.StateHash(), "defeated public queries are read-only"); Equal(version, s.StateVersion, "query version unchanged");
-            Equal(draws, s.Random.TotalDraws, "damage, nested death checks and cleanup consume no RNG");
-            True(!Legal(s, "BeginDevelopmentTurn") && !Legal(s, "ClaimDevelopmentGoldReward"), "defeat exposes neither turn nor reward actions");
+            else
+            {
+                Submit(s, "RepeatPlayerDeath"); Equal(hash, s.State.StateHash(), "repeat death check and cleanup are state-idempotent");
+                hash = s.State.StateHash(); var version = s.StateVersion;
+                for (var i = 0; i < 3; i++)
+                {
+                    var view = s.Observe(s.Participant(0), "base-spire:PlayerView"); s.LegalActions(s.Participant(0));
+                    True(view.Instances.All(i => !removedPowers.Contains(i.Id)), "removed player Powers are absent from the public view");
+                    True(Members(s, "Powers").All(p => view.Instances.Any(i => i.Id == p)), "live holders still publish their Powers");
+                }
+                Equal(hash, s.State.StateHash(), "defeated public queries are read-only"); Equal(version, s.StateVersion, "query version unchanged");
+                Equal(draws, s.Random.TotalDraws, "damage, nested death checks and cleanup consume no RNG");
+                True(!Legal(s, "BeginDevelopmentTurn") && !Legal(s, "ClaimDevelopmentGoldReward"), "defeat exposes neither turn nor reward actions");
+            }
             var independent = Start(compiled);
             Equal(0, Members(independent, "Powers").Count, "separate session does not inherit dead-player Powers");
             Equal(0, independent.State.AllInstances(independent.RuleSet.TypeByQualifiedId("base-spire:JugglingPower.State").Id).Count, "separate session does not inherit private module state");

@@ -109,6 +109,34 @@
     {
       "id": "base-spire:wriggler",
       "definition": "enemies/shared/wriggler.spire"
+    },
+    {
+      "id": "base-spire:bygone-effigy",
+      "definition": "enemies/shared/bygone-effigy.spire"
+    },
+    {
+      "id": "base-spire:byrdonis",
+      "definition": "enemies/shared/byrdonis.spire"
+    },
+    {
+      "id": "base-spire:phrog-parasite",
+      "definition": "enemies/shared/phrog-parasite.spire"
+    },
+    {
+      "id": "base-spire:vantom",
+      "definition": "enemies/shared/vantom.spire"
+    },
+    {
+      "id": "base-spire:kin-priest",
+      "definition": "enemies/shared/kin-priest.spire"
+    },
+    {
+      "id": "base-spire:kin-follower",
+      "definition": "enemies/shared/kin-follower.spire"
+    },
+    {
+      "id": "base-spire:ceremonial-beast",
+      "definition": "enemies/shared/ceremonial-beast.spire"
     }
   ]
 }

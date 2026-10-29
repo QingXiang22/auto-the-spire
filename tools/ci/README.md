@@ -62,13 +62,13 @@ python tools/ci/check.py base net migration docs
 | base | 通用加载并启动纯 DSL 包、执行当前机制行为、正常开局及固定源地图／队列比较、核对 DSL 遗物及卡牌执行结果 | 机制 scope及部分正常开局；铁甲战士卡牌检查要求源池 85 张单人铁甲战士完整且有实际执行结果，保留90项新版来源及五项多人排除 |
 | package | 在最小包数据上检查加载／编译边界、预算与内容模块限制，并核对生产登记映射 | 只验证包工具输入与登记映射，不执行玩法内容 |
 | enemy-graph | 在受控敌人图副本上检查非法图、无合法分支与转移预算 | 图机制输入测试，不表示正常遭遇或完整战斗验收 |
-| net | 通用 wire／text-rules 检查和纯 DSL 公开路径，包含真实 stdio 子进程 | 含seed 777的真实Neow至首战奖励领取／跳过及地图返回；完整正常Run的snapshot／control／formal检查尚未迁移 |
+| net | 通用 wire／text-rules 检查和纯 DSL 公开路径，包含真实 stdio 子进程 | 含seed 777的真实Neow至首战奖励领取／跳过及地图返回、首幕固定通关回放（249 动作到第二幕入口）与正常首战失败的公开终局；完整正常Run的snapshot／control／formal检查尚未迁移 |
 | docs | 检查 Git 文档（含共享 AGENTS.md）的链接、锚点、JSON 示例、需求引用、Vale 项目术语和差异格式 | CI 安装固定版本 Vale 并校验 SHA256；检查不读取本地原版源码或历史产物 |
 | migration | 准备锁定参考，校验构建依赖隔离、153 个固定版本的源代码组与 11 份原 suite；执行 Strike／重洗双侧、逐次随机诊断、正常开局预检、共同动作四路径及严格失败检查 | BattleFriend的13个及Wriggler／Infection的24个受控组件场景须通过；Strike 通过，重洗保留真实首差；正常领取／跳过及目标选择共四路径返回地图，完整公开语义快照和逐边界协议检查通过；逐次随机与适用事件仍缺，因此非零；其余原用例未支持，不代表完整差异测试验收 |
 
 首次非零使当前组失败。原始日志、退出码及 `result.json` 写入 `.artifacts/ci/<组名>/`，Actions 上传各组 artifact，保留 14 天。base 的行为报告标记 `independent_verified: false`；迁移清单中的原检查均标记未执行。固定版本的文本 SHA256 采用 UTF-8 与 LF，跨检出换行保持一致。
 
-base组的 `check --normal-run-only` 保留10组固定字符串seed，比较完整前置遗物袋、三幕房间队列、Neow候选、Gaussian拒绝抽样，以及首幕最终节点／房型／父子边和随机游标；源向量的[生成入口](../rng-oracle/README.md#重新生成)与生产规则隔离。CI 先执行完整 `check --report`（含 DenseVegetation 的 event 行为报告），再以 `--normal-run-only --skip-dense-vegetation` 运行独立正常组，避免同一 job 重复执行该场景；单独运行 `--normal-run-only` 时仍包含 DenseVegetation。公开正向路径从Neow实际获得遗物到首个真实战斗，不注入敌人、清场或奖励。未支持选项／遭遇保留在源池并验证失败无额外状态／随机消费；同组还验证正常首战领取／跳过返回地图、自然死亡与受控末杀／余效顺序；完整整局及逐步双侧比较仍不在本组验收范围。
+base组的 `check --normal-run-only` 保留10组固定字符串seed，比较完整前置遗物袋、三幕房间队列、Neow候选、Gaussian拒绝抽样，以及首幕最终节点／房型／父子边和随机游标；另逐节点比较第二幕14行地图与原生Hive，并用受控正常Run核对精英队列、独立游标、精英奖励与回到地图；源向量的[生成入口](../rng-oracle/README.md#重新生成)与生产规则隔离。CI 先执行完整 `check --report`（含 DenseVegetation 的 event 行为报告），再以 `--normal-run-only --skip-dense-vegetation` 运行独立正常组，避免同一 job 重复执行该场景；单独运行 `--normal-run-only` 时仍包含 DenseVegetation。公开正向路径从Neow实际获得遗物到首个真实战斗，不注入敌人、清场或奖励。未支持选项／遭遇保留在源池并验证失败无额外状态／随机消费；同组还验证正常首战领取／跳过返回地图、自然死亡与受控末杀／余效顺序；完整整局及逐步双侧比较仍不在本组验收范围。
 
 migration另运行[七个固定轮转敌人组件比较](../differential/README.md#固定轮转敌人组件比较)，要求原50项全部一致，包括玩家致死时Frail清理与Vigor保留。另执行[Power改量组件](../differential/README.md#power改量组件比较)的96项，保留新建／叠加／直接Modify、Artifact、正负增量／零量、临时力量、实例模式及真实来源。另执行16项侧开始／清挡与80项双方格挡命令组件，保留28项回合组件并比较Power开始量。各组均实际返回0并核对完整边界；组件初态与部分时点为受控设置，不表示完整正常Run或全部内容验收。
 

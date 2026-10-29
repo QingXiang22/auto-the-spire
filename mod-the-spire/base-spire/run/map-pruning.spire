@@ -140,7 +140,7 @@ procedure PruneSourceMapMatches {
       let = { into = size value = count(relation(MapKeySegments, key)) }
       let = { into = index value = subtract(size, 1) }
       repeat = { count = index body = {
-        sampleInt = { stream = "base-spire:run:act_1_map" min = 0 max = add(index, 1) into = pick }
+        sampleInt = { stream = pureCall(CurrentSourceMapStream) min = 0 max = add(index, 1) into = pick }
         let = { into = left value = first(where(relation(MapKeySegments, key), s, equal(field(s, MapSegment.Position), index))) }
         let = { into = right value = first(where(relation(MapKeySegments, key), s, equal(field(s, MapSegment.Position), pick))) }
         set = { target = left field = MapSegment.Position value = pick }

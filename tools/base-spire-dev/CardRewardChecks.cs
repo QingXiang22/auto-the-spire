@@ -11,6 +11,7 @@ internal static partial class PackageChecks
         var count = 0;
         RunCardRewardChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
         RunNormalRewardChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
+        RunActOneRewardChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
         Console.WriteLine($"All {count} focused card-reward checks passed; full check is required for package evidence.");
         return 0;
     }
@@ -59,7 +60,7 @@ internal static partial class PackageChecks
                 (0, 3175926989, "uncommon"), (1051931442, 3175926989, "uncommon"), (1051931443, 3175926989, "common"),
                 (1022739086, 0, "rare"), (1022739087, 0, "uncommon"), (1053609164, 0, "uncommon"), (1053609165, 0, "common"),
                 (1054615797, 1053609165, "rare"), (1054615798, 1053609165, "uncommon"), (1061997772, 1053609165, "uncommon"), (1061997773, 1053609165, "common") };
-            var assertions = string.Join(Environment.NewLine, vectors.Select(v => $"if = {{ condition = not(equal(pureCall(ClassifyCombatRewardRarity, {v.Roll}, {v.Offset}), \"{v.Rarity}\")) then = {{ fail = {{ message = \"rarity threshold mismatch\" }} }} }}"));
+            var assertions = string.Join(Environment.NewLine, vectors.Select(v => $"if = {{ condition = not(equal(pureCall(ClassifyCombatRewardRarity, {v.Roll}, {v.Offset}, \"monster\"), \"{v.Rarity}\")) then = {{ fail = {{ message = \"rarity threshold mismatch\" }} }} }}"));
             copy.Include("rarity-boundaries.spire", "action CheckThresholds { role = player body = { " + assertions + " } }");
             Submit(Start(copy.Load()), "CheckThresholds");
         });
@@ -142,7 +143,7 @@ internal static partial class PackageChecks
             File.WriteAllText(path, text);
             copy.Include("rarity-probe.spire", """
                 action RarityProbe { role = player locals = { rarity = String(length = 16) } body = {
-                  call = { procedure = RollCombatRewardRarity args = { owner = first(type(Player)) } into = rarity }
+                  call = { procedure = RollCombatRewardRarity args = { owner = first(type(Player)) source = "monster" } into = rarity }
                 } }
                 action FallbackProbe { role = player body = {
                   addToCollection = { collection = CardRewardPool item = first(where(collection(CardLibrary), b, equal(field(b, CardBlueprint.Rarity), "common"))) }

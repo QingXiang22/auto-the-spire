@@ -14,6 +14,7 @@
     <EmbeddedResource Include="fixtures/normal-combat-vectors.json" />
     <EmbeddedResource Include="fixtures/slimes-vectors.json" />
     <EmbeddedResource Include="fixtures/act-one-map-vectors.json" />
+    <EmbeddedResource Include="fixtures/act-two-map-vectors.json" />
     <EmbeddedResource Include="fixtures/ironclad-source-metadata.json" />
     <EmbeddedResource Include="fixtures/source-rng-vectors.json" />
     <EmbeddedResource Include="fixtures/enemy-move-vectors.json" />

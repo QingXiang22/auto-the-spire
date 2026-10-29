@@ -16,16 +16,20 @@ python -X utf8 tools/rng-oracle/refresh_locked_vectors.py --output .artifacts/rn
 | --- | --- |
 | normal-opening-vectors、reference-pool-metadata | 原生RunState、Player、Neow，完整遗物袋、三幕来源队列、候选资格与顺序；固定Overgrowth／Hive／Glory，不声称随机替代幕选择 |
 | act-one-map-vectors、map-gaussian-vectors | 原生Overgrowth与StandardActMap，最终节点／类型／边／游标、真实GetAllMapPoints后接独立起点／Boss的公开序列与位置，以及Gaussian拒绝抽样 |
+| act-two-map-vectors | 原生Hive与StandardActMap的14行第二幕地图，节点／类型／边／游标与公开序列；休息数量按Gaussian(6)与未知数量减一 |
+| normal-act-one-route（`tools/base-spire-dev/fixtures`） | 锁定参考的真实RunDriver在seed777上执行173个语义决策的首幕通关记录，含每步floor／HP／gold与终点；这是固定的验收输入，不能重新选策略或按DSL结果改写 |
 | normal-combat-vectors | seed777正常Neow选择BoomingConch，首个合法后继真实遭遇、HP、首招、手牌与抽牌堆 |
 | neow-effects-vector | seed777真实Neow选择WingedBoots／CursedPearl后首战；另列WingedBoots三次非连接入房与两seed正负初始Strength的FlexPotion受控组件，保存资源、实例顺序和随机四字状态／游标 |
 | slimes-vectors | 十组原seed，原生SlimesWeak累计楼层2的受控编队、HP、三回合行动、Slimed与游标 |
 | ironclad-source-metadata | 原生90项完整池及GiantRock；五项多人资格、基本／升级属性与来源摘要 |
 | source-rng-vectors | Python独立派生，15条流、初始／重洗、局部金币／卡牌；保留原seed并增加old前缀边界 |
-| normal-reward-vectors | Python独立完整首幕A0普通奖励，三次访问、48项药水池和每次抽样的候选／结果／游标 |
+| normal-reward-vectors | Python独立完整首幕A0普通／精英／Boss奖励：三次普通访问与两次精英／Boss访问、48项药水池、每次抽样的候选／结果／游标，精英另含遗物稀有度 |
 | enemy-move-vectors、pickup-upgrade-vectors | Python独立招式图与永久升级随机；分数权重为明确的算法探针 |
 | Word64Vectors.cs | 原生StringHelper的UTF-8哈希输出；生成时同时核对Python哈希及根seed分支 |
 
 局部生成器可使用各自`--output`参数；其来源池读取先由原生导出得到的reference-pool-metadata，要求锁一致。`normal_opening_vectors.py`只渲染已导出的来源定义，不再维护第二套开局算法。
+
+`normal-act-one-route.json`由参考侧一次性的RunDriver启发式驱动生成，该驱动脚本未纳入仓库；文件本身是固定的验收输入，正常首幕公开回放按其中的决策顺序执行，不应为了对齐当前实现而重新选择策略或改写步骤。
 
 ## 验证与限制
 

@@ -1,0 +1,7 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Locked Overgrowth.CreateAllEncounters, single-player A0.
+procedure SpawnCeremonialBeastBoss { locals = { target = Binding } body = {
+  call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:ceremonial-beast" min = 252 max = 252 } into = target }
+} }
+use CeremonialBeastBoss { template = SingleEnemyEncounterRange args = { definition = "base-spire:ceremonial-beast-boss" enemyDefinition = "base-spire:ceremonial-beast" min = 252 max = 252 } }

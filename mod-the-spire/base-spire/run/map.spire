@@ -1,6 +1,14 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
+procedure CurrentSourceMapRooms { pure = true result = Int body = {
+  if = { condition = equal(field(first(type(Run)), Run.ActIndex), 0) then = { return = { value = 15 } } }
+  return = { value = 14 }
+} }
+procedure CurrentSourceMapStream { pure = true result = String(length = 128) body = {
+  if = { condition = equal(field(first(type(Run)), Run.ActIndex), 0) then = { return = { value = "base-spire:run:act_1_map" } } }
+  return = { value = "base-spire:run:act_2_map" }
+} }
 # Temporary ordered lists belong to a single synchronous map build and are removed
 # before publishing the map. They never replace the Run's persistent node graph.
 entity MapWorkGroup { fields = {} }
@@ -50,7 +58,7 @@ procedure ShuffleMapWork {
   body = {
     let = { into = index value = subtract(count(relation(MapWorkItems, group)), 1) }
     repeat = { count = maximum(index, 0) body = {
-      sampleInt = { stream = "base-spire:run:act_1_map" min = 0 max = add(index, 1) into = pick }
+      sampleInt = { stream = pureCall(CurrentSourceMapStream) min = 0 max = add(index, 1) into = pick }
       let = { into = left value = pureCall(MapWorkAt, group, index) }
       let = { into = right value = pureCall(MapWorkAt, group, pick) }
       set = { target = left field = MapWork.Position value = pick }
@@ -129,7 +137,7 @@ procedure GenerateSourceMapPaths {
       call = { procedure = GenerateSourceMapPath args = { run = run current = current } }
       let = { into = path value = add(path, 1) }
     } }
-    forEach = { query = sort(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), equal(field(n, MapNode.Row), 15))), n, field(n, MapNode.Col)) item = node body = { call = { procedure = ConnectMapPoints args = { parent = node child = boss } } } }
+    forEach = { query = sort(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), equal(field(n, MapNode.Row), pureCall(CurrentSourceMapRooms)))), n, field(n, MapNode.Col)) item = node body = { call = { procedure = ConnectMapPoints args = { parent = node child = boss } } } }
     forEach = { query = sort(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), equal(field(n, MapNode.Row), 1))), n, field(n, MapNode.Col)) item = node body = { call = { procedure = ConnectMapPoints args = { parent = start child = node } } } }
   }
 }
@@ -139,7 +147,7 @@ procedure GenerateSourceMapPath {
   body = {
     set = { target = current field = MapNode.IsStart value = true }
     let = { into = node value = current }
-    repeat = { count = 14 body = {
+    repeat = { count = subtract(pureCall(CurrentSourceMapRooms), 1) body = {
       call = { procedure = NextSourceMapPoint args = { run = run current = node } into = next }
       call = { procedure = ConnectMapPoints args = { parent = node child = next } }
       let = { into = node value = next }
@@ -150,7 +158,7 @@ procedure GenerateSourceMapPath {
 procedure ValidSourceMapKind {
   pure = true parameters = { node = Ref(MapNode) kind = Int } result = Bool
   body = {
-    if = { condition = and(greaterOrEqual(field(node, MapNode.Row), 13), equal(kind, 4)) then = { return = { value = false } } }
+    if = { condition = and(greaterOrEqual(field(node, MapNode.Row), subtract(pureCall(CurrentSourceMapRooms), 2)), equal(kind, 4)) then = { return = { value = false } } }
     if = { condition = and(less(field(node, MapNode.Row), 6), or(equal(kind, 4), equal(kind, 6))) then = { return = { value = false } } }
     if = { condition = or(or(equal(kind, 4), equal(kind, 6)), or(equal(kind, 3), equal(kind, 2))) then = {
       if = { condition = or(exists(where(relation(MapParents, node), n, equal(field(n, MapNode.Kind), kind))), exists(where(relation(MapChildren, node), n, equal(field(n, MapNode.Kind), kind)))) then = { return = { value = false } } }
@@ -182,8 +190,8 @@ procedure AssignSourceMapKinds {
   locals = { queue = Binding points = Binding kind = Int }
   body = {
     forEach = { query = where(collection(MapNodes), n, equal(field(n, MapNode.Run), run)) item = node body = {
-      if = { condition = equal(field(node, MapNode.Row), 15) then = { set = { target = node field = MapNode.Kind value = 4 } set = { target = node field = MapNode.CanModify value = false } } }
-      if = { condition = equal(field(node, MapNode.Row), 9) then = { set = { target = node field = MapNode.Kind value = 3 } set = { target = node field = MapNode.CanModify value = false } } }
+      if = { condition = equal(field(node, MapNode.Row), pureCall(CurrentSourceMapRooms)) then = { set = { target = node field = MapNode.Kind value = 4 } set = { target = node field = MapNode.CanModify value = false } } }
+      if = { condition = equal(field(node, MapNode.Row), subtract(pureCall(CurrentSourceMapRooms), 6)) then = { set = { target = node field = MapNode.Kind value = 3 } set = { target = node field = MapNode.CanModify value = false } } }
       if = { condition = equal(field(node, MapNode.Row), 1) then = { set = { target = node field = MapNode.Kind value = 5 } set = { target = node field = MapNode.CanModify value = false } } }
     } }
     create = { type = MapWorkGroup scope = entityScope(run) into = queue }
@@ -215,7 +223,7 @@ procedure SelectSourceMapStart {
   locals = { col = Int node = Binding }
   body = {
     repeat = { count = 100000 body = {
-      sampleInt = { stream = "base-spire:run:act_1_map" min = 0 max = 7 into = col }
+      sampleInt = { stream = pureCall(CurrentSourceMapStream) min = 0 max = 7 into = col }
       call = { procedure = GetOrCreateMapPoint args = { run = run col = col row = 1 } into = node }
       if = { condition = or(not(distinct), not(field(node, MapNode.IsStart))) then = { return = { value = node } } }
     } }
@@ -242,7 +250,7 @@ procedure PublicSourceMapOrder {
   pure = true parameters = { node = Ref(MapNode) } result = Int
   body = {
     if = { condition = equal(field(node, MapNode.Row), 0) then = { return = { value = 1000 } } }
-    if = { condition = equal(field(node, MapNode.Row), 16) then = { return = { value = 1001 } } }
+    if = { condition = equal(field(node, MapNode.Row), add(pureCall(CurrentSourceMapRooms), 1)) then = { return = { value = 1001 } } }
     return = { value = add(multiply(field(node, MapNode.Col), 17), field(node, MapNode.Row)) }
   }
 }

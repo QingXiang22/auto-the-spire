@@ -31,7 +31,7 @@ internal static partial class PackageChecks
                       set = { target = first(type(RngProbe)) field = RngProbe.Content value = value }
                     } }
                     # Preserve the original component vectors; NormalRewardChecks verifies the full reward set separately.
-                    action OfferProbe { role = player body = { call = { procedure = OfferCombatGold args = { owner = first(type(Player)) } } call = { procedure = OfferCombatCards args = { owner = first(type(Player)) } } } }
+                    action OfferProbe { role = player body = { call = { procedure = OfferCombatGold args = { owner = first(type(Player)) source = "monster" } } call = { procedure = OfferCombatCards args = { owner = first(type(Player)) source = "monster" } } } }
                     """);
                 var p = copy.Load();
                 Session New() { var s = p.CreateSession(1, ["player"], seed); s.Start(); Healthy(s); return s; }

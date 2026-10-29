@@ -1,0 +1,34 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+template SlowPowerModule { body = {
+  entity State { fields = { Power = { type = Ref(Power) visibility = Hidden } Played = { type = Int default = 0 visibility = Hidden } } }
+  use Definition { template = PowerDefinition args = { definition = "base-spire:slow-power" powerType = "debuff" } }
+  procedure Create { parameters = { power = Ref(Power) } locals = { own = Binding } body = {
+    if = { condition = equal(field(power, Power.DefinitionId), "base-spire:slow-power") then = { create = { type = State scope = entityScope(power) into = own fields = { Power = power } } } }
+  } }
+  subscription Create { event = PowerCreated reaction = Create }
+  procedure Remove { parameters = { power = Ref(Power) } body = {
+    forEach = { query = where(type(State), s, equal(field(s, State.Power), power)) item = own body = { destroy = { target = own } } }
+  } }
+  subscription Remove { event = PowerRemoved reaction = Remove }
+  procedure Played { parameters = { owner = Ref(Player) card = Ref(Card) listener = Ref(Power) } locals = { own = Binding } body = {
+    let = { into = own value = first(where(type(State), s, equal(field(s, State.Power), listener))) }
+    set = { target = own field = State.Played value = add(field(own, State.Played), 1) }
+  } }
+  subscription Played { event = AfterCardPlayed reaction = Played instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:slow-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+  procedure Reset { parameters = { owner = Ref(Player) listener = Ref(Power) } locals = { own = Binding } body = {
+    if = { condition = not(isNone(field(listener, Power.HolderEnemy))) then = {
+      let = { into = own value = first(where(type(State), s, equal(field(s, State.Power), listener))) }
+      set = { target = own field = State.Played value = 0 }
+    } }
+  } }
+  subscription Reset { event = AfterEnemySideTurnStart reaction = Reset instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:slow-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+  procedure Multiply { pure = true parameters = { value = Int owner = Ref(Player) card = Binding target = Binding listener = Ref(Power) } result = Int body = {
+    if = { condition = equal(field(listener, Power.HolderEnemy), target) then = {
+      return = { value = divide(multiply(value, add(100, multiply(10, field(first(where(type(State), s, equal(field(s, State.Power), listener))), State.Played)))), 100) }
+    } }
+    return = { value = value }
+  } }
+  subscription Multiply { event = ModifyAttackMultiplier reaction = Multiply instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:slow-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+} }
+use SlowPower { template = SlowPowerModule }

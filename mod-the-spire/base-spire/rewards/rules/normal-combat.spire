@@ -3,9 +3,9 @@ dsl_version = "core/0.3"
 
 procedure OfferNormalCombatRewards {
   parameters = { owner = Ref(Player) visitId = Int source = String(length = 16) actIndex = Int ascension = Int }
-  locals = { rewards = Binding roll = Int dropped = Bool }
+  locals = { rewards = Binding roll = Int dropped = Bool threshold = Int rarity = String(length = 16) relic = String(length = 64) run = Binding bag = Binding item = Binding }
   body = {
-    if = { condition = or(not(equal(field(owner, Player.CharacterId), "base-spire:ironclad")), or(not(equal(source, "monster")), or(not(equal(actIndex, 0)), not(equal(ascension, 0))))) then = { fail = { message = "unsupported_capability: ordinary Ironclad act-one A0 rewards required" } } }
+    if = { condition = or(not(equal(field(owner, Player.CharacterId), "base-spire:ironclad")), or(not(or(equal(source, "monster"), or(equal(source, "elite"), equal(source, "boss")))), or(not(equal(actIndex, 0)), not(equal(ascension, 0))))) then = { fail = { message = "unsupported_capability: Ironclad act-one A0 combat rewards required" } } }
     if = { condition = or(lessOrEqual(visitId, 0), or(field(owner, Player.CombatActive), lessOrEqual(field(owner, Player.Hp), 0))) then = { fail = { message = "Invalid reward visit or player state" } } }
     if = { condition = or(not(isNone(field(owner, Player.CurrentRewardSet))), equal(field(owner, Player.Room), "rewards")) then = { fail = { message = "Close the previous rewards first" } } }
     if = { condition = exists(where(type(CombatRewardSet), r, and(equal(field(r, CombatRewardSet.Player), owner), equal(field(r, CombatRewardSet.VisitId), visitId)))) then = { fail = { message = "Reward visit was already generated" } } }
@@ -18,13 +18,34 @@ procedure OfferNormalCombatRewards {
     set = { target = owner field = Player.CurrentRewardSet value = rewards }
     # RewardsSet.GenerateRewardsFor rolls before any reward Populate, even if the inventory is full.
     sampleFloat32 = { stream = "base-spire:player:rewards" into = roll }
-    let = { into = dropped value = float32Less(roll, field(owner, Player.PotionRewardOdds)) }
+    let = { into = threshold value = field(owner, Player.PotionRewardOdds) }
+    if = { condition = equal(source, "elite") then = { let = { into = threshold value = float32Add(threshold, float32(0.125)) } } }
+    let = { into = dropped value = float32Less(roll, threshold) }
     if = { condition = dropped then = {
       set = { target = owner field = Player.PotionRewardOdds value = float32Subtract(field(owner, Player.PotionRewardOdds), float32(0.1)) }
     } else = { set = { target = owner field = Player.PotionRewardOdds value = float32Add(field(owner, Player.PotionRewardOdds), float32(0.1)) } } }
-    call = { procedure = OfferCombatGold args = { owner = owner } }
+    call = { procedure = OfferCombatGold args = { owner = owner source = source } }
     if = { condition = dropped then = { call = { procedure = OfferCombatPotion args = { owner = owner rewards = rewards } } } }
-    call = { procedure = OfferCombatCards args = { owner = owner } }
+    call = { procedure = OfferCombatCards args = { owner = owner source = source } }
+    if = { condition = equal(source, "elite") then = {
+      set = { target = rewards field = CombatRewardSet.RarityPolicy value = "elite-encounter" }
+      call = { procedure = RollRoomRelicRarity args = { stream = "base-spire:player:rewards" } into = rarity }
+      let = { into = run value = field(owner, Player.CurrentRun) }
+      let = { into = bag value = first(where(type(OpeningList), b, and(equal(field(b, OpeningList.Run), run), and(equal(field(b, OpeningList.Category), "player-bag"), equal(field(b, OpeningList.Rarity), rarity))))) }
+      let = { into = item value = first(sort(relation(OpeningItems, bag), i, field(i, OpeningListItem.Position))) }
+      let = { into = relic value = "base-spire:circlet" }
+      if = { condition = not(isNone(item)) then = {
+        let = { into = relic value = field(field(item, OpeningListItem.Definition), OpeningDefinition.DefinitionId) }
+        destroy = { target = item }
+        forEach = { query = where(type(OpeningList), b, and(equal(field(b, OpeningList.Run), run), equal(field(b, OpeningList.Category), "shared-bag"))) item = shared body = {
+          forEach = { query = where(relation(OpeningItems, shared), i, equal(field(field(i, OpeningListItem.Definition), OpeningDefinition.DefinitionId), relic)) item = duplicate body = { destroy = { target = duplicate } } }
+        } }
+      } }
+      set = { target = rewards field = CombatRewardSet.RelicId value = relic }
+      set = { target = rewards field = CombatRewardSet.RelicPending value = true }
+      set = { target = rewards field = CombatRewardSet.RelicImplemented value = field(first(where(type(RoomRelicMetadata), m, equal(field(m, RoomRelicMetadata.DefinitionId), relic))), RoomRelicMetadata.Implemented) }
+    } }
+    if = { condition = equal(source, "boss") then = { set = { target = rewards field = CombatRewardSet.RarityPolicy value = "boss-encounter" } } }
     set = { target = rewards field = CombatRewardSet.Generated value = true }
   }
 }
@@ -85,3 +106,9 @@ action SkipDevelopmentPotionReward {
   requires = and(equal(field(first(type(Player)), Player.Room), "rewards"), exists(where(type(CombatRewardSet), r, and(equal(r, field(first(type(Player)), Player.CurrentRewardSet)), field(r, CombatRewardSet.PotionPending)))))
   body = { call = { procedure = ClearCombatPotionReward args = { owner = first(type(Player)) } } }
 }
+
+action ClaimCombatRelicReward { role = player requires = exists(where(type(CombatRewardSet), r, and(equal(r, field(first(type(Player)), Player.CurrentRewardSet)), and(field(r, CombatRewardSet.RelicPending), field(r, CombatRewardSet.RelicImplemented))))) locals = { rewards = Binding } body = {
+  let = { into = rewards value = field(first(type(Player)), Player.CurrentRewardSet) }
+  call = { procedure = ObtainRelic args = { owner = first(type(Player)) definition = field(rewards, CombatRewardSet.RelicId) } }
+  set = { target = rewards field = CombatRewardSet.RelicPending value = false }
+} }

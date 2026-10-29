@@ -18,6 +18,8 @@ entity Run {
     VisitSequence = { type = Int(min = 0) default = 0 }
     NeowPending = { type = Bool default = true }
     Profile = { type = String(length = 64) default = "ironclad-a0-fully-unlocked-singleplayer" }
+    EliteEncounterIndex = { type = Int default = 0 visibility = Hidden }
+    AncientId = { type = String(length = 64) default = "base-spire:neow" }
     NormalEncounterIndex = { type = Int default = 0 visibility = Hidden }
     CardRemovals = { type = Int default = 0 visibility = Hidden }
     RestCount = { type = Int default = 0 visibility = Hidden }
@@ -81,7 +83,7 @@ procedure CanTravelToNormalMapPoint {
     if = { condition = or(not(equal(field(owner, Player.CurrentRun), run)), or(not(equal(field(node, MapNode.Run), run)), field(node, MapNode.Visited))) then = { return = { value = false } } }
     let = { into = current value = field(run, Run.CurrentNode) }
     if = { condition = isNone(current) then = { return = { value = false } } }
-    if = { condition = and(foldEvent(ShouldAllowFreeTravel, false, owner), exists(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(equal(field(n, MapNode.Row), add(field(current, MapNode.Row), 1)), less(field(n, MapNode.Row), 16)))))) then = {
+    if = { condition = and(foldEvent(ShouldAllowFreeTravel, false, owner), exists(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(equal(field(n, MapNode.Row), add(field(current, MapNode.Row), 1)), less(field(n, MapNode.Row), add(pureCall(CurrentSourceMapRooms), 1))))))) then = {
       return = { value = equal(field(node, MapNode.Row), add(field(current, MapNode.Row), 1)) }
     } }
     return = { value = exists(where(relation(MapChildren, current), c, equal(c, node))) }
@@ -240,12 +242,18 @@ procedure SpawnNormalEncounter {
     if = { condition = equal(encounter, "base-spire:slithering-strangler-normal") then = { call = { procedure = SpawnSlitheringStranglerNormal args = { totalFloor = totalFloor } } return = {} } }
     if = { condition = equal(encounter, "base-spire:snapping-jaxfruit-normal") then = { call = { procedure = SpawnSnappingJaxfruitNormal } return = {} } }
     if = { condition = equal(encounter, "base-spire:vine-shambler-normal") then = { call = { procedure = SpawnVineShamblerNormal } return = {} } }
+    if = { condition = equal(encounter, "base-spire:bygone-effigy-elite") then = { call = { procedure = SpawnBygoneEffigyElite } return = {} } }
+    if = { condition = equal(encounter, "base-spire:byrdonis-elite") then = { call = { procedure = SpawnByrdonisElite } return = {} } }
+    if = { condition = equal(encounter, "base-spire:phrog-parasite-elite") then = { call = { procedure = SpawnPhrogParasiteElite } return = {} } }
+    if = { condition = equal(encounter, "base-spire:ceremonial-beast-boss") then = { call = { procedure = SpawnCeremonialBeastBoss } return = {} } }
+    if = { condition = equal(encounter, "base-spire:vantom-boss") then = { call = { procedure = SpawnVantomBoss } return = {} } }
+    if = { condition = equal(encounter, "base-spire:the-kin-boss") then = { call = { procedure = SpawnTheKinBoss } return = {} } }
     fail = { message = "unsupported_capability: selected source normal encounter has not been migrated" }
   }
 }
 procedure EnterNormalMapPoint {
   parameters = { owner = Ref(Player) run = Ref(Run) node = Ref(MapNode) }
-  locals = { visit = Binding plan = Binding encounter = String(length = 64) target = Binding room = String(length = 16) }
+  locals = { visit = Binding plan = Binding encounter = String(length = 64) target = Binding room = String(length = 16) queue = String(length = 16) position = Int }
   body = {
     if = { condition = not(equal(field(node, MapNode.Run), run)) then = { fail = { message = "Map point belongs to another Run" } } }
     if = { condition = not(and(equal(field(run, Run.Phase), "map"), pureCall(CanTravelToNormalMapPoint, owner, run, node))) then = { fail = { message = "Map point is not currently travelable from this Run" } } }
@@ -267,7 +275,6 @@ procedure EnterNormalMapPoint {
       call = { procedure = EnterNormalEvent args = { owner = owner run = run visit = visit definition = encounter } }
       return = {}
     } }
-    if = { condition = equal(room, "elite") then = { fail = { message = "unsupported_capability: actual normal Elite room has not been connected" } } }
     if = { condition = or(equal(room, "treasure"), equal(room, "shop")) then = {
       call = { procedure = BeginNormalMapVisit args = { run = run node = node } into = visit }
       set = { target = visit field = RunVisit.RoomType value = room }
@@ -277,15 +284,20 @@ procedure EnterNormalMapPoint {
       if = { condition = equal(room, "treasure") then = { call = { procedure = NotifyNormalRoomEntered args = { owner = owner visit = visit } } call = { procedure = EnterNormalTreasure args = { owner = owner run = run visit = visit } } } else = { call = { procedure = EnterNormalMerchant args = { owner = owner run = run visit = visit } } call = { procedure = NotifyNormalRoomEntered args = { owner = owner visit = visit } } } }
       return = {}
     } }
-    let = { into = plan value = first(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), field(run, Run.ActIndex)), and(equal(field(p, RunRoomPlan.Room), "Monster"), equal(field(p, RunRoomPlan.Position), field(run, Run.NormalEncounterIndex))))))) }
+    let = { into = queue value = "Monster" }
+    let = { into = position value = field(run, Run.NormalEncounterIndex) }
+    if = { condition = equal(room, "elite") then = { let = { into = queue value = "Elite" } let = { into = position value = field(run, Run.EliteEncounterIndex) } } }
+    if = { condition = equal(room, "boss") then = { let = { into = queue value = "Boss" } let = { into = position value = 0 } } }
+    let = { into = plan value = first(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), field(run, Run.ActIndex)), and(equal(field(p, RunRoomPlan.Room), queue), equal(field(p, RunRoomPlan.Position), position)))))) }
     if = { condition = isNone(plan) then = { fail = { message = "Normal room has no source encounter queue entry" } } }
     let = { into = encounter value = field(field(plan, RunRoomPlan.Definition), OpeningDefinition.DefinitionId) }
     call = { procedure = BeginNormalMapVisit args = { run = run node = node } into = visit }
 
-    set = { target = visit field = RunVisit.RoomType value = "monster" }
+    set = { target = visit field = RunVisit.RoomType value = room }
     set = { target = visit field = RunVisit.EncounterId value = encounter }
     set = { target = visit field = RunVisit.Phase value = "combat" }
-    set = { target = run field = Run.NormalEncounterIndex value = add(field(run, Run.NormalEncounterIndex), 1) }
+    if = { condition = equal(room, "monster") then = { set = { target = run field = Run.NormalEncounterIndex value = add(field(run, Run.NormalEncounterIndex), 1) } } }
+    if = { condition = equal(room, "elite") then = { set = { target = run field = Run.EliteEncounterIndex value = add(field(run, Run.EliteEncounterIndex), 1) } } }
     set = { target = run field = Run.Phase value = "combat" }
     set = { target = owner field = Player.Room value = "none" }
     call = { procedure = PrepareEnemyBirthContext }
@@ -325,6 +337,7 @@ procedure SettleNormalCombat {
       if = { condition = not(isNone(field(visit, RunVisit.Parent))) then = {
         call = { procedure = DefeatNormalEvent args = { owner = owner visit = field(field(visit, RunVisit.Parent), RunVisit.Event) } }
       } }
+      terminal = { result = NormalRunDefeat fields = { ActIndex = field(run, Run.ActIndex) Floor = field(run, Run.TotalFloor) } }
       return = {}
     } }
     call = { procedure = OfferNormalCombatRewards args = { owner = owner visitId = field(visit, RunVisit.StableId) source = field(visit, RunVisit.RoomType) actIndex = field(run, Run.ActIndex) ascension = 0 } }
@@ -362,8 +375,41 @@ procedure CloseNormalVisit {
       call = { procedure = CloseNormalEventCombat args = { owner = owner visit = visit } }
       return = {}
     } }
+    if = { condition = equal(field(visit, RunVisit.RoomType), "boss") then = {
+      call = { procedure = AdvanceNormalAct args = { owner = owner run = run } }
+      return = {}
+    } }
     call = { procedure = RefreshNormalMapChoices args = { owner = owner run = run } }
     set = { target = run field = Run.Phase value = "map" }
     set = { target = owner field = Player.Room value = "map" }
   }
 }
+
+procedure AdvanceNormalAct { parameters = { owner = Ref(Player) run = Ref(Run) } locals = { plan = Binding } body = {
+  if = { condition = not(equal(field(run, Run.ActIndex), 0)) then = { fail = { message = "unsupported_capability: later act transitions have not been connected" } } }
+  set = { target = run field = Run.CurrentNode value = none }
+  set = { target = run field = Run.CurrentVisit value = none }
+  forEach = { query = collection(RunVisits) item = visit body = { destroy = { target = visit } } }
+  forEach = { query = type(MerchantStock) item = stock body = { destroy = { target = stock } } }
+  forEach = { query = collection(MapNodes) item = node body = { destroy = { target = node } } }
+  forEach = { query = type(NeowOption) item = option body = { destroy = { target = option } } }
+  forEach = { query = type(NeowVisit) item = visit body = { destroy = { target = visit } } }
+  set = { target = run field = Run.ActIndex value = 1 }
+  set = { target = run field = Run.NormalEncounterIndex value = 0 }
+  set = { target = run field = Run.EliteEncounterIndex value = 0 }
+  set = { target = run field = Run.NormalEventIndex value = 0 }
+  set = { target = run field = Run.CurrentPointHasShop value = false }
+  set = { target = run field = Run.SelectedNormalEvent value = "none" }
+  call = { procedure = ResetUnknownRoomOdds args = { run = run } }
+  let = { into = plan value = first(where(type(RunRoomPlan), p, and(equal(field(p, RunRoomPlan.Run), run), and(equal(field(p, RunRoomPlan.Act), 1), equal(field(p, RunRoomPlan.Room), "ancient"))))) }
+  set = { target = run field = Run.AncientId value = field(field(plan, RunRoomPlan.Definition), OpeningDefinition.DefinitionId) }
+  call = { procedure = GenerateSourceActOneMap args = { owner = owner run = run } }
+  forEach = { query = collection(MapNodes) item = node body = { set = { target = node field = MapNode.Selectable value = false } set = { target = node field = MapNode.Visited value = false } } }
+  set = { target = run field = Run.CurrentNode value = none }
+  set = { target = run field = Run.Phase value = "act-entry" }
+  set = { target = owner field = Player.Room value = "act-entry" }
+} }
+action EnterNextAncient { role = player requires = equal(field(first(type(Player)), Player.Room), "act-entry") body = {
+  fail = { message = "unsupported_capability: selected next-act Ancient effect has not been connected; inspect Run.AncientId" }
+} }
+terminal NormalRunDefeat { fields = { ActIndex = Int Floor = Int } }

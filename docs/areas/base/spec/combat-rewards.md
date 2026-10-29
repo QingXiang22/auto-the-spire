@@ -1,16 +1,16 @@
-# 首幕普通战斗奖励
+# 首幕战斗奖励
 
-文档类型：参考（Reference）。关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定首幕普通战斗奖励的上下文、生成、领取与关闭；认领和状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。遵守[纯 DSL 边界](../../../understand/base-architecture.md)。
+文档类型：参考（Reference）。关联 **CORE-AUTHOR-05／DSL-REWARD-CLAIM-01**。本文规定首幕普通、精英与 Boss 战斗奖励的上下文、生成、领取与关闭；认领和状态见[GitHub 任务清单](https://github.com/QingXiang22/auto-the-spire/issues/28)。遵守[纯 DSL 边界](../../../understand/base-architecture.md)。
 
 ## 来源与边界
 
-`sts2/src/Core/Rewards/GoldReward.cs` 的 `Populate` 用 Rewards RNG 生成金额，`OnSelect` 才调用 `PlayerCmd.GainGold`。`Reward.SelectUnsynchronized` 记录成功选择，`RewardsSet.Offer` 在玩家活着时提供奖励。`EncounterModel.MinGoldReward/MaxGoldReward` 的 A0 Monster 区间为 10..20。上一包“胜利即到账”是开发简化，本包改为显式领取。
+`sts2/src/Core/Rewards/GoldReward.cs` 的 `Populate` 用 Rewards RNG 生成金额，`OnSelect` 才调用 `PlayerCmd.GainGold`。`Reward.SelectUnsynchronized` 记录成功选择，`RewardsSet.Offer` 在玩家活着时提供奖励。A0 金币区间按实际房型取 Monster 10..20、Elite 35..45、Boss 100..100。上一包“胜利即到账”是开发简化，本包改为显式领取。
 
-金币使用原版布局的 `base-spire:player:rewards` 与 double 截断整数映射。卡牌按下节恢复；Elite／Boss、逃脱比例、进阶、金币修正参与者、遗物奖励与完整正常 Run 仍未迁移，不建立未来奖励种类的通用框架。
+金币使用原版布局的 `base-spire:player:rewards` 与 double 截断整数映射。卡牌与精英遗物按后文恢复；逃脱比例、进阶、金币修正参与者、Boss 专属遗物（来源明确偏离 #78）、后幕升级比例、奖励替代项、重抽与多选仍未迁移，不为未来奖励种类预建通用框架。
 
 ## 奖励来源上下文目标要求
 
-本节 REWARD-01～05 规定共享奖励要求，首幕 A0 普通来源已按后文实现，其余来源保持未支持。复用已实现的生成、领取与获得操作；共享上下文属于 base DSL，不能由 Host 或工具替玩法选择随机流。
+本节 REWARD-01～05 规定共享奖励要求，首幕 A0 普通、精英与 Boss 来源已按后文实现，事件来源保持未支持。复用已实现的生成、领取与获得操作；共享上下文属于 base DSL，不能由 Host 或工具替玩法选择随机流。
 
 | 要求 | 输入与顺序 | 失败及验证 |
 | --- | --- | --- |
@@ -24,13 +24,19 @@
 
 ### 普通战斗上下文与药水
 
-`OfferNormalCombatRewards(owner, visitId, source, actIndex, ascension)` 接受唯一正整数访问标识，仅支持全部解锁、无奖励修正的 Ironclad 首幕 A0 Monster。角色、来源、幕、进阶、已有奖励和重复访问均在抽样前检查。`CombatRewardSet` 保存这些输入及 Generated／Closed；关闭后保留访问凭据，拒绝同一访问再次生成。开发胜利使用独立递增访问号，正常访问由调用者传入，不由本操作推进地图。正常首战沿源战斗结束／胜利通知和清理顺序完成后调用本操作，奖励容器关联实际 RunVisit；共享关闭动作清理未选实例后关闭访问并返回合法地图后继。
+`OfferNormalCombatRewards(owner, visitId, source, actIndex, ascension)` 接受唯一正整数访问标识与 Monster／Elite／Boss 来源，仅支持全部解锁、无奖励修正的 Ironclad 首幕 A0。角色、来源、幕、进阶、已有奖励和重复访问均在抽样前检查。`CombatRewardSet` 保存这些输入及 Generated／Closed；关闭后保留访问凭据，拒绝同一访问再次生成。开发胜利使用独立递增访问号，正常访问由调用者传入，不由本操作推进地图。正常战斗沿源战斗结束／胜利通知和清理顺序完成后调用本操作，奖励容器关联实际 RunVisit；共享关闭动作清理未选实例后关闭访问并返回合法地图后继。
 
-源 RewardsSet 构造列表时先执行 PotionRewardOdds.Roll，再按列表顺序 Populate：金币→适用药水→三张卡牌。药水初始掉落率为 binary32(0.4)，严格小于时掉落并减 binary32(0.1)，否则加同量；不封顶或归零。药水 Populate 先抽稀有度，`<=0.1f` 为 Rare、`<=0.35f` 为 Uncommon，其余 Common，再从该稀有度的源顺序候选中 NextItem。卡牌继续复用现有偏移、去重和升级操作。
+源 RewardsSet 构造列表时先执行 PotionRewardOdds.Roll，再按列表顺序 Populate：金币→适用药水→三张卡牌→精英遗物。药水初始掉落率为 binary32(0.4)，Elite 再加源 `eliteBonus(0.25)×0.5`=binary32(0.125)；严格小于时掉落并减 binary32(0.1)，否则加同量；不封顶或归零。药水 Populate 先抽稀有度，`<=0.1f` 为 Rare、`<=0.35f` 为 Uncommon，其余 Common，再从该稀有度的源顺序候选中 NextItem。卡牌继续复用现有偏移、去重和升级操作。
 
 药水候选为 Ironclad4Epoch 的三项，接 SharedPotionPool 的45项，全部解锁，共48项；不能按效果支持情况过滤。静态 `PotionBlueprint` 只承载候选元数据。待领药水为真实 `Potion`，绑定当前奖励容器；获得调用 `ObtainPotion`，将同一实例放入第一个空槽后通知 `PotionObtained`。满三栏时领取不改变待领条目，玩家可丢弃已有药水后再次领取，也可跳过或关闭；没有自动替换或额外取消选择。观察、满栏重试、领取、跳过和关闭均不抽样。关闭清理未领药水与卡牌，互不消耗其他已生成条目。
 
 药水获得支持与效果支持分别记录：48项可生成及获得，只有已有六种效果可使用；其余条目明确标记 EffectSupported=false，不发布使用候选，直接调用使用过程报告 unsupported_capability。未知定义明确失败。此范围不包含药水修正遗物、额外槽位、其他来源或完整独立模拟器比较。正常首幕普通访问已由[Run 结算](run-domain.md#正常开局首段)接入相同生成及获得操作。
+
+### 精英与 Boss 来源
+
+Elite 与 Boss 共用同一 Rewards 流、奖励容器与关闭动作，只在来源参数上分叉：金币区间 Elite 35..45、Boss 100..100；药水掉落阈值 Elite 加 binary32(0.125)；卡牌稀有度 Elite 用 `0.1f＋offset` 为 Rare、`0.5f＋offset` 为 Uncommon 的来源阈值，Boss 每次直接 Rare 但仍消费一次 NextFloat，并按源 `CardRarityOdds.Roll` 在 Rare 后把 offset 重置为 -0.05f。三种来源都保留 potion presence→gold→potion→cards→（Elite）relic 的抽样顺序。
+
+Elite 额外生成真实遗物奖励：在同一 Rewards 流上按 `0.5f／0.83f` 抽 Common／Uncommon／Rare，再从玩家袋（共享池加角色池）该稀有度前端取真实标识，并同时从共享袋删除；空桶按来源偏离回退 Circlet。`CombatRewardSet` 公开 RelicPending／RelicId；只有已迁移效果的遗物才发布 `ClaimCombatRelicReward` 并走完整 `ObtainRelic` 获得，未实现条目保持可见但不可领取，跳过或关闭只清 pending，不伪造获得。Boss 不生成专属遗物（来源 RewardsSet 明确偏离 #78）。
 
 ## 状态与过程
 
@@ -51,20 +57,21 @@
 3. 关闭未领奖励不增加 Gold；关闭已领奖励不重复增加。关闭后新战斗能生成另一份奖励，第一份不残留。
 4. 奖励打开时三种跨房动作无候选，直接调用过程也拒绝；关闭后恢复可用。
 5. 通过同一 DSL 公开 Host 执行真实击杀，观察待领奖励、领取／关闭候选和 Gold，并覆盖领取与跳过两条路径。该验证记录是受控开发态，不能替代正常 Run 或原版独立参考比较。
+6. Elite／Boss 由独立源向量核对三种来源的金币、药水加成、稀有度阈值、每次抽样参数与游标；Elite 遗物按参考袋顺序核对前端标识、双袋删除、实现标记与领取／跳过，Boss 核对无遗物条目。固定首幕公开回放由 Host 执行并停在第二幕入口。
 
 ## 铁甲战士首幕普通战斗卡牌奖励
 
-关联 CORE-AUTHOR-05／DSL-CARD-REWARD-01。源依据为 CardReward.Populate／OnSelect、CardFactory.CreateForReward／RollForUpgrade、CardCreationOptions.ForRoom、CardRarityOdds.Roll 和 IroncladCardPool。只消费已显式初始化的 Ironclad，首幕 A0、全部解锁、普通战斗且无奖励修改者；不恢复 Elite／Boss、后幕升级比例、奖励替代项、重抽、多选和获得修正。金币探针未选择角色时保持原行为。
+关联 CORE-AUTHOR-05／DSL-CARD-REWARD-01。源依据为 CardReward.Populate／OnSelect、CardFactory.CreateForReward／RollForUpgrade、CardCreationOptions.ForRoom、CardRarityOdds.Roll 和 IroncladCardPool。只消费已显式初始化的 Ironclad，首幕 A0、全部解锁、普通／精英／Boss 战斗且无奖励修改者；普通、精英与 Boss 来源均已恢复，后幕升级比例、奖励替代项、重抽、多选和获得修正仍未恢复。金币探针未选择角色时保持原行为。
 
 ### 生成与状态
 
-卡牌与药水共享上文普通奖励容器。遗物奖励与其他明确未支持来源保持。
+卡牌与药水共享上文奖励容器；Elite 额外带遗物条目，Boss 只带金币、药水与卡牌。
 
 胜利后的同一奖励流程先判定药水掉落，再填充金币、适用药水和三张卡。源单人 85 项保留源顺序；奖励按 Common／Uncommon／Rare 过滤掉三张 Basic 和两张 Ancient，共 80 项，Feed／NotYet 可以作为奖励，不复用其战斗生成禁用条件。CardBlueprint.Rarity 与 Card.Rarity 来自内容模板，固定源快照独立核验全部稀有度。未知定义或不足三张候选必须在抽样前失败，不缩池或用空效果代替。
 
-Player.CardRarityOffset 以隐藏 Int 保存 binary32 位型，初值 -0.05f（3175926989），上限0.4f，跨奖励／战斗保留。每张先抽源 NextFloat：小于 binary32(0.03f+offset) 为 Rare，小于 binary32(0.37f+binary32(0.03f+offset)) 为 Uncommon，其余 Common；Rare 后重置 -0.05f，其他结果按 binary32 加0.01f并封顶0.4f。偏移更新先于稀有度回退。当前稀有度无可用牌时按 Common→Uncommon→Rare→Common 回退，不能静默缩小来源表。再在该稀有度的剩余源顺序中随机选一张，同组三张定义互异；最后消费一次升级抽样。首幕基础升级概率为零，保留源 `<=` 的零边界。
+Player.CardRarityOffset 以隐藏 Int 保存 binary32 位型，初值 -0.05f（3175926989），上限0.4f，跨奖励／战斗保留。每张先抽源 NextFloat：Monster 小于 binary32(0.03f+offset) 为 Rare、小于 binary32(0.37f+binary32(0.03f+offset)) 为 Uncommon，Elite 改用 binary32(0.1f+offset)／binary32(0.4f+binary32(0.1f+offset))，Boss 恒为 Rare；其余结果按 Common 处理。Rare 后重置 -0.05f，其他结果按 binary32 加0.01f并封顶0.4f，Boss 的 Rare 同样重置。偏移更新先于稀有度回退。当前稀有度无可用牌时按 Common→Uncommon→Rare→Common 回退，不能静默缩小来源表。再在该稀有度的剩余源顺序中随机选一张，同组三张定义互异；最后消费一次升级抽样。首幕基础升级概率为零，保留源 `<=` 的零边界。
 
-金币、稀有度、候选与升级共用 `base-spire:player:rewards`，采用源流布局、有界整数和精确 NextFloat 映射；不再使用24-bit开发网格。独立源向量分别验证金币／卡牌局部操作与完整普通奖励上下文，后者包含药水掉落、适用药水稀有度和候选抽取的参数、结果、有序候选及游标。这些仍是受控访问验证，不能据此宣称正常 Run 可达或完整模拟器双侧一致。第一幕以外仍未接入；准确边界见[随机约定](randomness.md)。
+金币、稀有度、候选与升级共用 `base-spire:player:rewards`，采用源流布局、有界整数和精确 NextFloat 映射；不再使用24-bit开发网格。独立源向量分别验证金币／卡牌局部操作、完整普通奖励上下文与三种来源的完整奖励上下文，后者包含药水掉落（含 Elite 加成）、适用药水稀有度和候选抽取的参数、结果、有序候选及游标，以及 Elite 遗物稀有度抽样。这些仍是受控访问验证，不能据此宣称正常 Run 可达或完整模拟器双侧一致。第一幕以外仍未接入；准确边界见[随机约定](randomness.md)。
 
 CardRewardOptions 是待领 Card 集合，CardRewardPending 是 Player 标记；候选为未入战斗的真实 Card 实例，不进入 RunDeck、手牌或出牌历史，不发 CardEnteredCombat。先创建定义元数据再判断升级，候选固定后观察／无效领取均不重抽。CardLibrary／偏移不发布隐藏未来信息。
 
@@ -76,4 +83,4 @@ SkipDevelopmentCardReward 清空 pending 和所有候选，不给永久牌、不
 
 ### 验证
 
-独立固定的 87 项源稀有度／两项多人排除／80 项奖励资格及顺序；手工核对的稀有度阈值边界、偏移上限／重置、空稀有度回退；三张去重、同 seed 重放、失败／观察／无效输入不抽样；实际领取同一实例、获得事件顺序、未选销毁、跳过／关闭不获得、金币独立、下一场副本和真实 stdio 三选一。原版双侧未执行就保留未验证。
+独立固定的 87 项源稀有度／两项多人排除／80 项奖励资格及顺序；手工核对的稀有度阈值边界、偏移上限／重置、空稀有度回退；三张去重、同 seed 重放、失败／观察／无效输入不抽样；实际领取同一实例、获得事件顺序、未选销毁、跳过／关闭不获得、金币独立、下一场副本和真实 stdio 三选一。Elite／Boss 另用独立源向量核对三种来源的完整奖励与游标；Elite 遗物按参考袋顺序核对。原版双侧未执行就保留未验证。

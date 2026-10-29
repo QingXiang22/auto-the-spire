@@ -4,12 +4,12 @@ dsl_version = "core/0.3"
 # Locked Overgrowth.CreateSlimesWeak: A, remaining B (including singleton draw), medium.
 procedure SpawnSourceSlimesWeak {
   parameters = { totalFloor = Int }
-  locals = { small = Int singleton = Int medium = Int target = Binding }
+  locals = { stream = String(length = 128) small = Int singleton = Int medium = Int target = Binding }
   body = {
-    seedStream64 = { stream = "base-spire:encounter:monsters" seed = pureCall(SourceContentSeed, totalFloor, "SLIMES_WEAK", 0) }
-    sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 2 into = small }
-    sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 1 into = singleton }
-    sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 2 into = medium }
+    call = { procedure = BeginSourceEncounterRandom args = { totalFloor = totalFloor entry = "SLIMES_WEAK" } into = stream }
+    sampleInt = { stream = stream min = 0 max = 2 into = small }
+    sampleInt = { stream = stream min = 0 max = 1 into = singleton }
+    sampleInt = { stream = stream min = 0 max = 2 into = medium }
     if = { condition = equal(small, 0) then = {
       call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:leaf-slime-s" min = 11 max = 15 } into = target }
     } else = {

@@ -18,8 +18,9 @@ internal static partial class PackageChecks
         True(initialEnemies.Skip(1).Select(e => IntField(natural, e, "Enemy", "Hp")).SequenceEqual(survivors), "other enemy instances unchanged");
         var loaded = natural.State.CollectionMembers(natural.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:PowerLibrary").Id)
             .Select(p => TextField(natural, p, "PowerBlueprint", "DefinitionId")).ToHashSet(StringComparer.Ordinal);
-        foreach (var name in new[] { "die-for-you", "adaptable", "steam-eruption", "minion", "painful-stabs", "illusion", "reattach" })
+        foreach (var name in new[] { "die-for-you", "adaptable", "steam-eruption", "painful-stabs", "illusion", "reattach" })
             True(!loaded.Contains("base-spire:" + name + "-power"), "source death-retention/veto consumer remains unsupported: " + name);
+        True(loaded.Contains("base-spire:minion-power"), "the Kin's Minion is now a real death-retention consumer with its own boss witness");
         Console.WriteLine("ok   CB07 normal SlimesWeak Bash/Strike: death clears real Vulnerable without changing survivors or RNG");
 
         using var copy = new Copy(package.Root);

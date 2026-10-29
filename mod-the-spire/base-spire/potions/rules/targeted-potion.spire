@@ -1,0 +1,19 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Explicit target selection uses the same lifecycle as the first-target convenience action.
+action UseTargetedPotion {
+  role = player parameters = { potion = Ref(Potion) }
+  candidates = { parameter = potion query = where(collection(Potions), p, and(field(p, Potion.EffectSupported), equal(field(p, Potion.Target), "enemy"))) }
+  requires = and(field(first(type(Player)), Player.CombatActive), exists(where(type(Enemy), enemy, pureCall(EnemyIsActive, enemy))))
+  locals = { owner = Binding target = Binding }
+  body = {
+    let = { into = owner value = first(type(Player)) }
+    call = { procedure = UsePotionCommon args = { owner = owner potion = potion } }
+    decide = { participant = field(owner, Player.Owner) kind = EntityRef min = 1 max = 1 candidates = sort(where(type(Enemy), e, pureCall(EnemyIsActive, e)), e, field(e, Enemy.SpawnOrder)) prompt = "Choose potion target" into = target }
+    set = { target = owner field = Player.EffectDepth value = add(field(owner, Player.EffectDepth), 1) }
+    emit = { event = PotionUsedOnTarget payload = { owner = owner potion = potion target = target } }
+    call = { procedure = ConsumePotion args = { potion = potion } }
+    set = { target = owner field = Player.EffectDepth value = subtract(field(owner, Player.EffectDepth), 1) }
+    call = { procedure = CheckCombatVictory args = { owner = owner } }
+  }
+}

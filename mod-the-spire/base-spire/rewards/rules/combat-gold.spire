@@ -7,14 +7,17 @@ dsl_version = "core/0.3"
 # Elite and boss ranges and gold proportion for escapes are not migrated.
 # Source GoldReward.Populate stores the amount; OnSelect grants gold only when the player claims it.
 procedure OfferCombatGold {
-  parameters = { owner = Ref(Player) }
-  locals = { amount = Int }
+  parameters = { owner = Ref(Player) source = String(length = 16) }
+  locals = { amount = Int low = Int high = Int }
   body = {
     if = {
       condition = equal(field(owner, Player.Room), "rewards")
       then = { fail = { message = "Close the previous development rewards first" } }
     }
-    sampleInt = { stream = "base-spire:player:rewards" min = 10 max = 21 into = amount }
+    let = { into = low value = 10 } let = { into = high value = 21 }
+    if = { condition = equal(source, "elite") then = { let = { into = low value = 35 } let = { into = high value = 46 } } }
+    if = { condition = equal(source, "boss") then = { let = { into = low value = 100 } let = { into = high value = 101 } } }
+    sampleInt = { stream = "base-spire:player:rewards" min = low max = high into = amount }
     set = { target = owner field = Player.GoldRewardAmount value = amount }
     set = { target = owner field = Player.GoldRewardPending value = true }
     set = { target = owner field = Player.Room value = "rewards" }
@@ -37,7 +40,7 @@ procedure WhenCombatEnded {
         if = { condition = equal(field(owner, Player.CharacterId), "base-spire:ironclad") then = {
           call = { procedure = OfferNormalCombatRewards args = { owner = owner visitId = add(field(owner, Player.DevelopmentRewardVisit), 1) source = "monster" actIndex = 0 ascension = 0 } }
           set = { target = owner field = Player.DevelopmentRewardVisit value = add(field(owner, Player.DevelopmentRewardVisit), 1) }
-        } else = { call = { procedure = OfferCombatGold args = { owner = owner } } } }
+        } else = { call = { procedure = OfferCombatGold args = { owner = owner source = "monster" } } } }
       }
     }
   }
@@ -84,6 +87,7 @@ procedure CloseDevelopmentRewards {
     call = { procedure = ClearCombatPotionReward args = { owner = owner } }
     if = { condition = not(isNone(field(owner, Player.CurrentRewardSet))) then = {
       set = { target = field(owner, Player.CurrentRewardSet) field = CombatRewardSet.Closed value = true }
+      set = { target = field(owner, Player.CurrentRewardSet) field = CombatRewardSet.RelicPending value = false }
       set = { target = owner field = Player.CurrentRewardSet value = none }
     } }
     set = { target = owner field = Player.GoldRewardPending value = false }

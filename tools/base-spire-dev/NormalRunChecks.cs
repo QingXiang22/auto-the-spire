@@ -9,6 +9,8 @@ internal static partial class PackageChecks
         RunSourceOpeningChecks(package);
         RunMapGaussianChecks(package);
         RunSourceMapChecks(package);
+        RunActTwoMapChecks(package);
+        RunActOneEliteVisitChecks(package);
         RunNormalOpeningChecks(package);
         RunNormalReturnOnly(package, includeDenseVegetation);
         RunUnsupportedNormalOpeningChecks(package);
@@ -272,6 +274,100 @@ internal static partial class PackageChecks
             }
             Console.WriteLine("ok   ENV-T05 map source port: final cells, types, edges and cursor: " + seed);
         }
+    }
+
+    private static void RunActTwoMapChecks(DslPackage package)
+    {
+        using var copy = new Copy(package.Root);
+        copy.Include("act-two-probes.spire", """
+            action PrepareActTwoRun { role = player locals = { potion = Binding } body = {
+              call = { procedure = InitializeNormalIronclad args = { owner = first(type(Player)) } }
+              call = { procedure = InitializeSourceOpeningPools args = { run = first(type(Run)) } }
+              set = { target = first(type(Player)) field = Player.CurrentRun value = first(type(Run)) }
+              call = { procedure = CreatePotionInstance args = { owner = first(type(Player)) definition = "base-spire:fire-potion" } into = potion }
+              call = { procedure = ObtainPotion args = { owner = first(type(Player)) potion = potion } }
+              call = { procedure = GenerateSourceActOneMap args = { owner = first(type(Player)) run = first(type(Run)) } }
+            } }
+            action AdvanceActProbe { role = player body = {
+              call = { procedure = AdvanceNormalAct args = { owner = first(type(Player)) run = first(type(Run)) } }
+            } }
+            """);
+        var compiled = copy.Load();
+        using var vectors = JsonDocument.Parse(typeof(PackageChecks).Assembly.GetManifestResourceStream("BaseSpire.Dev.fixtures.act-two-map-vectors.json")!);
+        using var opening = JsonDocument.Parse(typeof(PackageChecks).Assembly.GetManifestResourceStream("BaseSpire.Dev.fixtures.normal-opening-vectors.json")!);
+        Equal(10, vectors.RootElement.GetProperty("vectors").GetArrayLength(), "all required act-two map seeds remain present");
+        foreach (var vector in vectors.RootElement.GetProperty("vectors").EnumerateArray())
+        {
+            var seed = vector.GetProperty("seed").GetString()!;
+            var s = compiled.CreateSession(1, ["player"], seed, new SessionDebugOptions(MaxRecords: 100000));
+            s.Start(); Healthy(s); Submit(s, "PrepareActTwoRun");
+            var run = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Run").Id).Single();
+            var deck = Members(s, "RunDeck").ToArray();
+            var relics = Members(s, "Relics").ToArray();
+            var potions = Members(s, "Potions").ToArray();
+            Equal(1, potions.Length, "the prepared run carries a real potion instance");
+            var oldNodes = Members(s, "MapNodes").ToArray();
+            True(oldNodes.Length > 0, "the prepared run carries the generated act-one map");
+            var hp = IntField(s, Player(s), "Player", "Hp");
+            var maxHp = IntField(s, Player(s), "Player", "MaxHp");
+            var gold = IntField(s, Player(s), "Player", "Gold");
+            var streams = new[] { "base-spire:player:rewards", "base-spire:run:up_front", "base-spire:run:act_1_map" }
+                .Select(name => s.Random.DrawCount(name)).ToArray();
+            Submit(s, "AdvanceActProbe");
+            Equal(1L, IntField(s, run, "Run", "ActIndex"), "the boss transition advances to the second act: " + seed);
+            Equal(14L, vector.GetProperty("rooms").GetInt64(), "source Hive room count");
+            Equal(vector.GetProperty("draws").GetInt64(), s.Random.DrawCount("base-spire:run:act_2_map"), "source act-two map cursor: " + seed);
+            var nodes = Members(s, "MapNodes");
+            var expected = vector.GetProperty("cells").EnumerateArray().ToArray();
+            Equal(expected.Length, nodes.Count, "source act-two map node count: " + seed);
+            var publication = vector.GetProperty("publication").EnumerateArray().ToArray();
+            Equal(nodes.Count, publication.Length, "complete independently enumerated act-two publication: " + seed);
+            for (var i = 0; i < publication.Length; i++)
+            {
+                Equal(publication[i].GetProperty("index").GetInt64(), IntField(s, nodes[i], "MapNode", "Index"), "native act-two enumeration index: " + seed);
+                Equal(publication[i].GetProperty("col").GetInt64(), IntField(s, nodes[i], "MapNode", "Col"), "native act-two column order: " + seed);
+                Equal(publication[i].GetProperty("row").GetInt64(), IntField(s, nodes[i], "MapNode", "Row"), "native act-two row order: " + seed);
+            }
+            var childRelation = s.RuleSet.Relations.Single(r => r.QualifiedId == "base-spire:MapChildren");
+            var parentRelation = s.RuleSet.Relations.Single(r => r.QualifiedId == "base-spire:MapParents");
+            foreach (var cell in expected)
+            {
+                var node = nodes.Single(n => IntField(s, n, "MapNode", "Col") == cell.GetProperty("col").GetInt64() && IntField(s, n, "MapNode", "Row") == cell.GetProperty("row").GetInt64());
+                Equal(cell.GetProperty("type").GetInt64(), IntField(s, node, "MapNode", "Kind"), "source act-two point type");
+                long Mask(int relation) => s.State.RelationTargets(relation, node).Sum(n => 1L << (int)IntField(s, n, "MapNode", "Col"));
+                Equal(cell.GetProperty("children").GetInt64(), Mask(childRelation.Id), "source act-two children");
+                Equal(cell.GetProperty("parents").GetInt64(), Mask(parentRelation.Id), "source act-two parents");
+            }
+            foreach (var name in new[] { "MapWork", "MapWorkGroup", "MapSegment", "MapSegmentKey" })
+                Equal(0, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:" + name).Id).Count(), "act-two map scratch state is removed");
+            True(Members(s, "MapNodes").All(n => !s.State.GetField(n, s.RuleSet.TypeByQualifiedId("base-spire:MapNode").FieldIndex("Selectable")).AsBool()
+                && !s.State.GetField(n, s.RuleSet.TypeByQualifiedId("base-spire:MapNode").FieldIndex("Visited")).AsBool()), "the next-act map is published without open travel: " + seed);
+            Equal("act-entry", TextField(s, Player(s), "Player", "Room"), "player waits at the act entry: " + seed);
+            Equal("act-entry", TextField(s, run, "Run", "Phase"), "run phase waits at the act entry: " + seed);
+            var plan = opening.RootElement.GetProperty("vectors").EnumerateArray().Single(v => v.GetProperty("seed").GetString() == seed)
+                .GetProperty("plans").EnumerateArray().Single(p => p.GetProperty("act").GetInt64() == 1 && p.GetProperty("room").GetString() == "ancient");
+            Equal(plan.GetProperty("id").GetString(), TextField(s, run, "Run", "AncientId"), "pre-generated second-act Ancient is reused, not rerolled");
+            True(Members(s, "RunDeck").SequenceEqual(deck), "long-term deck instances survive the act transition: " + seed);
+            True(Members(s, "Relics").SequenceEqual(relics), "long-term relic instances survive the act transition: " + seed);
+            Equal(potions.Length, Members(s, "Potions").Count, "potion inventory survives the act transition: " + seed);
+            True(Members(s, "Potions").SequenceEqual(potions), "the same potion instances survive the act transition: " + seed);
+            True(Members(s, "MapNodes").All(n => !oldNodes.Contains(n)), "the previous act map nodes are destroyed, not reused: " + seed);
+            Equal(hp, IntField(s, Player(s), "Player", "Hp"), "HP survives the act transition: " + seed);
+            Equal(maxHp, IntField(s, Player(s), "Player", "MaxHp"), "Max HP survives the act transition: " + seed);
+            Equal(gold, IntField(s, Player(s), "Player", "Gold"), "gold survives the act transition: " + seed);
+            foreach (var name in new[] { "RunVisit", "MerchantStock", "NeowOption", "NeowVisit" })
+                Equal(0, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:" + name).Id).Count(), "within-act lifetime is cleared: " + name);
+            True(s.State.GetField(run, s.RuleSet.TypeByQualifiedId("base-spire:Run").FieldIndex("CurrentNode")).IsNone
+                && s.State.GetField(run, s.RuleSet.TypeByQualifiedId("base-spire:Run").FieldIndex("CurrentVisit")).IsNone, "the old map cursor and visit are cleared");
+            var names = new[] { "base-spire:player:rewards", "base-spire:run:up_front", "base-spire:run:act_1_map" };
+            for (var i = 0; i < names.Length; i++) Equal(streams[i], s.Random.DrawCount(names[i]), "the act transition does not reset or consume " + names[i]);
+            Console.WriteLine("ok   ENV-T05 act-two map source port: cells, types, edges, cursor and act entry: " + seed);
+        }
+        var gate = compiled.CreateSession(1, ["player"], "777"); gate.Start(); Healthy(gate); Submit(gate, "PrepareActTwoRun"); Submit(gate, "AdvanceActProbe");
+        var before = gate.State.StateHash();
+        Throws<EngineFaultException>(() => Submit(gate, "EnterNextAncient"));
+        True(gate.Fault!.Message.Contains("unsupported_capability", StringComparison.Ordinal), "next-act Ancient effects stay explicitly unsupported");
+        Equal(before, gate.State.StateHash(), "an unsupported Ancient entry grants no fake transition");
     }
 
     private static void RunMapGaussianChecks(DslPackage package)

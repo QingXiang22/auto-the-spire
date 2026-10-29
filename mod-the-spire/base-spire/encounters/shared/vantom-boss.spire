@@ -1,0 +1,7 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Locked Overgrowth.CreateAllEncounters, single-player A0.
+procedure SpawnVantomBoss { locals = { target = Binding } body = {
+  call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:vantom" min = 173 max = 173 } into = target }
+} }
+use VantomBoss { template = SingleEnemyEncounterRange args = { definition = "base-spire:vantom-boss" enemyDefinition = "base-spire:vantom" min = 173 max = 173 } }
