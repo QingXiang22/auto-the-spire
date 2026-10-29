@@ -325,7 +325,7 @@ internal sealed class NormalReferenceRun : IDisposable
             Phase is "neow" or "map" && run.CurrentMapPoint!.Children.Contains(n) && !run.VisitedMapCoords.Contains(n.coord),
             n.Children.Select(Coord).Order(StringComparer.Ordinal).ToArray())).OrderBy(n => n.Coordinate, StringComparer.Ordinal).ToArray());
         Put("public.run", new NormalRunView(Phase, run.CurrentActIndex, run.CurrentMapCoord!.Value.row, run.TotalFloor,
-            Coord(run.CurrentMapPoint!), map.Length, Phase == "neow", NormalReferenceConfiguration.Profile(configuration)));
+            Coord(run.CurrentMapPoint!), map.Length, Phase == "neow", NormalReferenceConfiguration.Profile(configuration), Id(ModelDb.GetId(run.CurrentAncientEventType))));
         var active = combat?.Engine.IsInProgress ?? false;
         Put("public.player", new NormalPlayerView(player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, Id(player.Character.Id), player.MaxEnergy,
             active, combat is null || active ? "none" : combat.Engine.Won ? "victory" : "defeat", Phase == "combat" ? "battle" : Phase,

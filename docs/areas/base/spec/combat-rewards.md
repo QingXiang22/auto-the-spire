@@ -36,7 +36,7 @@
 
 Elite 与 Boss 共用同一 Rewards 流、奖励容器与关闭动作，只在来源参数上分叉：金币区间 Elite 35..45、Boss 100..100；药水掉落阈值 Elite 加 binary32(0.125)；卡牌稀有度 Elite 用 `0.1f＋offset` 为 Rare、`0.5f＋offset` 为 Uncommon 的来源阈值，Boss 每次直接 Rare 但仍消费一次 NextFloat，并按源 `CardRarityOdds.Roll` 在 Rare 后把 offset 重置为 -0.05f。三种来源都保留 potion presence→gold→potion→cards→（Elite）relic 的抽样顺序。
 
-Elite 额外生成真实遗物奖励：在同一 Rewards 流上按 `0.5f／0.83f` 抽 Common／Uncommon／Rare，再从玩家袋（共享池加角色池）该稀有度前端取真实标识，并同时从共享袋删除；空桶按来源偏离回退 Circlet。`CombatRewardSet` 公开 RelicPending／RelicId／RelicImplemented；只有已迁移效果的遗物可经 `ClaimCombatRelicReward` 走完整 `ObtainRelic` 获得，未实现条目保持可见但不可领取，跳过或关闭只清 pending，不伪造获得。Boss 不生成专属遗物（来源 RewardsSet 明确偏离 #78）。
+Elite 额外生成真实遗物奖励：在同一 Rewards 流上按 `0.5f／0.83f` 抽 Common／Uncommon／Rare，再从玩家袋（共享池加角色池）该稀有度前端取真实标识，并同时从共享袋删除；空桶按来源偏离回退 Circlet。`CombatRewardSet` 公开 RelicPending／RelicId；只有已迁移效果的遗物才发布 `ClaimCombatRelicReward` 并走完整 `ObtainRelic` 获得，未实现条目保持可见但不可领取，跳过或关闭只清 pending，不伪造获得。Boss 不生成专属遗物（来源 RewardsSet 明确偏离 #78）。
 
 ## 状态与过程
 

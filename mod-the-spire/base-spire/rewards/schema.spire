@@ -24,7 +24,7 @@ entity CombatRewardSet {
     Closed = { type = Bool default = false }
     RelicPending = { type = Bool default = false }
     RelicId = { type = String(length = 64) default = "none" }
-    RelicImplemented = { type = Bool default = false }
+    RelicImplemented = { type = Bool default = false visibility = Hidden }
     PotionPending = { type = Bool default = false }
     Potion = { type = Ref(Potion) optional = true }
   }
