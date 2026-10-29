@@ -52,6 +52,8 @@ internal sealed class NormalReferenceRun : IDisposable
     private readonly bool diagnostics;
     private CombatRoom? combat;
     private NormalReferenceRewards? rewardObservation;
+    private NormalRewardCandidateCall[] rewardCandidates = [];
+    private object? rewardCandidateSources;
     private CardModel? targetedCard;
     private PlayerCombatState? lastCombatState;
     private string[] neowOptions = [];
@@ -244,8 +246,12 @@ internal sealed class NormalReferenceRun : IDisposable
                     throw new NotSupportedException("missing_dimension: native final card must finish before rewards are generated");
                 settlement.Add(new("effects-finished", player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, false));
             }
+            var rewardStart = random.CallCount;
+            var rewardSources = diagnostics ? new NormalReferenceRewardCandidates(player) : null;
+            rewardCandidateSources = rewardSources?.Sources;
             await combat.ResolveOutcomeAsync(); Phase = "rewards";
             rewardObservation = new(run, combat, random.StreamName);
+            if (rewardSources is not null) rewardCandidates = rewardSources.Capture(random.RewardDraws(rewardStart), combat.Rewards!);
             if (diagnostics) settlement.Add(new("rewards-published", player.Creature.CurrentHp, player.Creature.MaxHp, player.Gold, combat.GeneratedRewards.Count > 0));
             if (combat.Rewards!.Potion?.Potion is { } potion)
                 potionOrigins.Add(potion, $"generated:action:{actionIndex}:potion-reward:0");
@@ -419,6 +425,7 @@ internal sealed class NormalReferenceRun : IDisposable
         var scalars = diagnostics ? random.ScalarCalls() : null;
         if (scalars is not null) Put("random.scalar_calls", scalars.Calls);
         if (diagnostics) Put("random.weighted_candidates", random.WeightedCalls());
+        if (diagnostics) Put("random.reward_candidates", rewardCandidates);
         if (diagnostics)
         {
             var attempts = random.OpeningAttempts(); var queues = NormalOpeningQueues.Reference(run);
@@ -443,6 +450,7 @@ internal sealed class NormalReferenceRun : IDisposable
                 native_rest_context = restContext,
                 native_event_coverage = coverage,
                 native_reward_policies = rewardObservation?.Evidence,
+                native_reward_candidate_sources = rewardCandidateSources,
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = Array.Empty<string>(),
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
@@ -514,6 +522,13 @@ internal sealed class NormalReferenceRandom : IDisposable
     private readonly Dictionary<Call, NormalScalarCall> hpCalls = [];
     private NormalHpOrigin[] hpOrigins = [];
     internal int CallCount => calls.Count;
+    internal NormalRewardDraw[] RewardDraws(int start)
+    {
+        if (dropped != 0 || pending.Count != 0) throw NormalRewardCandidateTrace.Missing("incomplete native reward diagnostics");
+        return calls.Skip(start).Select(c => Name(c.Rng) == NormalRewardCandidateTrace.Stream
+            ? new NormalRewardDraw(c.Parameters.Operation, c.Before, c.After, c.Parameters.Minimum, c.Parameters.Maximum, c.Parameters.Arity, c.Result)
+            : throw NormalRewardCandidateTrace.Missing("unclassified stream during native reward generation")).ToArray();
+    }
     internal void CaptureHpOrigins(CombatState state, int start)
     {
         if (hpOrigins.Length != 0 || state.SpawnedEnemies.Any(e => e.CurrentHp != e.MaxHp))

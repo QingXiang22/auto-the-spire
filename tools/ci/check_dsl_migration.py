@@ -589,7 +589,7 @@ def main() -> int:
                               or "lifecycle.settlement" not in b[side]["values"]
                               or any(path not in b[side]["values"] for path in (
                                   "public.snapshot", "public.map", "public.run", "public.neow", "public.reward_offer", "public.potions", "public.potion_inventory",
-                                  "public.relic_inventory", "public.cards", "public.player", "public.enemies", "public.powers", "public.visits", "random.shuffle_candidates"))
+                                  "public.relic_inventory", "public.cards", "public.player", "public.enemies", "public.powers", "public.visits", "random.shuffle_candidates", "random.reward_candidates"))
                               for b in c["boundaries"] for side in ("left", "right"))
                        or any(not json.loads(c["boundaries"][-1][side]["values"]["events.observed_order"])
                               for side in ("left", "right"))
@@ -603,6 +603,10 @@ def main() -> int:
                         for side in ("left", "right")]
             if shuffles[0] != shuffles[1] or len(shuffles[0]) != 19:
                 raise ValueError("normal paths must compare both real shuffles and all ordered candidate lists")
+            rewards = [json.loads(case["boundaries"][-1][side]["values"]["random.reward_candidates"])
+                       for side in ("left", "right")]
+            if rewards[0] != rewards[1] or [c["Kind"] for c in rewards[0]] != ["potion", "card", "card", "card"]:
+                raise ValueError("normal paths must compare all actual potion and card reward candidates")
             for boundary in case["boundaries"]:
                 for side in ("left", "right"):
                     state = boundary[side]

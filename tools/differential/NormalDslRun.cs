@@ -265,6 +265,7 @@ internal sealed class NormalDslRun : IDisposable
         if (trace is not null) Put("events.observed_order", ObservedEvents());
         if (trace is not null) Put("lifecycle.settlement", Settlement());
         if (trace is not null) Put("random.float32_calls", NormalFloat32Trace.Dsl(trace.Capture(), trace.DroppedRecords));
+        if (trace is not null) Put("random.reward_candidates", NormalRewardCandidateTrace.Dsl(trace.Capture(), trace.DroppedRecords));
         if (trace is not null)
         {
             var randomState = Engine.Random.Capture();
