@@ -142,7 +142,7 @@ Boss 访问的奖励全部关闭后，关闭流程调用同一幕转换过程，
 
 第二幕地图由 `base-spire:run:act_2_map` 流按同一源算法重建：14 个房间行、休息数量按 `NextGaussianInt(6,1,6,7)`、未知数量按 `StandardRandomUnknownCount − 1`，宝箱固定在倒数第七行、Boss 行随长度变化。生成后所有节点清空 `Selectable`／`Visited`，`Phase` 与本房间置 `act-entry`，不提前执行 Ancient，也不开放 `ChooseMapPoint`；`EnterNextAncient` 对未接通的下一幕 Ancient 效果明确报告不支持。该地图与原生 `Hive`／`StandardActMap` 的独立向量逐节点核对节点数、类型、双向边、公开顺序与游标（10 组 seed），向量不读取 DSL 结果。
 
-正常战斗死亡在战斗结算稳定边界创建 `NormalRunDefeat` 终局，公开元数据映射为失败；该终局路径与正常跨幕分别验证，不用于推断完整 Run 可用。
+正常战斗死亡在战斗结算稳定边界创建 `NormalRunDefeat` 终局，公开元数据映射为失败；该终局路径与正常跨幕分别验证，不用于推断完整 Run 可用。公开协议已执行一次真实的正常首战失败：终局快照给出 `outcome=loss` 与 `NormalRunDefeat`，携带幕与累计楼层事实，不再发布任何动作或地图后继。
 
 ## 战斗副本来源与结算写回
 

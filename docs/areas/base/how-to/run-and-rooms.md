@@ -131,6 +131,7 @@ dotnet run --project tools/base-spire-dev -c Release -- check --normal-rooms-onl
 ```powershell
 python tools/base-spire-dev/normal_rooms_smoke.py --host-dll net-the-spire/Net.TheSpire.Host/bin/Release/net9.0/Net.TheSpire.Host.dll --output .artifacts/normal-rooms --room Treasure
 python tools/base-spire-dev/normal_act_one_smoke.py --host-dll net-the-spire/Net.TheSpire.Host/bin/Release/net9.0/Net.TheSpire.Host.dll --output .artifacts/normal-act-one
+python tools/base-spire-dev/normal_defeat_smoke.py --host-dll net-the-spire/Net.TheSpire.Host/bin/Release/net9.0/Net.TheSpire.Host.dll --output .artifacts/normal-defeat
 ```
 
-这两条路径分别证明固定路线的真实房间访问／返回与首幕固定路线到达第二幕入口。精英／Boss组件由 `check --act-one-bosses-only` 与奖励向量单独验证，路线本身不经过精英；后幕、完整事件与物品效果池、完整Run和完整独立比较仍未验收。
+这三条路径分别证明固定路线的真实房间访问／返回、首幕固定路线到达第二幕入口，以及正常首战失败在公开快照中给出 `loss` 终局且不发布动作。精英／Boss组件由 `check --act-one-bosses-only` 与奖励向量单独验证，路线本身不经过精英；后幕、完整事件与物品效果池、完整Run和完整独立比较仍未验收。
