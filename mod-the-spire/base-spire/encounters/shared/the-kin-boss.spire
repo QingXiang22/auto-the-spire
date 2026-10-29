@@ -1,0 +1,10 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Source birth order: slot1 (dance), slot2 (quick slash), leaderSlot.
+procedure SpawnTheKinBoss { locals = { target = Binding } body = {
+  call = { procedure = KinFollower.Create args = { dance = true slot = 0 } into = target }
+  call = { procedure = KinFollower.Create args = { dance = false slot = 1 } into = target }
+  call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:kin-priest" min = 190 max = 190 } into = target }
+  set = { target = target field = Enemy.SlotIndex value = 2 }
+} }
+action TheKinBoss.Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) body = { call = { procedure = SpawnTheKinBoss } } }

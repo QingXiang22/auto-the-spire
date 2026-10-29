@@ -1,0 +1,2983 @@
+{
+  "format": "normal-act-one-route@1",
+  "reference_lock": {
+    "repository": "https://github.com/iRyougi/sts2-sim.git",
+    "commit": "611cea2b498ee1eba3743d185c210c6b2a4624a6",
+    "tree": "ee49effa72b2290bacfb2ef9974e34af3aa2f78e",
+    "status": "upstream-only; rule authority and comparison backend; main verified on 2026-10-22",
+    "declared_game_baseline": "v0.111.0",
+    "rule_source": "src/Sts2Sim.Core"
+  },
+  "source_hash_encoding": "utf8-lf",
+  "source_sha256": {
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunDriver.cs": "a03152ffb55d4c4cd0b5ad2f20f0cce4d65794f5634756cf7b1a2834217fa76b",
+    "reference/sts2-sim/src/Sts2Sim.Core/Runs/RunState.cs": "9cba5a6e9c239e81fc077a3f32da5a6c741cebb462cd707be2af9b121793fd7c",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/Overgrowth.cs": "7ea866cde5786814ce32b6d598af4179a91a093172c89698e7b2503b02342c77",
+    "reference/sts2-sim/src/Sts2Sim.Core/Content/Acts/Hive.cs": "bb47c3efaef57061774f1093a26d7c36a5caac2c14931d5cc1fe74eb8c1231cc",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rewards/RewardsSet.cs": "fb37fe8cc5dc491a42594d27bfbc826538e8ddf9f9388721923d8825cdde1bc7",
+    "reference/sts2-sim/src/Sts2Sim.Core/Rewards/GoldReward.cs": "70c3979126f2f63dc16ad45c3e66529a6284c015caccb3837f1f9b7912575094",
+    "reference/sts2-sim/src/Sts2Sim.Core/Odds/PotionRewardOdds.cs": "685726ac304630cd97ffe7257f5bbda4a54855a6dae1b8e9ceba45afd95bd125",
+    "reference/sts2-sim/src/Sts2Sim.Core/Odds/CardRarityOdds.cs": "eff66507a40fde2f60a1a24d30a3ef5240750afb5dd8f6d740e10aa73bc2b31e",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/KinFollower.cs": "2bb54baf7c57099effad39e9acc4346723f4ee80dc54deded96d0b55241d66b5",
+    "reference/sts2-sim/src/Sts2Sim.Core/Models/Monsters/KinPriest.cs": "c74b1d6b8b6878eb76b608757ca7cdc96c1c39e86dae53fdc5da596c58461f0e"
+  },
+  "seed": "777",
+  "steps": [
+    {
+      "floor": 1,
+      "hp": 80,
+      "gold": 99,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "neow",
+        "key": "WingedBoots"
+      }
+    },
+    {
+      "floor": 1,
+      "hp": 80,
+      "gold": 99,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 6,
+        "row": 1
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 80,
+      "gold": 99,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "LeafSlimeS",
+          "hp": 14
+        },
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 28
+        },
+        {
+          "id": 3,
+          "name": "TwigSlimeS",
+          "hp": 11
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:bash",
+        "target": 3
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 80,
+      "gold": 99,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "LeafSlimeS",
+          "hp": 14
+        },
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 28
+        },
+        {
+          "id": 3,
+          "name": "TwigSlimeS",
+          "hp": 3
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 3
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 80,
+      "gold": 99,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "LeafSlimeS",
+          "hp": 14
+        },
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 28
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 80,
+      "gold": 99,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "LeafSlimeS",
+          "hp": 14
+        },
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 28
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 80,
+      "gold": 99,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "LeafSlimeS",
+          "hp": 8
+        },
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 28
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 80,
+      "gold": 99,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "LeafSlimeS",
+          "hp": 2
+        },
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 28
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 80,
+      "gold": 99,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 28
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 69,
+      "gold": 99,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 28
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:bash",
+        "target": 2
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 69,
+      "gold": 99,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 20
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 2
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 69,
+      "gold": 99,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 11
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 58,
+      "gold": 99,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 11
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 2
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 58,
+      "gold": 99,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "TwigSlimeM",
+          "hp": 2
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 2
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 64,
+      "gold": 99,
+      "turn": 4,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakeGold"
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 64,
+      "gold": 116,
+      "turn": 4,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakePotion"
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 64,
+      "gold": 116,
+      "turn": 4,
+      "enemies": [],
+      "choice": {
+        "kind": "reward-card",
+        "id": "base-spire:thunderclap"
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 64,
+      "gold": 116,
+      "turn": 4,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "Done"
+      }
+    },
+    {
+      "floor": 2,
+      "hp": 64,
+      "gold": 116,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 6,
+        "row": 2
+      }
+    },
+    {
+      "floor": 3,
+      "hp": 64,
+      "gold": 116,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "shop",
+        "id": "base-spire:uppercut"
+      }
+    },
+    {
+      "floor": 3,
+      "hp": 64,
+      "gold": 38,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "shop",
+        "id": "leave"
+      }
+    },
+    {
+      "floor": 3,
+      "hp": 64,
+      "gold": 38,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 6,
+        "row": 3
+      }
+    },
+    {
+      "floor": 4,
+      "hp": 64,
+      "gold": 38,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 42
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:bash",
+        "target": 1
+      }
+    },
+    {
+      "floor": 4,
+      "hp": 64,
+      "gold": 38,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 34
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 4,
+      "hp": 64,
+      "gold": 38,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 25
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 4,
+      "hp": 52,
+      "gold": 38,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 25
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:uppercut",
+        "target": 1
+      }
+    },
+    {
+      "floor": 4,
+      "hp": 52,
+      "gold": 38,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 6
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 4,
+      "hp": 58,
+      "gold": 38,
+      "turn": 2,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakeGold"
+      }
+    },
+    {
+      "floor": 4,
+      "hp": 58,
+      "gold": 51,
+      "turn": 2,
+      "enemies": [],
+      "choice": {
+        "kind": "reward-card",
+        "id": "base-spire:shrug-it-off"
+      }
+    },
+    {
+      "floor": 4,
+      "hp": 58,
+      "gold": 51,
+      "turn": 2,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "Done"
+      }
+    },
+    {
+      "floor": 4,
+      "hp": 58,
+      "gold": 51,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 0,
+        "row": 4
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 58,
+      "gold": 51,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "ShrinkerBeetle",
+          "hp": 40
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:uppercut",
+        "target": 1
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 58,
+      "gold": 51,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "ShrinkerBeetle",
+          "hp": 27
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 58,
+      "gold": 51,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "ShrinkerBeetle",
+          "hp": 18
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 58,
+      "gold": 51,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "ShrinkerBeetle",
+          "hp": 18
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:shrug-it-off",
+        "target": null
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 58,
+      "gold": 51,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "ShrinkerBeetle",
+          "hp": 18
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 58,
+      "gold": 51,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "ShrinkerBeetle",
+          "hp": 14
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 58,
+      "gold": 51,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "ShrinkerBeetle",
+          "hp": 10
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 58,
+      "gold": 51,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "ShrinkerBeetle",
+          "hp": 10
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:bash",
+        "target": 1
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 58,
+      "gold": 51,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "ShrinkerBeetle",
+          "hp": 5
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 64,
+      "gold": 51,
+      "turn": 3,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakeGold"
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 64,
+      "gold": 62,
+      "turn": 3,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakePotion"
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 64,
+      "gold": 62,
+      "turn": 3,
+      "enemies": [],
+      "choice": {
+        "kind": "reward-card",
+        "id": "base-spire:setup-strike"
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 64,
+      "gold": 62,
+      "turn": 3,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "Done"
+      }
+    },
+    {
+      "floor": 5,
+      "hp": 64,
+      "gold": 62,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 3,
+        "row": 5
+      }
+    },
+    {
+      "floor": 6,
+      "hp": 64,
+      "gold": 62,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "shop",
+        "id": "leave"
+      }
+    },
+    {
+      "floor": 6,
+      "hp": 64,
+      "gold": 62,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 2,
+        "row": 6
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 64,
+      "gold": 62,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Fogmog",
+          "hp": 74
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:setup-strike",
+        "target": 1
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 64,
+      "gold": 62,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Fogmog",
+          "hp": 67
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 64,
+      "gold": 62,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Fogmog",
+          "hp": 58
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:thunderclap",
+        "target": null
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 64,
+      "gold": 62,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Fogmog",
+          "hp": 51
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 64,
+      "gold": 62,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "EyeWithTeeth",
+          "hp": 6
+        },
+        {
+          "id": 1,
+          "name": "Fogmog",
+          "hp": 51
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:bash",
+        "target": 1
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 64,
+      "gold": 62,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "EyeWithTeeth",
+          "hp": 6
+        },
+        {
+          "id": 1,
+          "name": "Fogmog",
+          "hp": 43
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 64,
+      "gold": 62,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "EyeWithTeeth",
+          "hp": 6
+        },
+        {
+          "id": 1,
+          "name": "Fogmog",
+          "hp": 34
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 56,
+      "gold": 62,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "EyeWithTeeth",
+          "hp": 6
+        },
+        {
+          "id": 1,
+          "name": "Fogmog",
+          "hp": 34
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:uppercut",
+        "target": 1
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 56,
+      "gold": 62,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "EyeWithTeeth",
+          "hp": 6
+        },
+        {
+          "id": 1,
+          "name": "Fogmog",
+          "hp": 15
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 56,
+      "gold": 62,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "EyeWithTeeth",
+          "hp": 6
+        },
+        {
+          "id": 1,
+          "name": "Fogmog",
+          "hp": 6
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 45,
+      "gold": 62,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "EyeWithTeeth",
+          "hp": 6
+        },
+        {
+          "id": 1,
+          "name": "Fogmog",
+          "hp": 6
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 51,
+      "gold": 62,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "EyeWithTeeth",
+          "hp": 0
+        }
+      ],
+      "choice": {
+        "kind": "reward",
+        "id": "TakeGold"
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 51,
+      "gold": 82,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "EyeWithTeeth",
+          "hp": 0
+        }
+      ],
+      "choice": {
+        "kind": "reward-card",
+        "id": "base-spire:perfected-strike"
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 51,
+      "gold": 82,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "EyeWithTeeth",
+          "hp": 0
+        }
+      ],
+      "choice": {
+        "kind": "reward",
+        "id": "Done"
+      }
+    },
+    {
+      "floor": 7,
+      "hp": 51,
+      "gold": 82,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 2,
+        "row": 7
+      }
+    },
+    {
+      "floor": 8,
+      "hp": 51,
+      "gold": 82,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "rest",
+        "index": -1
+      }
+    },
+    {
+      "floor": 8,
+      "hp": 75,
+      "gold": 82,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 2,
+        "row": 8
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 75,
+      "gold": 82,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "SnappingJaxfruit",
+          "hp": 31
+        },
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 49
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:shrug-it-off",
+        "target": null
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 75,
+      "gold": 82,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "SnappingJaxfruit",
+          "hp": 31
+        },
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 49
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:setup-strike",
+        "target": 1
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 75,
+      "gold": 82,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "SnappingJaxfruit",
+          "hp": 24
+        },
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 49
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 75,
+      "gold": 82,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "SnappingJaxfruit",
+          "hp": 15
+        },
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 49
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 69,
+      "gold": 82,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "SnappingJaxfruit",
+          "hp": 15
+        },
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 49
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:perfected-strike",
+        "target": 1
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 69,
+      "gold": 82,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 49
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 2
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 69,
+      "gold": 82,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 43
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 61,
+      "gold": 82,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 43
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:bash",
+        "target": 2
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 61,
+      "gold": 82,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 35
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 2
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 61,
+      "gold": 82,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 26
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 50,
+      "gold": 82,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 26
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:setup-strike",
+        "target": 2
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 50,
+      "gold": 82,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 16
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 2
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 50,
+      "gold": 82,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Flyconid",
+          "hp": 3
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:thunderclap",
+        "target": null
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 56,
+      "gold": 82,
+      "turn": 4,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakeGold"
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 56,
+      "gold": 102,
+      "turn": 4,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "SkipCard"
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 56,
+      "gold": 102,
+      "turn": 4,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "Done"
+      }
+    },
+    {
+      "floor": 9,
+      "hp": 56,
+      "gold": 102,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 1,
+        "row": 9
+      }
+    },
+    {
+      "floor": 10,
+      "hp": 56,
+      "gold": 152,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 2,
+        "row": 10
+      }
+    },
+    {
+      "floor": 11,
+      "hp": 56,
+      "gold": 152,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "rest",
+        "index": -1
+      }
+    },
+    {
+      "floor": 11,
+      "hp": 80,
+      "gold": 152,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 3,
+        "row": 11
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 80,
+      "gold": 152,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 42
+        },
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 46
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:uppercut",
+        "target": 1
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 80,
+      "gold": 152,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 29
+        },
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 46
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:setup-strike",
+        "target": 1
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 80,
+      "gold": 152,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 19
+        },
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 46
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 76,
+      "gold": 152,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 16
+        },
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 46
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:shrug-it-off",
+        "target": null
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 76,
+      "gold": 152,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 16
+        },
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 46
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 76,
+      "gold": 152,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 15
+        },
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 46
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 76,
+      "gold": 152,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 9
+        },
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 46
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 70,
+      "gold": 152,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "Nibbit",
+          "hp": 9
+        },
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 43
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:perfected-strike",
+        "target": 1
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 70,
+      "gold": 152,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 43
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:setup-strike",
+        "target": 2
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 70,
+      "gold": 152,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 36
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 62,
+      "gold": 152,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 33
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:uppercut",
+        "target": 2
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 62,
+      "gold": 152,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 25
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 2
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 62,
+      "gold": 152,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 16
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 62,
+      "gold": 152,
+      "turn": 5,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 16
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:shrug-it-off",
+        "target": null
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 62,
+      "gold": 152,
+      "turn": 5,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 16
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 2
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 62,
+      "gold": 152,
+      "turn": 5,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 10
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 2
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 62,
+      "gold": 152,
+      "turn": 5,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 4
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 54,
+      "gold": 152,
+      "turn": 6,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "Nibbit",
+          "hp": 1
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:bash",
+        "target": 2
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 60,
+      "gold": 152,
+      "turn": 6,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakeGold"
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 60,
+      "gold": 172,
+      "turn": 6,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "SkipCard"
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 60,
+      "gold": 172,
+      "turn": 6,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "Done"
+      }
+    },
+    {
+      "floor": 12,
+      "hp": 60,
+      "gold": 172,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 3,
+        "row": 12
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 60,
+      "gold": 172,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "VineShambler",
+          "hp": 61
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:uppercut",
+        "target": 1
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 60,
+      "gold": 172,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "VineShambler",
+          "hp": 48
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:shrug-it-off",
+        "target": null
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 60,
+      "gold": 172,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "VineShambler",
+          "hp": 48
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 60,
+      "gold": 172,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "VineShambler",
+          "hp": 42
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:bash",
+        "target": 1
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 60,
+      "gold": 172,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "VineShambler",
+          "hp": 34
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 60,
+      "gold": 172,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "VineShambler",
+          "hp": 25
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 52,
+      "gold": 172,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "VineShambler",
+          "hp": 22
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:defend-ironclad",
+        "target": null
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 52,
+      "gold": 172,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "VineShambler",
+          "hp": 22
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:setup-strike",
+        "target": 1
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 52,
+      "gold": 172,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "VineShambler",
+          "hp": 12
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 41,
+      "gold": 172,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "VineShambler",
+          "hp": 9
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:uppercut",
+        "target": 1
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 47,
+      "gold": 172,
+      "turn": 4,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakeGold"
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 47,
+      "gold": 185,
+      "turn": 4,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakePotion"
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 47,
+      "gold": 185,
+      "turn": 4,
+      "enemies": [],
+      "choice": {
+        "kind": "reward-card",
+        "id": "base-spire:demon-form"
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 47,
+      "gold": 185,
+      "turn": 4,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "Done"
+      }
+    },
+    {
+      "floor": 13,
+      "hp": 47,
+      "gold": 185,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 6,
+        "row": 13
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 47,
+      "gold": 185,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "TwigSlimeS",
+          "hp": 9
+        },
+        {
+          "id": 2,
+          "name": "TwigSlimeS",
+          "hp": 10
+        },
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 55
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:perfected-strike",
+        "target": 1
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 47,
+      "gold": 185,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "TwigSlimeS",
+          "hp": 10
+        },
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 55
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 2
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 47,
+      "gold": 185,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "TwigSlimeS",
+          "hp": 4
+        },
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 55
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 43,
+      "gold": 185,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 2,
+          "name": "TwigSlimeS",
+          "hp": 1
+        },
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 55
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:setup-strike",
+        "target": 2
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 43,
+      "gold": 185,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 55
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:shrug-it-off",
+        "target": null
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 43,
+      "gold": 185,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 55
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 3
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 43,
+      "gold": 185,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 46
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 41,
+      "gold": 185,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 43
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:demon-form",
+        "target": null
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 41,
+      "gold": 185,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 43
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 38,
+      "gold": 185,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 43
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:bash",
+        "target": 3
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 38,
+      "gold": 185,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 32
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 3
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 38,
+      "gold": 185,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 19
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 25,
+      "gold": 185,
+      "turn": 5,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "SlitheringStrangler",
+          "hp": 16
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:uppercut",
+        "target": 3
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 31,
+      "gold": 185,
+      "turn": 5,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakeGold"
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 31,
+      "gold": 197,
+      "turn": 5,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakePotion"
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 31,
+      "gold": 197,
+      "turn": 5,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "SkipCard"
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 31,
+      "gold": 197,
+      "turn": 5,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "Done"
+      }
+    },
+    {
+      "floor": 14,
+      "hp": 31,
+      "gold": 197,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 5,
+        "row": 14
+      }
+    },
+    {
+      "floor": 15,
+      "hp": 31,
+      "gold": 197,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "shop",
+        "id": "base-spire:shrug-it-off"
+      }
+    },
+    {
+      "floor": 15,
+      "hp": 31,
+      "gold": 173,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "shop",
+        "id": "base-spire:thunderclap"
+      }
+    },
+    {
+      "floor": 15,
+      "hp": 31,
+      "gold": 123,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "shop",
+        "id": "leave"
+      }
+    },
+    {
+      "floor": 15,
+      "hp": 31,
+      "gold": 123,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 4,
+        "row": 15
+      }
+    },
+    {
+      "floor": 16,
+      "hp": 31,
+      "gold": 123,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "rest",
+        "index": -1
+      }
+    },
+    {
+      "floor": 16,
+      "hp": 55,
+      "gold": 123,
+      "turn": 0,
+      "enemies": null,
+      "choice": {
+        "kind": "map",
+        "col": 3,
+        "row": 16
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 55,
+      "gold": 123,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 59
+        },
+        {
+          "id": 2,
+          "name": "KinFollower",
+          "hp": 58
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 190
+        }
+      ],
+      "choice": {
+        "kind": "potion",
+        "id": "base-spire:flex-potion",
+        "target": 0
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 55,
+      "gold": 123,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 59
+        },
+        {
+          "id": 2,
+          "name": "KinFollower",
+          "hp": 58
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 190
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:demon-form",
+        "target": null
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 55,
+      "gold": 123,
+      "turn": 1,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 59
+        },
+        {
+          "id": 2,
+          "name": "KinFollower",
+          "hp": 58
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 190
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 42,
+      "gold": 123,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 59
+        },
+        {
+          "id": 2,
+          "name": "KinFollower",
+          "hp": 55
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 187
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:uppercut",
+        "target": 2
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 42,
+      "gold": 123,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 59
+        },
+        {
+          "id": 2,
+          "name": "KinFollower",
+          "hp": 39
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 187
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 2
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 42,
+      "gold": 123,
+      "turn": 2,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 59
+        },
+        {
+          "id": 2,
+          "name": "KinFollower",
+          "hp": 26
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 187
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 25,
+      "gold": 123,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 56
+        },
+        {
+          "id": 2,
+          "name": "KinFollower",
+          "hp": 20
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 184
+        }
+      ],
+      "choice": {
+        "kind": "potion",
+        "id": "base-spire:fire-potion",
+        "target": 2
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 25,
+      "gold": 123,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 56
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 184
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:shrug-it-off",
+        "target": null
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 25,
+      "gold": 123,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 56
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 184
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:perfected-strike",
+        "target": 1
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 25,
+      "gold": 123,
+      "turn": 3,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 37
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 184
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 16,
+      "gold": 123,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 31
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 175
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:bash",
+        "target": 1
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 16,
+      "gold": 123,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 1,
+          "name": "KinFollower",
+          "hp": 14
+        },
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 175
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 1
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 16,
+      "gold": 123,
+      "turn": 4,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 175
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 16,
+      "gold": 123,
+      "turn": 5,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 175
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:setup-strike",
+        "target": 3
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 16,
+      "gold": 123,
+      "turn": 5,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 156
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 3
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 16,
+      "gold": 123,
+      "turn": 5,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 135
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:strike-ironclad",
+        "target": 3
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 16,
+      "gold": 123,
+      "turn": 5,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 114
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 6,
+      "gold": 123,
+      "turn": 6,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 111
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:shrug-it-off",
+        "target": null
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 6,
+      "gold": 123,
+      "turn": 6,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 111
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:perfected-strike",
+        "target": 3
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 6,
+      "gold": 123,
+      "turn": 6,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 76
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 2,
+      "gold": 123,
+      "turn": 7,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 73
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:uppercut",
+        "target": 3
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 2,
+      "gold": 123,
+      "turn": 7,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 50
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:shrug-it-off",
+        "target": null
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 2,
+      "gold": 123,
+      "turn": 7,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 50
+        }
+      ],
+      "choice": {
+        "kind": "end-turn"
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 1,
+      "gold": 123,
+      "turn": 8,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 41
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:bash",
+        "target": 3
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 1,
+      "gold": 123,
+      "turn": 8,
+      "enemies": [
+        {
+          "id": 3,
+          "name": "KinPriest",
+          "hp": 12
+        }
+      ],
+      "choice": {
+        "kind": "play",
+        "id": "base-spire:setup-strike",
+        "target": 3
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 7,
+      "gold": 123,
+      "turn": 8,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "TakeGold"
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 7,
+      "gold": 223,
+      "turn": 8,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "SkipCard"
+      }
+    },
+    {
+      "floor": 17,
+      "hp": 7,
+      "gold": 223,
+      "turn": 8,
+      "enemies": [],
+      "choice": {
+        "kind": "reward",
+        "id": "Done"
+      }
+    }
+  ],
+  "expected": {
+    "act_index": 1,
+    "phase": "act-entry",
+    "floor": 17,
+    "hp": 7,
+    "gold": 223,
+    "deck_count": 18,
+    "ancient": "base-spire:tezcatara"
+  }
+}

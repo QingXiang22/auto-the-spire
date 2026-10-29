@@ -36,6 +36,7 @@ entity Player {
     UsesRunDeck = { type = Bool default = false }
     CharacterId = { type = String(length = 64) default = "none" }
     CurrentRun = { type = Ref(Run) optional = true }
+    EncounterSequence = { type = Int(min = 0) default = 0 visibility = Hidden }
     NextEnemyBirthOrder = { type = Int(min = 0) default = 0 visibility = Hidden }
     AutoDrawPerTurn = { type = Int(min = 0, max = 10) default = 0 }
     AttackDepth = { type = Int(min = 0, max = 99) default = 0 visibility = Hidden }

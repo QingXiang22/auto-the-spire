@@ -1,0 +1,23 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Locked sts2-sim 611cea2, CeremonialBeast.cs, single-player A0.
+template CeremonialBeastContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:ceremonial-beast" initial = "STAMP_MOVE" } }
+  use Move0 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:ceremonial-beast" id = "STAMP_MOVE" next = "PLOW_MOVE" intent = "buff" index = 0 } }
+  use Move1 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:ceremonial-beast" id = "PLOW_MOVE" next = "PLOW_MOVE" intent = "attack,buff" index = 1 } }
+  use Move2 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:ceremonial-beast" id = "BEAST_CRY_MOVE" next = "STOMP_MOVE" intent = "debuff" index = 2 } }
+  use Move3 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:ceremonial-beast" id = "STOMP_MOVE" next = "CRUSH_MOVE" intent = "attack" index = 3 } }
+  use Move4 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:ceremonial-beast" id = "CRUSH_MOVE" next = "BEAST_CRY_MOVE" intent = "attack,buff" index = 4 } }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } locals = { card = Binding } body = {
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "STAMP_MOVE") then = { call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:plow-power" stacks = 150 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "PLOW_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 18 hits = 1 } }call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 2 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "BEAST_CRY_MOVE") then = { call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:ringing-power" stacks = 1 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "STOMP_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 15 hits = 1 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "CRUSH_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 17 hits = 1 } }call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 3 } } } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:ceremonial-beast" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) locals = { target = Binding } body = {
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:ceremonial-beast" min = 252 max = 252 } into = target }
+  } }
+} }
+use CeremonialBeast { template = CeremonialBeastContent }

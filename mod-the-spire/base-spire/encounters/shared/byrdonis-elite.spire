@@ -1,0 +1,7 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Locked Overgrowth.CreateAllEncounters, single-player A0.
+procedure SpawnByrdonisElite { locals = { target = Binding } body = {
+  call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:byrdonis" min = 81 max = 84 } into = target }
+} }
+use ByrdonisElite { template = SingleEnemyEncounterRange args = { definition = "base-spire:byrdonis-elite" enemyDefinition = "base-spire:byrdonis" min = 81 max = 84 } }

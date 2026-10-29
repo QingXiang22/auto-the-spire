@@ -1,0 +1,41 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+template RingingPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:ringing-power" powerType = "debuff" stackType = "single" } }
+  procedure Mark { parameters = { card = Ref(Card) } locals = { attachment = Binding } body = {
+    if = { condition = not(exists(where(type(CardAttachment), a, and(equal(field(a, CardAttachment.Card), card), equal(field(a, CardAttachment.Kind), "affliction"))))) then = {
+      create = { type = CardAttachment scope = entityScope(card) into = attachment fields = { Owner = field(card, Card.Owner) Card = card DefinitionId = "base-spire:ringing" Kind = "affliction" Amount = 1 } }
+    } }
+  } }
+  procedure Applied { parameters = { power = Ref(Power) amount = Int created = Bool listener = Ref(Power) } body = {
+    if = { condition = and(created, equal(power, listener)) then = {
+      forEach = { query = where(type(Card), c, and(equal(field(c, Card.Owner), field(field(power, Power.HolderPlayer), Player.Owner)), less(collectionIndex(RunDeck, c), 0))) item = card body = { call = { procedure = Mark args = { card = card } } } }
+    } }
+  } }
+  subscription Applied { event = AfterPowerApplied reaction = Applied instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:ringing-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+  procedure Entered { parameters = { owner = Ref(Player) card = Ref(Card) clone = Bool listener = Ref(Power) } body = {
+    if = { condition = equal(owner, field(listener, Power.HolderPlayer)) then = { call = { procedure = Mark args = { card = card } } } }
+  } }
+  subscription Entered { event = CardEnteredCombat reaction = Entered instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:ringing-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+  procedure CanPlay { pure = true parameters = { value = Bool owner = Ref(Player) card = Ref(Card) auto = Bool listener = Ref(Power) } result = Bool body = {
+    if = { condition = and(equal(owner, field(listener, Power.HolderPlayer)), exists(where(type(CardAttachment), a, and(equal(field(a, CardAttachment.Card), card), equal(field(a, CardAttachment.DefinitionId), "base-spire:ringing"))))) then = {
+      return = { value = and(value, not(exists(where(collection(CardPlays), p, and(equal(field(p, CardPlayRecord.Owner), field(owner, Player.Owner)), and(field(p, CardPlayRecord.Started), equal(field(p, CardPlayRecord.Turn), field(owner, Player.TurnNumber)))))))) }
+    } }
+    return = { value = value }
+  } }
+  subscription CanPlay { event = ShouldPlayCard reaction = CanPlay instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:ringing-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+  procedure Expire { parameters = { owner = Ref(Player) listener = Ref(Power) } body = {
+    if = { condition = equal(owner, field(listener, Power.HolderPlayer)) then = { call = { procedure = RemovePower args = { power = listener } } } }
+  } }
+  subscription Expire { event = AfterPlayerSideTurnEnd reaction = Expire instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:ringing-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+  procedure Clean { parameters = { power = Ref(Power) } body = {
+    if = { condition = equal(field(power, Power.DefinitionId), "base-spire:ringing-power") then = {
+      forEach = { query = where(type(CardAttachment), a, equal(field(a, CardAttachment.DefinitionId), "base-spire:ringing")) item = attachment body = {
+        emit = { event = CardAttachmentRemoved payload = { attachment = attachment } }
+        destroy = { target = attachment }
+      } }
+    } }
+  } }
+  subscription Clean { event = PowerRemoved reaction = Clean }
+} }
+use RingingPower { template = RingingPowerModule }

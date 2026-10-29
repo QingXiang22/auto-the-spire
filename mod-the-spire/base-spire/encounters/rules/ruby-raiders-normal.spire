@@ -52,10 +52,10 @@ procedure CreateSourceRaider {
   }
 }
 procedure PickSourceRaider {
-  parameters = { totalFloor = Int }
+  parameters = { totalFloor = Int stream = String(length = 128) }
   locals = { picked = Binding }
   body = {
-    samplePick = { stream = "base-spire:encounter:monsters" candidates = collection(EnemyPool) into = picked }
+    samplePick = { stream = stream candidates = collection(EnemyPool) into = picked }
     removeFromCollection = { collection = EnemyPool item = picked }
     call = { procedure = CreateSourceRaider args = { definition = field(picked, EnemyPoolEntry.DefinitionId) totalFloor = totalFloor } }
     destroy = { target = picked }
@@ -63,17 +63,17 @@ procedure PickSourceRaider {
 }
 procedure SpawnSourceRubyRaidersNormal {
   parameters = { totalFloor = Int }
-  locals = { entry = Binding }
+  locals = { stream = String(length = 128) entry = Binding }
   body = {
-    seedStream64 = { stream = "base-spire:encounter:monsters" seed = pureCall(SourceContentSeed, totalFloor, "RUBY_RAIDERS_NORMAL", 0) }
+    call = { procedure = BeginSourceEncounterRandom args = { totalFloor = totalFloor entry = "RUBY_RAIDERS_NORMAL" } into = stream }
     create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:axe-ruby-raider" Hp = 20 } }
     create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:assassin-ruby-raider" Hp = 18 } }
     create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:brute-ruby-raider" Hp = 30 } }
     create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:crossbow-ruby-raider" Hp = 18 } }
     create = { type = EnemyPoolEntry scope = frameScope() into = entry collection = EnemyPool fields = { DefinitionId = "base-spire:tracker-ruby-raider" Hp = 21 } }
-    call = { procedure = PickSourceRaider args = { totalFloor = totalFloor } }
-    call = { procedure = PickSourceRaider args = { totalFloor = totalFloor } }
-    call = { procedure = PickSourceRaider args = { totalFloor = totalFloor } }
+    call = { procedure = PickSourceRaider args = { totalFloor = totalFloor stream = stream } }
+    call = { procedure = PickSourceRaider args = { totalFloor = totalFloor stream = stream } }
+    call = { procedure = PickSourceRaider args = { totalFloor = totalFloor stream = stream } }
     call = { procedure = ClearRaiderPool }
   }
 }

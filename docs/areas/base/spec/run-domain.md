@@ -49,7 +49,7 @@ Neow 按独立内容种子生成两个正向遗物选项与一个诅咒选项，
 
 正常访问复用现有 `ClaimDevelopmentGoldReward`、卡牌／药水领取与跳过、`CloseDevelopmentRewards` 动作。领取和跳过不抽样，关闭清理未选实例并标记奖励容器与访问已关闭，然后返回 map，仅将当前节点的未访问子节点设为 Selectable。关闭和再次领取由原守卫拒绝；后续未迁移房型／遭遇仍在修改访问或随机流前失败。已领取永久实例在下一场重建为独立副本。
 
-包为地图生成声明每条命令四百万条指令上限；超出时保留显式 BudgetExceeded，不截断路径、裁剪步骤或随机消费。DenseVegetation子战斗沿下文父子访问执行；其他事件续接、跨幕和终局尚未接入。源移植地图比较、开局操作向量、同一公开 Host 流程和完整模拟器逐步比较分别验证，不能据此关闭 M01。
+包为地图生成声明每条命令四百万条指令上限；超出时保留显式 BudgetExceeded，不截断路径、裁剪步骤或随机消费。DenseVegetation子战斗沿下文父子访问执行；其他事件续接与终局尚未接入，跨幕目前只到第二幕入口（见[首幕结束与第二幕入口](#首幕结束与第二幕入口)）。源移植地图比较、开局操作向量、同一公开 Host 流程和完整模拟器逐步比较分别验证，不能据此关闭 M01。
 
 | 要求 | 输入、状态与执行顺序 | 失败与可观察结果 |
 | --- | --- | --- |
@@ -67,7 +67,7 @@ Run分别保存原地图节点类型和实际进入房型。问号使用unknown_
 
 前一地图点实际包含Shop，或目标节点的非空后继全为Shop时，先禁用Shop。房型资格和未选增长使用pure修正接缝；当前未迁移的遗物／事件参与者不因此宣称支持。幕初ResetUnknownRoomOdds将当前值恢复已配置base，不重新抽样。观察不显示赔率或抽样，不推进流。
 
-ChooseMapPoint先验证当前Run、节点所有权、未访问及真实后继，再解析问号。问号判为Monster时消费真实普通遭遇队列，RunVisit.MapType仍为Unknown，RoomType为monster；成功进入后清理前一地图点的商店标记。尚未实现的实际房型在分类后具名失败，此时分类抽样及赔率更新已经发生；不承诺动作级回滚。其他直接未支持的地图类型仍在抽样前失败。问号机制不开放正常事件池、商店、宝箱、精英或跨幕；这些消费者各按完整条件验收。
+ChooseMapPoint先验证当前Run、节点所有权、未访问及真实后继，再解析问号。问号判为Monster时消费真实普通遭遇队列，RunVisit.MapType仍为Unknown，RoomType为monster；成功进入后清理前一地图点的商店标记。尚未实现的实际房型在分类后具名失败，此时分类抽样及赔率更新已经发生；不承诺动作级回滚。其他直接未支持的地图类型仍在抽样前失败。问号机制本身不开放事件池、商店、宝箱、精英或跨幕；这些消费者分别按完整条件接入与验收。
 
 ### 首幕正常事件选择
 
@@ -136,9 +136,17 @@ AfterObtained／AfterRemoved 表示获得与移除的通知阶段，准确 DSL �
 
 源码依据为CardSelectCmd.FromDeckForUpgrade/FromDeckForTransformation、CardFactory.GetDefaultTransformationOptions与CardCmd.Transform；永久Deck变换追加末尾，其他战斗牌区才保留旧下标。普通移除的BeforeRemoved不等于变换的AfterTransformedFrom/To，不能混用生命周期。
 
+## 首幕结束与第二幕入口
+
+Boss 访问的奖励全部关闭后，关闭流程调用同一幕转换过程，不另设外部注入。转换在首幕开始时已预生成的库存上继续：清除本次幕内对象（地图节点、访问、商店库存、Neow 选项与访问），保留生命、金币、永久牌组、遗物与药水等长期实例；`ActIndex` 置 1，重置普通／精英遭遇、事件与商店标记游标，调用 `ResetUnknownRoomOdds` 恢复问号赔率。第二幕 Ancient 标识取自开局已生成的计划项，不重抽古代人。
+
+第二幕地图由 `base-spire:run:act_2_map` 流按同一源算法重建：14 个房间行、休息数量按 `NextGaussianInt(6,1,6,7)`、未知数量按 `StandardRandomUnknownCount − 1`，宝箱固定在倒数第七行、Boss 行随长度变化。生成后所有节点清空 `Selectable`／`Visited`，`Phase` 与本房间置 `act-entry`，不提前执行 Ancient，也不开放 `ChooseMapPoint`；`EnterNextAncient` 对未接通的下一幕 Ancient 效果明确报告不支持。
+
+正常战斗死亡在战斗结算稳定边界创建 `NormalRunDefeat` 终局，公开元数据映射为失败；该终局路径与正常跨幕分别验证，不用于推断完整 Run 可用。
+
 ## 战斗副本来源与结算写回
 
-正常遭遇使用跨幕累计的 `Run.TotalFloor`：Neow访问为1，每次合法地图访问加1，不能用当前幕行号代替。SlimesWeak 以根seed加累计楼层、再加 `SLIMES_WEAK` 的 UTF-8 XxHash64 派生独立编队流；按源顺序抽小型A、剩余单候选B、中型，三次抽样均消费，出生顺序为A、中型、B。首幕 16 个 Monster 遭遇都按 `SourceContentSeed(totalFloor, IdEntry, 0)` 派生自己的编队流和源顺序；`SpawnNormalEncounter` 是唯一正常 Monster 分派入口，其他幕、Elite、Boss 及未迁移效果仍在访问、HP及编队抽样之前具名失败。各怪HP按出生顺序消费Niche，开战统一初始化招式，不能在创建和开战各滚一次。
+正常遭遇使用跨幕累计的 `Run.TotalFloor`：Neow访问为1，每次合法地图访问加1，不能用当前幕行号代替。SlimesWeak 以根seed加累计楼层、再加 `SLIMES_WEAK` 的 UTF-8 XxHash64 派生独立编队流；按源顺序抽小型A、剩余单候选B、中型，三次抽样均消费，出生顺序为A、中型、B。首幕 16 个 Monster 遭遇都按 `SourceContentSeed(totalFloor, IdEntry, 0)` 派生自己的编队流和源顺序；`SpawnNormalEncounter` 是唯一的正常遭遇分派入口，Monster／Elite／Boss 各自消费预生成队列（Elite 使用独立游标，不推进普通队列）。其他幕及未迁移效果仍在访问、HP及编队抽样之前具名失败。各怪HP按出生顺序消费Niche，开战统一初始化招式，不能在创建和开战各滚一次。
 
 `SpawnDevelopmentEnemy` 供受控单敌入口立即发布意图；正常批量出生调用只创建实例的 `CreateEncounterEnemy`，由 `BeforeCombatStart` 对全体按序初始化。LeafSlimeS初始RAND且两个等权分支不能连用；LeafSlimeM固定状态与攻击交替；TwigSlimeS固定TACKLE_MOVE。三者复用共享图及状态牌生成操作。
 

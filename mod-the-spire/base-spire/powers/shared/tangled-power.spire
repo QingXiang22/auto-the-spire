@@ -1,54 +1,40 @@
 using namespace base-spire;
 dsl_version = "core/0.3"
 
-# Locked TangledPower: each attack card without another affliction becomes Entangled and costs one more
-# per stack until the owner's side turn ends. Entangled is represented by an internal marker owned by this
-# power module; the source affliction is not a public field.
 template TangledPowerModule { body = {
-  entity TangledCard { fields = { Card = { type = Ref(Card) visibility = Hidden } } }
   use Definition { template = PowerDefinition args = { definition = "base-spire:tangled-power" powerType = "debuff" } }
-  procedure Mark {
-    parameters = { card = Ref(Card) listener = Ref(Power) }
-    locals = { marker = Binding }
-    body = {
-      if = { condition = and(and(equal(field(card, Card.Kind), "attack"), not(field(card, Card.IsX))), and(field(first(type(Player)), Player.CombatActive), not(exists(where(type(TangledCard), m, equal(field(m, TangledCard.Card), card)))))) then = {
-        create = { type = TangledCard scope = entityScope(card) into = marker fields = { Card = card } }
-        call = { procedure = AddCardCostModifier args = { card = card source = "base-spire:tangled-power" operation = "add" amount = field(listener, Power.Stacks) lifetime = "turn" } }
-      } }
-    }
-  }
+  procedure Mark { parameters = { card = Ref(Card) } locals = { attachment = Binding } body = {
+    if = { condition = and(equal(field(card, Card.Kind), "attack"), not(exists(where(type(CardAttachment), a, and(equal(field(a, CardAttachment.Card), card), equal(field(a, CardAttachment.Kind), "affliction")))))) then = {
+      create = { type = CardAttachment scope = entityScope(card) into = attachment fields = { Owner = field(card, Card.Owner) Card = card DefinitionId = "base-spire:entangled" Kind = "affliction" Amount = 1 } }
+    } }
+  } }
   procedure Apply { parameters = { power = Ref(Power) amount = Int created = Bool listener = Ref(Power) } body = {
-    if = { condition = created then = {
-      forEach = { query = type(Card) item = card body = { call = { procedure = Mark args = { card = card listener = power } } } }
+    if = { condition = equal(power, listener) then = {
+      forEach = { query = where(type(Card), c, and(equal(field(c, Card.Owner), field(field(power, Power.HolderPlayer), Player.Owner)), less(collectionIndex(RunDeck, c), 0))) item = card body = { call = { procedure = Mark args = { card = card } } } }
     } }
   } }
   subscription Apply { event = AfterPowerApplied reaction = Apply instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:tangled-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
-  procedure Created { parameters = { card = Ref(Card) listener = Ref(Power) } body = {
-    if = { condition = equal(field(listener, Power.HolderPlayer), first(type(Player))) then = { call = { procedure = Mark args = { card = card listener = listener } } } }
-  } }
-  subscription Created { event = CardCreated reaction = Created instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:tangled-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
   procedure Entered { parameters = { owner = Ref(Player) card = Ref(Card) clone = Bool listener = Ref(Power) } body = {
-    if = { condition = equal(field(listener, Power.HolderPlayer), first(type(Player))) then = { call = { procedure = Mark args = { card = card listener = listener } } } }
+    if = { condition = equal(owner, field(listener, Power.HolderPlayer)) then = { call = { procedure = Mark args = { card = card } } } }
   } }
   subscription Entered { event = CardEnteredCombat reaction = Entered instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:tangled-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
   procedure Cost { pure = true parameters = { value = Int owner = Ref(Player) card = Ref(Card) listener = Ref(Power) } result = Int body = {
-    if = { condition = and(equal(field(listener, Power.HolderPlayer), owner), exists(where(type(TangledCard), m, equal(field(m, TangledCard.Card), card)))) then = {
-      return = { value = add(value, field(listener, Power.Stacks)) }
-    } }
+    if = { condition = and(equal(owner, field(listener, Power.HolderPlayer)), and(not(field(card, Card.IsX)), exists(where(type(CardAttachment), a, and(equal(field(a, CardAttachment.Card), card), equal(field(a, CardAttachment.DefinitionId), "base-spire:entangled")))))) then = { return = { value = add(value, field(listener, Power.Stacks)) } } }
     return = { value = value }
   } }
   subscription Cost { event = ModifyCardCost reaction = Cost instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:tangled-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
-  procedure Clean { parameters = { card = Ref(Card) } body = {
-    forEach = { query = where(type(TangledCard), m, equal(field(m, TangledCard.Card), card)) item = marker body = { destroy = { target = marker } } }
-  } }
-  subscription Clean { event = CardRemoving reaction = Clean }
   procedure Expire { parameters = { owner = Ref(Player) listener = Ref(Power) } body = {
-    if = { condition = equal(field(listener, Power.HolderPlayer), owner) then = {
-      forEach = { query = type(Card) item = card body = { call = { procedure = ExpireCardCostModifiers args = { card = card boundary = "turn" } } } }
-      forEach = { query = type(TangledCard) item = marker body = { destroy = { target = marker } } }
-      call = { procedure = RemovePower args = { power = listener } }
-    } }
+    if = { condition = equal(owner, field(listener, Power.HolderPlayer)) then = { call = { procedure = RemovePower args = { power = listener } } } }
   } }
   subscription Expire { event = AfterPlayerSideTurnEnd reaction = Expire instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:tangled-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+  procedure Clean { parameters = { power = Ref(Power) } body = {
+    if = { condition = equal(field(power, Power.DefinitionId), "base-spire:tangled-power") then = {
+      forEach = { query = where(type(CardAttachment), a, and(equal(field(a, CardAttachment.Owner), field(field(power, Power.HolderPlayer), Player.Owner)), equal(field(a, CardAttachment.DefinitionId), "base-spire:entangled"))) item = attachment body = {
+        emit = { event = CardAttachmentRemoved payload = { attachment = attachment } }
+        destroy = { target = attachment }
+      } }
+    } }
+  } }
+  subscription Clean { event = PowerRemoved reaction = Clean }
 } }
 use TangledPower { template = TangledPowerModule }

@@ -22,6 +22,9 @@ entity CombatRewardSet {
     RandomStream = { type = String(length = 64) default = "base-spire:player:rewards" }
     Generated = { type = Bool default = false }
     Closed = { type = Bool default = false }
+    RelicPending = { type = Bool default = false }
+    RelicId = { type = String(length = 64) default = "none" }
+    RelicImplemented = { type = Bool default = false }
     PotionPending = { type = Bool default = false }
     Potion = { type = Ref(Potion) optional = true }
   }

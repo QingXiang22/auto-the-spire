@@ -1,0 +1,17 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+template PlowPowerModule { body = {
+  use Definition { template = PowerDefinition args = { definition = "base-spire:plow-power" powerType = "debuff" } }
+  procedure Break { parameters = { result = Ref(DamageResult) listener = Ref(Power) } locals = { target = Binding state = Binding node = Binding } body = {
+    let = { into = target value = field(listener, Power.HolderEnemy) }
+    if = { condition = or(not(equal(target, field(result, DamageResult.Enemy))), or(lessOrEqual(field(result, DamageResult.Unblocked), 0), greater(field(target, Enemy.Hp), field(listener, Power.Stacks)))) then = { return = {} } }
+    forEach = { query = where(collection(Powers), p, and(equal(field(p, Power.HolderEnemy), target), equal(field(p, Power.DefinitionId), "base-spire:strength-power"))) item = strength body = { call = { procedure = RemovePower args = { power = strength } } } }
+    let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
+    let = { into = node value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "BEAST_CRY_MOVE") }
+    set = { target = state field = EnemyMoveState.Current value = node }
+    call = { procedure = StunEnemy args = { target = target } }
+    call = { procedure = RemovePower args = { power = listener } }
+  } }
+  subscription Break { event = AfterDamageReceived reaction = Break instances = where(collection(Powers), p, equal(field(p, Power.DefinitionId), "base-spire:plow-power")) instance_order = pureCall(PowerHookOrder, listener, false) priority = 0 }
+} }
+use PlowPower { template = PlowPowerModule }

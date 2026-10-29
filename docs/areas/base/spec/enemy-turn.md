@@ -96,3 +96,11 @@ dotnet run --project tools/base-spire-dev -c Release -- check --enemy-graph-only
 定向检查包括既有开发敌人、首幕普通敌人编队、Slimed执行、同定义双实例／双会话、跨战重置、查询只读及暂停续接。首幕正常 dispatch 覆盖全部 16 个目标 Monster 遭遇，并由真实 seed 进入 NibbitsWeak；非法图、无合法分支和迁移循环预算属于图机制输入，只在 `--enemy-graph-only` 或图 schema／规则变化时执行，新增敌人不重复全部损坏图变体。固定源向量的生成入口见[随机神谕](../../../../tools/rng-oracle/README.md)。完整包检查另核对原来源条目、全部已声明卡牌及既有敌人行为。
 
 公共CI检查core、base、net、migration、docs及按影响选择的package／enemy-graph；正常Run和完整参考模拟器行为仍按各自工单验收。
+
+## 首幕精英与Boss的必要机制
+
+当前目标为锁定Overgrowth的三个精英及三个Boss。BygoneEffigy的Slow按每个实例保存自持有者侧开始以来已完成出牌数，每次出牌后递增、敌侧开始清零，倍率每次增加10%。Byrdonis的Territorial在持有者侧结束获得等量Strength。PhrogParasite的Infested在死亡通知内按四个源槽位抽取HP、创建从SPAWNED_MOVE开始的Wriggler并完成出生；该监听存在时阻止过早确认胜利。
+
+CeremonialBeast的Plow在正未格挡伤害后且当前HP不高于Power量时破除：先移除Strength及临时Strength，再保存BEAST_CRY_MOVE续接并眩晕；后续进入第二阶段循环。Ringing只附着没有其他负面附加的战斗牌，并在该玩家回合已开始过出牌时禁止附有Ringing的牌；自动出牌也受约束。移除Power只清理Ringing附加，既有Entangled保留独占资格。
+
+KinFollower的出生变体决定首招，并使用次要敌人资格；主要KinPriest死亡后不由随从阻塞胜利。Vantom复用Slippery并生成真实Wound。全部新增状态按实际敌人／Power／战斗牌实例归属，移除时清理；动作图、伤害和领域获得仍复用现有操作。

@@ -39,7 +39,7 @@ AttackModifierRelicChecks随同一定向入口执行MiniatureCannon／PaperPhrog
 
 `base-spire-dsl-relic-draw-dev-v1` 是单玩家、全部解锁的机制开发范围，覆盖实际出牌／选敌／选牌、耗尽、X 费、费用修改、复制／生成／变换、自动与重复出牌、所需 Power 反应、已有敌人／遗物／药水、营火与金币奖励。铁甲战士以完整源池 87 项核对 85 张单人牌，保留两项多人排除；准确共享入口和未支持边界见[铁甲战士操作参考](../../docs/areas/base/reference/ironclad-shared-operations.md)。显式 Ironclad 基础初态、原版随机算法／流布局和自动起手已接入；独立的 `StartNormalRun` 动作提供同版本源 Neow、地图与首个已支持遭遇的开局路径，范围见[Run 与房间](../../docs/areas/base/how-to/run-and-rooms.md)；该机制包的名称不表示完整正常 Run 已验收。当前数量与交付验证记录从[路线图](../../docs/meta/roadmap.md#近期队列)定位。
 
-敌人招式图可定向运行 `dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only`，包含FuzzyWurmCrawler固定轮转、TwigSlimeM首招及随机限制、Slimed实际出牌、Wriggler四槽条件与Infection费用／回合末生命周期，以及合法图的实际行动。非法图矩阵、无合法分支与转移预算等图机制输入使用 `check --enemy-graph-only`，只在图 schema／规则或该检查变化时由 CI 选择，新增敌人不重复执行。这两个选项都不能与其他定向参数或报告输出组合；完整报告仍使用普通check。正常遭遇和完整独立比较不由这些定向检查验收。
+敌人招式图可定向运行 `dotnet run --project tools/base-spire-dev -c Release -- check --enemy-moves-only`，包含FuzzyWurmCrawler固定轮转、TwigSlimeM首招及随机限制、Slimed实际出牌、Wriggler四槽条件与Infection费用／回合末生命周期，以及合法图的实际行动。首幕三精英／三Boss的组件行为可单独运行 `check --act-one-bosses-only`，覆盖Slow／Territorial／Infested孵化／Minion／Slippery／Plow与Ringing，并登记到行为报告的敌人与遭遇检查结果。非法图矩阵、无合法分支与转移预算等图机制输入使用 `check --enemy-graph-only`，只在图 schema／规则或该检查变化时由 CI 选择，新增敌人不重复执行。这些选项都不能与其他定向参数或报告输出组合；完整报告仍使用普通check。正常遭遇和完整独立比较不由这些定向检查验收。
 
 分阶段学习与实际公开结果见[base 开发教程](../../docs/areas/base/README.md)。教学驱动复用现有 Python 客户端，不修改正式包或原版行为执行结果。
 
@@ -49,6 +49,6 @@ AttackModifierRelicChecks随同一定向入口执行MiniatureCannon／PaperPhrog
 
 显式 Ironclad 的首幕开发战斗胜利还提供三张不同的卡牌奖励。通过 `ClaimDevelopmentCardReward` 候选选择一张，所选同一实例加入 RunDeck；未选实例销毁。`SkipDevelopmentCardReward` 仅跳过卡牌，金币仍可领取；`CloseDevelopmentRewards` 丢弃全部未领奖励。奖励使用完整80张可奖励源牌、稀有度偏移与去重，已使用原版随机映射和共享 Rewards 游标，包含普通来源药水掉落等前置消费；正常首战接入见下文，完整 Run 与独立参考比较仍未通过验收。
 
-正常首战奖励返回可定向执行 `dotnet run --project tools/base-spire-dev -c Release -- check --normal-return-only`。该组也包含在 `--normal-run-only` 中；使用纳管的 `fixtures/normal-first-combat.json` 固定 seed、Neow 选择、公开动作优先级和领取／跳过路径，可作为正常双侧比较的输入。它验证真实首战与合法后继，另用受控状态检查 Feed 末杀、回合余效和药水消耗顺序；完整独立比较仍未验证。
+正常首战奖励返回可定向执行 `dotnet run --project tools/base-spire-dev -c Release -- check --normal-return-only`。该组也包含在 `--normal-run-only` 中；使用纳管的 `fixtures/normal-first-combat.json` 固定 seed、Neow 选择、公开动作优先级和领取／跳过路径，可作为正常双侧比较的输入。它验证真实首战与合法后继，另用受控状态检查 Feed 末杀、回合余效和药水消耗顺序；完整独立比较仍未验证。首幕固定通关路线使用 `python tools/base-spire-dev/normal_act_one_smoke.py --host-dll <Host dll> --output .artifacts/issue177/receiver-public`，由真实 stdio 公开协议执行固定的 173 步参考决策并停在第二幕入口；net CI 组在 Host 构建后运行它。
 
 `check --card-behavior-only --filter NEOW-EFFECT`消费独立原生`neow-effects-vector.json`。两条seed777正常开局比较WingedBoots／CursedPearl获得后的资源、永久牌、首战手牌及五条随机流完整状态；受控组件另核对地图自由旅行和FlexPotion的正负力量、叠加、直接改量及真实攻击。边界检查覆盖三次旅行用尽、网格外连接、子访问、移除／熔化资格、Greed战斗副本与永久移除拒绝、药水重复消费及跨战清理。受控熔化资格检查不代表完整熔化入口，组件测试也不代表正常整局或全公开双侧比较。

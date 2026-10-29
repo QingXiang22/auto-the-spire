@@ -5,10 +5,10 @@ dsl_version = "core/0.3"
 # and then Flyconid.
 procedure SpawnFlyconidNormal {
   parameters = { totalFloor = Int }
-  locals = { medium = Int target = Binding }
+  locals = { stream = String(length = 128) medium = Int target = Binding }
   body = {
-    seedStream64 = { stream = "base-spire:encounter:monsters" seed = pureCall(SourceContentSeed, totalFloor, "FLYCONID_NORMAL", 0) }
-    sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 2 into = medium }
+    call = { procedure = BeginSourceEncounterRandom args = { totalFloor = totalFloor entry = "FLYCONID_NORMAL" } into = stream }
+    sampleInt = { stream = stream min = 0 max = 2 into = medium }
     if = { condition = equal(medium, 0) then = {
       call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:leaf-slime-m" min = 32 max = 35 } into = target }
     } else = {

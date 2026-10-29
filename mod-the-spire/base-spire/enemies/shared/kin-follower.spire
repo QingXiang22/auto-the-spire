@@ -1,0 +1,41 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Locked sts2-sim 611cea2, KinFollower.cs, single-player A0.
+template KinFollowerContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:kin-follower" initial = "START" } }
+  entity State { fields = { Enemy = { type = Ref(Enemy) visibility = Hidden } Dance = { type = Bool visibility = Hidden } } }
+  use Start { template = EnemyMoveNodeDefinition args = { definition = "base-spire:kin-follower" id = "START" kind = "conditional" } }
+  procedure Condition { pure = true parameters = { state = Ref(EnemyMoveState) node = Ref(EnemyMoveNode) } result = Binding locals = { own = Binding } body = {
+    let = { into = own value = first(where(type(State), s, equal(field(s, State.Enemy), field(state, EnemyMoveState.Enemy)))) }
+    if = { condition = field(own, State.Dance) then = { return = { value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "POWER_DANCE_MOVE") } } }
+    return = { value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "QUICK_SLASH_MOVE") }
+  } }
+  dispatchCase Condition { dispatch = ResolveEnemyMoveCondition key = "base-spire:kin-follower" procedure = Condition }
+  procedure Create { parameters = { dance = Bool slot = Int } result = Binding locals = { target = Binding own = Binding } body = {
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:kin-follower" min = 58 max = 59 } into = target }
+    set = { target = target field = Enemy.SlotIndex value = slot }
+    create = { type = State scope = entityScope(target) into = own fields = { Enemy = target Dance = dance } }
+    return = { value = target }
+  } }
+  procedure Remove { parameters = { target = Ref(Enemy) } body = {
+    forEach = { query = where(type(State), s, equal(field(s, State.Enemy), target)) item = own body = { destroy = { target = own } } }
+  } }
+  subscription Remove { event = EnemyRemoving reaction = Remove }
+  use Move0 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:kin-follower" id = "QUICK_SLASH_MOVE" next = "BOOMERANG_MOVE" intent = "attack" index = 0 } }
+  use Move1 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:kin-follower" id = "BOOMERANG_MOVE" next = "POWER_DANCE_MOVE" intent = "attack" index = 1 } }
+  use Move2 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:kin-follower" id = "POWER_DANCE_MOVE" next = "QUICK_SLASH_MOVE" intent = "buff" index = 2 } }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } locals = { card = Binding } body = {
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "QUICK_SLASH_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 5 hits = 1 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "BOOMERANG_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 2 hits = 2 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "POWER_DANCE_MOVE") then = { call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 2 } } } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:kin-follower" procedure = Execute }
+  procedure Enter { parameters = { owner = Ref(Player) target = Ref(Enemy) } body = {
+    if = { condition = equal(field(target, Enemy.DefinitionId), "base-spire:kin-follower") then = { set = { target = target field = Enemy.SecondaryEnemy value = true } call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:minion-power" stacks = 1 } } } }
+  } }
+  subscription Enter { event = EnemyAddedToCombat reaction = Enter }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) locals = { target = Binding } body = {
+    call = { procedure = Create args = { dance = false slot = 0 } into = target }
+  } }
+} }
+use KinFollower { template = KinFollowerContent }

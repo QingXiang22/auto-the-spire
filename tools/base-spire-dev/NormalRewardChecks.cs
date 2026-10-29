@@ -152,7 +152,7 @@ internal static partial class PackageChecks
         });
         Case("NR04: unsupported contexts, duplicate visits and missing pool fail before random consumption", () =>
         {
-            foreach (var args in new[] { "visitId = 1 source = \"elite\" actIndex = 0 ascension = 0", "visitId = 1 source = \"monster\" actIndex = 1 ascension = 0", "visitId = 1 source = \"monster\" actIndex = 0 ascension = 1", "visitId = 0 source = \"monster\" actIndex = 0 ascension = 0" })
+            foreach (var args in new[] { "visitId = 1 source = \"treasure\" actIndex = 0 ascension = 0", "visitId = 1 source = \"monster\" actIndex = 1 ascension = 0", "visitId = 1 source = \"monster\" actIndex = 0 ascension = 1", "visitId = 0 source = \"monster\" actIndex = 0 ascension = 0" })
             {
                 using var invalid = new Copy(package.Root);
                 invalid.Include("invalid-reward.spire", "action InvalidReward { role = player body = { call = { procedure = OfferNormalCombatRewards args = { owner = first(type(Player)) " + args + " } } } }");

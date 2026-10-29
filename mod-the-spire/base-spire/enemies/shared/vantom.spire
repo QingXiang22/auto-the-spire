@@ -1,0 +1,25 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Locked sts2-sim 611cea2, Vantom.cs, single-player A0.
+template VantomContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:vantom" initial = "INK_BLOT_MOVE" } }
+  use Move0 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:vantom" id = "INK_BLOT_MOVE" next = "INKY_LANCE_MOVE" intent = "attack" index = 0 } }
+  use Move1 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:vantom" id = "INKY_LANCE_MOVE" next = "DISMEMBER_MOVE" intent = "attack" index = 1 } }
+  use Move2 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:vantom" id = "DISMEMBER_MOVE" next = "PREPARE_MOVE" intent = "attack,status" index = 2 } }
+  use Move3 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:vantom" id = "PREPARE_MOVE" next = "INK_BLOT_MOVE" intent = "buff" index = 3 } }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } locals = { card = Binding } body = {
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "INK_BLOT_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 7 hits = 1 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "INKY_LANCE_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 6 hits = 2 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "DISMEMBER_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 26 hits = 1 } } if = { condition = greater(field(owner, Player.Hp), 0) then = { repeat = { count = 3 body = { call = { procedure = CreateCardInstance args = { owner = owner definition = "base-spire:wound" } into = card } call = { procedure = GenerateCardIntoCombat args = { owner = owner card = card creator = none to = "discard" clone = false } } } } } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "PREPARE_MOVE") then = { call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 2 } } } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:vantom" procedure = Execute }
+  procedure Enter { parameters = { owner = Ref(Player) target = Ref(Enemy) } body = {
+    if = { condition = equal(field(target, Enemy.DefinitionId), "base-spire:vantom") then = { call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:slippery-power" stacks = 8 } } } }
+  } }
+  subscription Enter { event = EnemyAddedToCombat reaction = Enter }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) locals = { target = Binding } body = {
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:vantom" min = 173 max = 173 } into = target }
+  } }
+} }
+use Vantom { template = VantomContent }

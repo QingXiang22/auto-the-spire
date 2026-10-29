@@ -1,0 +1,7 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Locked Overgrowth.CreateAllEncounters, single-player A0.
+procedure SpawnPhrogParasiteElite { locals = { target = Binding } body = {
+  call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:phrog-parasite" min = 61 max = 64 } into = target }
+} }
+use PhrogParasiteElite { template = SingleEnemyEncounterRange args = { definition = "base-spire:phrog-parasite-elite" enemyDefinition = "base-spire:phrog-parasite" min = 61 max = 64 } }

@@ -21,7 +21,7 @@ python -X utf8 tools/rng-oracle/refresh_locked_vectors.py --output .artifacts/rn
 | slimes-vectors | 十组原seed，原生SlimesWeak累计楼层2的受控编队、HP、三回合行动、Slimed与游标 |
 | ironclad-source-metadata | 原生90项完整池及GiantRock；五项多人资格、基本／升级属性与来源摘要 |
 | source-rng-vectors | Python独立派生，15条流、初始／重洗、局部金币／卡牌；保留原seed并增加old前缀边界 |
-| normal-reward-vectors | Python独立完整首幕A0普通奖励，三次访问、48项药水池和每次抽样的候选／结果／游标 |
+| normal-reward-vectors | Python独立完整首幕A0普通／精英／Boss奖励：三次普通访问与两次精英／Boss访问、48项药水池、每次抽样的候选／结果／游标，精英另含遗物稀有度 |
 | enemy-move-vectors、pickup-upgrade-vectors | Python独立招式图与永久升级随机；分数权重为明确的算法探针 |
 | Word64Vectors.cs | 原生StringHelper的UTF-8哈希输出；生成时同时核对Python哈希及根seed分支 |
 

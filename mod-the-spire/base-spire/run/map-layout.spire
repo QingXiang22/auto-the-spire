@@ -29,13 +29,13 @@ procedure CenterSourceMap {
   parameters = { run = Ref(Run) }
   locals = { leftEmpty = Bool rightEmpty = Bool shift = Int }
   body = {
-    let = { into = leftEmpty value = not(exists(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(greater(field(n, MapNode.Row), 0), and(less(field(n, MapNode.Row), 16), less(field(n, MapNode.Col), 2)))))))) }
-    let = { into = rightEmpty value = not(exists(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(greater(field(n, MapNode.Row), 0), and(less(field(n, MapNode.Row), 16), greater(field(n, MapNode.Col), 4)))))))) }
+    let = { into = leftEmpty value = not(exists(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(greater(field(n, MapNode.Row), 0), and(less(field(n, MapNode.Row), add(pureCall(CurrentSourceMapRooms), 1)), less(field(n, MapNode.Col), 2)))))))) }
+    let = { into = rightEmpty value = not(exists(where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(greater(field(n, MapNode.Row), 0), and(less(field(n, MapNode.Row), add(pureCall(CurrentSourceMapRooms), 1)), greater(field(n, MapNode.Col), 4)))))))) }
     let = { into = shift value = 0 }
     if = { condition = and(leftEmpty, not(rightEmpty)) then = { let = { into = shift value = -1 } } }
     if = { condition = and(not(leftEmpty), rightEmpty) then = { let = { into = shift value = 1 } } }
     if = { condition = not(equal(shift, 0)) then = {
-      forEach = { query = where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(greater(field(n, MapNode.Row), 0), less(field(n, MapNode.Row), 16))))) item = node body = {
+      forEach = { query = where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), and(not(field(n, MapNode.Removed)), and(greater(field(n, MapNode.Row), 0), less(field(n, MapNode.Row), add(pureCall(CurrentSourceMapRooms), 1)))))) item = node body = {
         set = { target = node field = MapNode.Col value = add(field(node, MapNode.Col), shift) }
       } }
     } }
@@ -74,7 +74,7 @@ procedure StraightenSourceMap {
   locals = { row = Int col = Int node = Binding parent = Binding child = Binding shift = Int }
   body = {
     let = { into = row value = 0 }
-    repeat = { count = 16 body = {
+    repeat = { count = add(pureCall(CurrentSourceMapRooms), 1) body = {
       let = { into = col value = 0 }
       repeat = { count = 7 body = {
         let = { into = node value = pureCall(SourceMapPoint, run, col, row) }
@@ -94,15 +94,18 @@ procedure StraightenSourceMap {
 }
 procedure GenerateSourceActOneMap {
   parameters = { owner = Ref(Player) run = Ref(Run) }
-  locals = { start = Binding boss = Binding rest = Int unknown = Int row = Int }
+  locals = { start = Binding boss = Binding rest = Int unknown = Int row = Int mean = Int seedName = String(length = 64) }
   body = {
-    seedStream64 = { stream = "base-spire:run:act_1_map" seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), "act_1_map") }
-    call = { procedure = SourceGaussianInt args = { stream = "base-spire:run:act_1_map" mean = 7 deviation = 1 min = 6 max = 7 } into = rest }
-    call = { procedure = SourceGaussianInt args = { stream = "base-spire:run:act_1_map" mean = 12 deviation = 1 min = 10 max = 14 } into = unknown }
+    let = { into = mean value = 7 } let = { into = seedName value = "act_1_map" }
+    if = { condition = equal(field(run, Run.ActIndex), 1) then = { let = { into = mean value = 6 } let = { into = seedName value = "act_2_map" } } }
+    seedStream64 = { stream = pureCall(CurrentSourceMapStream) seed = pureCall(SourceStreamSeed, pureCall(SourceRunSeed), seedName) }
+    call = { procedure = SourceGaussianInt args = { stream = pureCall(CurrentSourceMapStream) mean = mean deviation = 1 min = 6 max = 7 } into = rest }
+    call = { procedure = SourceGaussianInt args = { stream = pureCall(CurrentSourceMapStream) mean = 12 deviation = 1 min = 10 max = 14 } into = unknown }
     set = { target = run field = Run.RestCount value = rest }
+    if = { condition = equal(field(run, Run.ActIndex), 1) then = { let = { into = unknown value = subtract(unknown, 1) } } }
     set = { target = run field = Run.UnknownCount value = unknown }
     call = { procedure = GetOrCreateMapPoint args = { run = run col = 3 row = 0 } into = start }
-    call = { procedure = GetOrCreateMapPoint args = { run = run col = 3 row = 16 } into = boss }
+    call = { procedure = GetOrCreateMapPoint args = { run = run col = 3 row = add(pureCall(CurrentSourceMapRooms), 1) } into = boss }
     set = { target = start field = MapNode.Kind value = 8 }
     set = { target = boss field = MapNode.Kind value = 7 }
     set = { target = start field = MapNode.Visited value = true }
@@ -111,7 +114,7 @@ procedure GenerateSourceActOneMap {
     call = { procedure = PruneAndRepairSourceMap args = { run = run start = start } }
     call = { procedure = CenterSourceMap args = { run = run } }
     let = { into = row value = 1 }
-    repeat = { count = 15 body = { call = { procedure = SpreadSourceMapRow args = { run = run row = row } } let = { into = row value = add(row, 1) } } }
+    repeat = { count = pureCall(CurrentSourceMapRooms) body = { call = { procedure = SpreadSourceMapRow args = { run = run row = row } } let = { into = row value = add(row, 1) } } }
     call = { procedure = StraightenSourceMap args = { run = run } }
     forEach = { query = where(collection(MapNodes), n, and(equal(field(n, MapNode.Run), run), field(n, MapNode.Removed))) item = node body = { destroy = { target = node } } }
     call = { procedure = PublishSourceMapTypes args = { run = run } }

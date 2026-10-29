@@ -4,21 +4,27 @@ dsl_version = "core/0.3"
 # A0 source binary32 thresholds and offset accumulation on the shared player Rewards stream.
 procedure ClassifyCombatRewardRarity {
   pure = true
-  parameters = { roll = Int offset = Int }
+  parameters = { roll = Int offset = Int source = String(length = 16) }
   result = String(length = 16)
   body = {
+    if = { condition = equal(source, "boss") then = { return = { value = "rare" } } }
+    if = { condition = equal(source, "elite") then = {
+      if = { condition = float32Less(roll, float32Add(float32(0.1), offset)) then = { return = { value = "rare" } } }
+      if = { condition = float32Less(roll, float32Add(float32(0.4), float32Add(float32(0.1), offset))) then = { return = { value = "uncommon" } } }
+      return = { value = "common" }
+    } }
     if = { condition = float32Less(roll, float32Add(float32(0.03), offset)) then = { return = { value = "rare" } } }
     if = { condition = float32Less(roll, float32Add(float32(0.37), float32Add(float32(0.03), offset))) then = { return = { value = "uncommon" } } }
     return = { value = "common" }
   }
 }
 procedure RollCombatRewardRarity {
-  parameters = { owner = Ref(Player) }
+  parameters = { owner = Ref(Player) source = String(length = 16) }
   locals = { roll = Int rarity = String(length = 16) }
   result = String(length = 16)
   body = {
     sampleFloat32 = { stream = "base-spire:player:rewards" into = roll }
-    let = { into = rarity value = pureCall(ClassifyCombatRewardRarity, roll, field(owner, Player.CardRarityOffset)) }
+    let = { into = rarity value = pureCall(ClassifyCombatRewardRarity, roll, field(owner, Player.CardRarityOffset), source) }
     if = {
       condition = equal(rarity, "rare")
       then = { set = { target = owner field = Player.CardRarityOffset value = float32(-0.05) } }
@@ -58,7 +64,7 @@ procedure ValidateCombatCardReward {
   }
 }
 procedure OfferCombatCards {
-  parameters = { owner = Ref(Player) }
+  parameters = { owner = Ref(Player) source = String(length = 16) }
   locals = { rarity = String(length = 16) chosen = Binding card = Binding upgradeRoll = Int }
   body = {
     call = { procedure = ValidateCombatCardReward args = { owner = owner } }
@@ -67,7 +73,7 @@ procedure OfferCombatCards {
       body = { addToCollection = { collection = CardRewardPool item = entry } }
     }
     repeat = { count = 3 body = {
-      call = { procedure = RollCombatRewardRarity args = { owner = owner } into = rarity }
+      call = { procedure = RollCombatRewardRarity args = { owner = owner source = source } into = rarity }
       let = { into = rarity value = pureCall(ResolveCombatRewardRarity, rarity) }
       samplePick = { stream = "base-spire:player:rewards" candidates = where(collection(CardRewardPool), b, equal(field(b, CardBlueprint.Rarity), rarity)) into = chosen }
       removeFromCollection = { collection = CardRewardPool item = chosen }

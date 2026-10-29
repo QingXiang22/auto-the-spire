@@ -1,0 +1,21 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Locked sts2-sim 611cea2, KinPriest.cs, single-player A0.
+template KinPriestContent { body = {
+  use Graph { template = EnemyMoveGraphDefinition args = { definition = "base-spire:kin-priest" initial = "ORB_OF_FRAILTY_MOVE" } }
+  use Move0 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:kin-priest" id = "ORB_OF_FRAILTY_MOVE" next = "ORB_OF_WEAKNESS_MOVE" intent = "attack,debuff" index = 0 } }
+  use Move1 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:kin-priest" id = "ORB_OF_WEAKNESS_MOVE" next = "BEAM_MOVE" intent = "attack,debuff" index = 1 } }
+  use Move2 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:kin-priest" id = "BEAM_MOVE" next = "RITUAL_MOVE" intent = "attack" index = 2 } }
+  use Move3 { template = EnemyMoveNodeDefinition args = { definition = "base-spire:kin-priest" id = "RITUAL_MOVE" next = "ORB_OF_FRAILTY_MOVE" intent = "buff" index = 3 } }
+  procedure Execute { parameters = { owner = Ref(Player) target = Ref(Enemy) node = Ref(EnemyMoveNode) } locals = { card = Binding } body = {
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "ORB_OF_FRAILTY_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 8 hits = 1 } }call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:frail-power" stacks = 1 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "ORB_OF_WEAKNESS_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 8 hits = 1 } }call = { procedure = ApplyPlayerPower args = { owner = owner definition = "base-spire:weak-power" stacks = 1 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "BEAM_MOVE") then = { call = { procedure = EnemyAttack args = { attacker = target defender = owner amount = 3 hits = 3 } } } }
+    if = { condition = equal(field(node, EnemyMoveNode.Id), "RITUAL_MOVE") then = { call = { procedure = ApplyEnemyPower args = { target = target definition = "base-spire:strength-power" stacks = 2 } } } }
+  } }
+  dispatchCase Execute { dispatch = ExecuteEnemyMove key = "base-spire:kin-priest" procedure = Execute }
+  action Spawn { role = player requires = pureCall(CanSpawnDevelopmentEnemies, first(type(Player))) locals = { target = Binding } body = {
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:kin-priest" min = 190 max = 190 } into = target }
+  } }
+} }
+use KinPriest { template = KinPriestContent }

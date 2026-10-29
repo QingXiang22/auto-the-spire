@@ -1,0 +1,7 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+# Locked Overgrowth.CreateAllEncounters, single-player A0.
+procedure SpawnBygoneEffigyElite { locals = { target = Binding } body = {
+  call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:bygone-effigy" min = 127 max = 127 } into = target }
+} }
+use BygoneEffigyElite { template = SingleEnemyEncounterRange args = { definition = "base-spire:bygone-effigy-elite" enemyDefinition = "base-spire:bygone-effigy" min = 127 max = 127 } }

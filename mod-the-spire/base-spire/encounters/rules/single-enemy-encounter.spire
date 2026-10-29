@@ -2,6 +2,19 @@ using namespace base-spire;
 dsl_version = "core/0.3"
 
 # Active-combat creation needs a separate entry lifecycle; these actions configure the next battle.
+# Every native encounter factory owns a fresh RNG even when its seed repeats.
+# A unique engine stream names that lifetime without reseeding a consumed generator.
+procedure BeginSourceEncounterRandom { parameters = { totalFloor = Int entry = String(length = 128) } result = String(length = 128)
+  locals = { owner = Binding stream = String(length = 128) sequence = Int } body = {
+    let = { into = owner value = first(type(Player)) }
+    let = { into = sequence value = field(owner, Player.EncounterSequence) }
+    let = { into = stream value = "base-spire:encounter:monsters" }
+    if = { condition = greater(sequence, 0) then = { let = { into = stream value = concat(stream, ":", sequence) } } }
+    set = { target = owner field = Player.EncounterSequence value = add(sequence, 1) }
+    seedStream64 = { stream = stream seed = pureCall(SourceContentSeed, totalFloor, entry, 0) }
+    return = { value = stream }
+  }
+}
 procedure CanSpawnDevelopmentEnemies {
   pure = true parameters = { owner = Ref(Player) } result = Bool
   body = {
@@ -94,10 +107,11 @@ procedure SummonCombatEnemy {
   parameters = { definition = String(length = 64) hp = Int(min = 1, max = 9999) slot = Int(min = -1) illusion = Bool }
   locals = { target = Binding }
   body = {
-    call = { procedure = CreateEncounterEnemy args = { definition = definition hp = hp } into = target }
+    call = { procedure = CreateSourceEncounterEnemy args = { definition = definition min = hp max = hp } into = target }
     set = { target = target field = Enemy.SlotIndex value = slot }
     set = { target = target field = Enemy.Illusion value = illusion }
     set = { target = target field = Enemy.SecondaryEnemy value = illusion }
+    call = { procedure = SortEncounterEnemies }
     call = { procedure = ResetEnemyMoves args = { target = target } }
     emit = { event = EnemyAddedToCombat payload = { owner = first(type(Player)) target = target } }
   }

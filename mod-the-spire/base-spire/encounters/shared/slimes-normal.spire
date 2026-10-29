@@ -5,10 +5,10 @@ dsl_version = "core/0.3"
 # whose leaf/twig order comes from one source NextBool draw.
 procedure SpawnSourceSlimesNormal {
   parameters = { totalFloor = Int }
-  locals = { leafFirst = Int target = Binding }
+  locals = { stream = String(length = 128) leafFirst = Int target = Binding }
   body = {
-    seedStream64 = { stream = "base-spire:encounter:monsters" seed = pureCall(SourceContentSeed, totalFloor, "SLIMES_NORMAL", 0) }
-    sampleInt = { stream = "base-spire:encounter:monsters" min = 0 max = 2 into = leafFirst }
+    call = { procedure = BeginSourceEncounterRandom args = { totalFloor = totalFloor entry = "SLIMES_NORMAL" } into = stream }
+    sampleInt = { stream = stream min = 0 max = 2 into = leafFirst }
     call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:twig-slime-m" min = 26 max = 28 } into = target }
     call = { procedure = CreateSourceEncounterEnemy args = { definition = "base-spire:leaf-slime-m" min = 32 max = 35 } into = target }
     if = { condition = equal(leafFirst, 0) then = {

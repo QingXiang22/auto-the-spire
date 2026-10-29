@@ -369,6 +369,10 @@
     {
       "id": "base-spire:whistle",
       "definition": "cards/colorless/whistle.spire"
+    },
+    {
+      "id": "base-spire:wound",
+      "definition": "cards/status/wound.spire"
     }
   ]
 }

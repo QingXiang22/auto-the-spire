@@ -75,7 +75,7 @@ internal static partial class PackageChecks
             var cards = rows.RootElement.GetProperty("entries"); Equal(578, SourceCatalog.Entries("cards").Length, "independent frozen card source denominator");
             var migrated = cards.EnumerateArray().Where(row => row.GetProperty("definition").ValueKind == System.Text.Json.JsonValueKind.String)
                 .Select(row => row.GetProperty("id").GetString()).Order(StringComparer.Ordinal);
-            var expected = IroncladSinglePlayerNames.Split(' ').Select(IroncladId).Concat(["base-spire:giant-rock", "base-spire:shockwave", "base-spire:slimed", "base-spire:infection", "base-spire:dazed", "base-spire:whistle", "base-spire:greed"]).Order(StringComparer.Ordinal);
+            var expected = IroncladSinglePlayerNames.Split(' ').Select(IroncladId).Concat(["base-spire:giant-rock", "base-spire:shockwave", "base-spire:slimed", "base-spire:infection", "base-spire:dazed", "base-spire:wound", "base-spire:whistle", "base-spire:greed"]).Order(StringComparer.Ordinal);
             True(migrated.SequenceEqual(expected), "actual complete singleplayer Ironclad roster plus the token, colorless, status and curse consumers");
         });
         Case("CP09: targeted and untargeted cards are offered by different play actions", () =>

@@ -46,7 +46,9 @@ internal static partial class PackageChecks
             Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Submit(s, "EndDevelopmentTurn"); Submit(s, "BeginDevelopmentTurn");
             Equal(1L, PlayerPowerStacks(s, "base-spire:tangled-power"), "Tangled 1 from Grasping Vines");
-            var strike = IcAdd(s, "StrikeIronclad"); Equal(2L, CardCost(s, strike), "attack costs one more while Entangled");
+            var strike = IcAdd(s, "StrikeIronclad");
+            Set(s, Player(s), "Player", "Energy", Value.Of(3L)); IcPlay(s, strike);
+            Equal(1L, IntField(s, Player(s), "Player", "Energy"), "Entangled charges exactly two energy, without a duplicate local modifier");
             Submit(s, "EndDevelopmentTurn");
             Equal(0L, PlayerPowerStacks(s, "base-spire:tangled-power"), "Tangled expires at player side end");
         });
