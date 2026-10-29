@@ -167,6 +167,8 @@ Python 消费者使用 [load_report](../ci/normal_report.py) 按需读取引用�
 
 `random.reward_candidates` 比较首战药水和三张卡牌奖励抽样的完整有序候选、实际选中索引和游标。DSL读取抽样时的历史快照；参考侧在奖励生成前复制自身解锁池，结合实际奖品稀有度与此前选中项重建候选，再以实录索引核对真实奖品。原始池保存在诊断的`native_reward_candidate_sources`，原始随机调用仍单独保留。该映射只接受既有奖励策略检查确认的默认首幕单人Ironclad来源；缺调用、候选截断、错序、重复选牌或无法核对实际产物均失败。它不代表初始化、地图等其余候选或完整`random.trace`已经验收。
 
+`random.initialization_candidates` 比较开局遗物袋／事件／共享Ancient的洗牌候选、共享Ancient子集分配，以及三幕Boss／Ancient直接抽样。DSL从实际`AddOpeningItem`与`ShuffleOpeningList`过程和随机记录重建诊断副本，直接抽样读取历史候选；参考从自身源池及实录索引重建副本。两侧都与真实遗物袋和已生成房间计划核对。原始来源分别保存在`dsl_initialization_sources`与`native_initialization_sources`；DSL必要过程记录和原始随机调用另行保留。固定四路径各含311次洗牌、两次共享分配及六次直接抽样；结合已有94次加权遭遇抽样，覆盖全部413次UpFront消费。单候选Ancient与空共享池的零项分配仍须保留实际消费；候选缺失、错序、分配与实际状态不符或消费不完整均失败。该结果不表示地图、Neow等其余候选、根／流派生或完整`random.trace`已经验收。
+
 `random.float32_calls` 逐条比较正常路径中的浮点取样：具名流、调用前后游标、已求值的上下界及最终 binary32 位型。DSL 读取真实 `RandomCallDetails.Float32`，参考读取自身 `NextFloat` 参数和实际结果；原始 double 记录保留在诊断中。比较按流名与流内游标规范化，不要求独立流有相同的全局初始化顺序。缺附加数据、截断、丢失、重复或流内错序均失败。固定首战有敌人三次与奖励八次浮点调用；这部分一致不代表离散候选、权重及拒绝过程已经比较，完整 `random.trace` 仍为必需维度。
 
 `random.scalar_calls` 比较实际整数上下界、结果及流内游标。原生无参 `NextBool` 的 true／false 对应 DSL `[0,2)` 的 0／1；地图 Gaussian 的四次输入将 DSL `[0,2^53)` 整数除以 `2^53`，与原生单位区间 `NextDouble` 的 binary64 位型比较。94 次开局加权抽样读取 core 0.9.5 在实际抽样时保留的 `SingleRawWord`，按 vanilla 公式 `(raw >> 11) * 2^-53` 规范化，同时校验实际离散结果确为该单位值乘候选数后的截断。缺字或多字消费明确失败，不从选中索引反推或重跑生成器。
