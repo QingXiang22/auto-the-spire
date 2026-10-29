@@ -10,6 +10,7 @@ internal static partial class PackageChecks
         RunMapGaussianChecks(package);
         RunSourceMapChecks(package);
         RunActTwoMapChecks(package);
+        RunActOneEliteVisitChecks(package);
         RunNormalOpeningChecks(package);
         RunNormalReturnOnly(package, includeDenseVegetation);
         RunUnsupportedNormalOpeningChecks(package);

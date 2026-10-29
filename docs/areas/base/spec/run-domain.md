@@ -146,7 +146,7 @@ Boss 访问的奖励全部关闭后，关闭流程调用同一幕转换过程，
 
 ## 战斗副本来源与结算写回
 
-正常遭遇使用跨幕累计的 `Run.TotalFloor`：Neow访问为1，每次合法地图访问加1，不能用当前幕行号代替。SlimesWeak 以根seed加累计楼层、再加 `SLIMES_WEAK` 的 UTF-8 XxHash64 派生独立编队流；按源顺序抽小型A、剩余单候选B、中型，三次抽样均消费，出生顺序为A、中型、B。首幕 16 个 Monster 遭遇都按 `SourceContentSeed(totalFloor, IdEntry, 0)` 派生自己的编队流和源顺序；`SpawnNormalEncounter` 是唯一的正常遭遇分派入口，Monster／Elite／Boss 各自消费预生成队列（Elite 使用独立游标，不推进普通队列）。其他幕及未迁移效果仍在访问、HP及编队抽样之前具名失败。各怪HP按出生顺序消费Niche，开战统一初始化招式，不能在创建和开战各滚一次。
+正常遭遇使用跨幕累计的 `Run.TotalFloor`：Neow访问为1，每次合法地图访问加1，不能用当前幕行号代替。SlimesWeak 以根seed加累计楼层、再加 `SLIMES_WEAK` 的 UTF-8 XxHash64 派生独立编队流；按源顺序抽小型A、剩余单候选B、中型，三次抽样均消费，出生顺序为A、中型、B。首幕 16 个 Monster 遭遇都按 `SourceContentSeed(totalFloor, IdEntry, 0)` 派生自己的编队流和源顺序；`SpawnNormalEncounter` 是唯一的正常遭遇分派入口，Monster／Elite／Boss 各自消费预生成队列（Elite 使用独立游标，不推进普通队列）。受控正常 Run 已覆盖精英房：队列条目、实际房型、独立游标、精英奖励与关闭后回到地图。其他幕及未迁移效果仍在访问、HP及编队抽样之前具名失败。各怪HP按出生顺序消费Niche，开战统一初始化招式，不能在创建和开战各滚一次。
 
 `SpawnDevelopmentEnemy` 供受控单敌入口立即发布意图；正常批量出生调用只创建实例的 `CreateEncounterEnemy`，由 `BeforeCombatStart` 对全体按序初始化。LeafSlimeS初始RAND且两个等权分支不能连用；LeafSlimeM固定状态与攻击交替；TwigSlimeS固定TACKLE_MOVE。三者复用共享图及状态牌生成操作。
 
