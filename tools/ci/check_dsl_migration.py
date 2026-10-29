@@ -589,7 +589,7 @@ def main() -> int:
                               or "lifecycle.settlement" not in b[side]["values"]
                               or any(path not in b[side]["values"] for path in (
                                   "public.snapshot", "public.map", "public.run", "public.neow", "public.reward_offer", "public.potions", "public.potion_inventory",
-                                  "public.relic_inventory", "public.cards", "public.player", "public.enemies", "public.powers", "public.visits", "random.shuffle_candidates", "random.reward_candidates"))
+                                  "public.relic_inventory", "public.cards", "public.player", "public.enemies", "public.powers", "public.visits", "random.shuffle_candidates", "random.reward_candidates", "random.initialization_candidates"))
                               for b in c["boundaries"] for side in ("left", "right"))
                        or any(not json.loads(c["boundaries"][-1][side]["values"]["events.observed_order"])
                               for side in ("left", "right"))
@@ -607,6 +607,13 @@ def main() -> int:
                        for side in ("left", "right")]
             if rewards[0] != rewards[1] or [c["Kind"] for c in rewards[0]] != ["potion", "card", "card", "card"]:
                 raise ValueError("normal paths must compare all actual potion and card reward candidates")
+            initialization = [json.loads(case["boundaries"][-1][side]["values"]["random.initialization_candidates"])
+                              for side in ("left", "right")]
+            if (initialization[0] != initialization[1] or len(initialization[0]["Shuffles"]) != 311
+                    or len(initialization[0]["Allocations"]) != 2 or len(initialization[0]["Picks"]) != 6
+                    or len(initialization[0]["Picks"][1]["Candidates"]) != 1
+                    or initialization[0]["Allocations"][1]["Remaining"] != []):
+                raise ValueError("normal paths must compare complete initialization candidates, including singleton and empty-pool allocation draws")
             for boundary in case["boundaries"]:
                 for side in ("left", "right"):
                     state = boundary[side]

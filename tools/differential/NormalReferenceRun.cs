@@ -54,6 +54,8 @@ internal sealed class NormalReferenceRun : IDisposable
     private NormalReferenceRewards? rewardObservation;
     private NormalRewardCandidateCall[] rewardCandidates = [];
     private object? rewardCandidateSources;
+    private NormalInitializationCandidates? initialization;
+    private object? initializationSources;
     private CardModel? targetedCard;
     private PlayerCombatState? lastCombatState;
     private string[] neowOptions = [];
@@ -75,10 +77,16 @@ internal sealed class NormalReferenceRun : IDisposable
             run = new RunState(seed, acts);
             player = Player.CreateForNewRun(ModelDb.Character<Ironclad>(), run); run.AddPlayer(player);
             random.Name(run, player);
+            var initializationObserver = diagnostics ? new NormalReferenceInitialization(acts, run, player) : null;
             foreach (var card in player.Deck.Cards) permanent.Add(card, "permanent:" + permanent.Count.ToString("D2"));
             if (diagnostics) random.WatchShuffle(player, Card);
             run.AddVisitedMapCoord(run.Map.StartingMapPoint.coord);
             opening = (EventRoom)RoomFactory.CreateAncientEventRoom(run); run.PushRoom(opening);
+            if (initializationObserver is not null)
+            {
+                initializationSources = initializationObserver.Sources;
+                initialization = initializationObserver.Capture(random.InitializationDraws(), random.WeightedCalls());
+            }
         }
         catch { random.Dispose(); throw; }
     }
@@ -426,6 +434,7 @@ internal sealed class NormalReferenceRun : IDisposable
         if (scalars is not null) Put("random.scalar_calls", scalars.Calls);
         if (diagnostics) Put("random.weighted_candidates", random.WeightedCalls());
         if (diagnostics) Put("random.reward_candidates", rewardCandidates);
+        if (diagnostics) Put("random.initialization_candidates", initialization);
         if (diagnostics)
         {
             var attempts = random.OpeningAttempts(); var queues = NormalOpeningQueues.Reference(run);
@@ -451,6 +460,7 @@ internal sealed class NormalReferenceRun : IDisposable
                 native_event_coverage = coverage,
                 native_reward_policies = rewardObservation?.Evidence,
                 native_reward_candidate_sources = rewardCandidateSources,
+                native_initialization_sources = initializationSources,
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = Array.Empty<string>(),
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
@@ -522,6 +532,12 @@ internal sealed class NormalReferenceRandom : IDisposable
     private readonly Dictionary<Call, NormalScalarCall> hpCalls = [];
     private NormalHpOrigin[] hpOrigins = [];
     internal int CallCount => calls.Count;
+    internal NormalInitializationDraw[] InitializationDraws()
+    {
+        if (dropped != 0 || pending.Count != 0) throw NormalInitializationTrace.Missing("incomplete native initialization diagnostics");
+        return calls.Where(c => Name(c.Rng) == NormalInitializationTrace.Stream).Select(c => new NormalInitializationDraw(
+            c.Parameters.Operation, c.Before, c.After, c.Parameters.Minimum, c.Parameters.Maximum, c.Parameters.Arity, c.Result)).ToArray();
+    }
     internal NormalRewardDraw[] RewardDraws(int start)
     {
         if (dropped != 0 || pending.Count != 0) throw NormalRewardCandidateTrace.Missing("incomplete native reward diagnostics");

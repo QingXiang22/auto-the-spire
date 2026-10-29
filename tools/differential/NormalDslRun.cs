@@ -20,6 +20,8 @@ internal sealed class NormalDslRun : IDisposable
     private readonly Dictionary<InstanceId, string> rewardCardOrigins = [];
     private readonly HashSet<int> generatedActions = [];
     private NormalSettlement[]? settlement;
+    private NormalInitializationCandidates? initialization;
+    private NormalInitializationSources? initializationSources;
     private int actionIndex = -1;
     private int number;
     private RequestDto? lastStep;
@@ -59,6 +61,7 @@ internal sealed class NormalDslRun : IDisposable
     internal string PublicState => WireCanonical.Text(Snapshot.ToWire());
     internal bool HasCompleteDebug => Engine.Debug is { DroppedRecords: 0 };
     internal IReadOnlyList<SessionDebugRecord> DebugRecords => Engine.Debug?.Capture() ?? [];
+    internal NormalInitializationSources InitializationSources => initializationSources ?? throw NormalInitializationTrace.Missing("missing DSL initialization sources");
     internal bool IsLive(InstanceId instance) => Engine.State.Exists(instance);
     internal string StateHash => Engine.State.StateHash();
     internal bool HasDebug => Engine.Debug is not null;
@@ -97,6 +100,24 @@ internal sealed class NormalDslRun : IDisposable
         if (!lastStepResponse.Ok) throw new InvalidOperationException("Public Host: " + lastStepResponse.Error?.Message);
         Snapshot = PublicSnapshotDto.FromWire(Get(Send(Operation.Observe, ("session_id", WireValue.Str(sessionId))), "snapshot"), NetProtocol.V02);
         Remember();
+        if (HasDebug && action.ActionType == "net:action:base-spire:StartNormalRun") CaptureInitialization();
+    }
+    private void CaptureInitialization()
+    {
+        var definitions = Instances("OpeningDefinition").Select(d => new NormalOpeningSource(d.Value,
+            Field(d, "OpeningDefinition", "Category").AsString(), Field(d, "OpeningDefinition", "Act").AsInt(),
+            Field(d, "OpeningDefinition", "DefinitionId").AsString(), Field(d, "OpeningDefinition", "Room").AsString(), Field(d, "OpeningDefinition", "Rarity").AsString(),
+            Field(d, "OpeningDefinition", "AssignedAct").AsInt())).ToArray();
+        var relation = Engine.RuleSet.Relations.Single(r => r.QualifiedId == "base-spire:OpeningItems").Id;
+        var bags = Instances("OpeningList").Where(b => Field(b, "OpeningList", "Category").AsString() is "shared-bag" or "player-bag")
+            .Select(b => new NormalOpeningList(Field(b, "OpeningList", "Category").AsString() + "/" + Field(b, "OpeningList", "Rarity").AsString(),
+                Engine.State.RelationTargets(relation, b).OrderBy(i => Field(i, "OpeningListItem", "Position").AsInt())
+                    .Select(i => Field(Field(i, "OpeningListItem", "Definition").AsRef(), "OpeningDefinition", "DefinitionId").AsString()).ToArray())).ToArray();
+        var plans = Instances("RunRoomPlan").Where(p => Field(p, "RunRoomPlan", "Room").AsString() is "event" or "Boss" or "ancient")
+            .Select(p => new NormalOpeningQueueEntry(Field(p, "RunRoomPlan", "Act").AsInt(), Field(p, "RunRoomPlan", "Room").AsString(),
+                Field(p, "RunRoomPlan", "Position").AsInt(), Field(Field(p, "RunRoomPlan", "Definition").AsRef(), "OpeningDefinition", "DefinitionId").AsString())).ToArray();
+        initializationSources = new(definitions, bags, plans);
+        initialization = NormalInitializationTrace.Dsl(DebugRecords, Engine.Debug!.DroppedRecords, definitions, bags, plans);
     }
     internal NormalProtocolCheck CheckRequestReplay()
     {
@@ -266,6 +287,7 @@ internal sealed class NormalDslRun : IDisposable
         if (trace is not null) Put("lifecycle.settlement", Settlement());
         if (trace is not null) Put("random.float32_calls", NormalFloat32Trace.Dsl(trace.Capture(), trace.DroppedRecords));
         if (trace is not null) Put("random.reward_candidates", NormalRewardCandidateTrace.Dsl(trace.Capture(), trace.DroppedRecords));
+        if (trace is not null) Put("random.initialization_candidates", initialization ?? throw NormalInitializationTrace.Missing("missing actual DSL initialization capture"));
         if (trace is not null)
         {
             var randomState = Engine.Random.Capture();
@@ -285,8 +307,11 @@ internal sealed class NormalDslRun : IDisposable
                 unmapped_public_topology = Array.Empty<string>(),
                 unmapped_scalar_calls = scalars?.Unmapped,
                 unmapped_weighted_semantics = Array.Empty<string>(),
+                dsl_initialization_sources = initializationSources,
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
-                    or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault).Select(r => r with { Snapshot = null }).ToArray(), dropped = trace?.DroppedRecords,
+                    or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault || NormalInitializationTrace.Relevant(r))
+                    .Select(r => r with { Snapshot = r.Subject == NormalInitializationTrace.Stream && r.Random?.Operation == "pick"
+                        && r.Snapshot?.Entities.All(e => e.Type != "base-spire:OpeningListItem") == true ? r.Snapshot : null }).ToArray(), dropped = trace?.DroppedRecords,
                 streams = Engine.Random.Capture(), instance_mapping = identities.Select(p => new { instance = p.Key.Value, identity = p.Value }).ToArray() });
     }
     private NormalSettlement[] Settlement()
