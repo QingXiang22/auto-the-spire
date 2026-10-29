@@ -140,7 +140,7 @@ AfterObtained／AfterRemoved 表示获得与移除的通知阶段，准确 DSL �
 
 Boss 访问的奖励全部关闭后，关闭流程调用同一幕转换过程，不另设外部注入。转换在首幕开始时已预生成的库存上继续：清除本次幕内对象（地图节点、访问、商店库存、Neow 选项与访问），保留生命、金币、永久牌组、遗物与药水等长期实例；`ActIndex` 置 1，重置普通／精英遭遇、事件与商店标记游标，调用 `ResetUnknownRoomOdds` 恢复问号赔率。第二幕 Ancient 标识取自开局已生成的计划项，不重抽古代人。
 
-第二幕地图由 `base-spire:run:act_2_map` 流按同一源算法重建：14 个房间行、休息数量按 `NextGaussianInt(6,1,6,7)`、未知数量按 `StandardRandomUnknownCount − 1`，宝箱固定在倒数第七行、Boss 行随长度变化。生成后所有节点清空 `Selectable`／`Visited`，`Phase` 与本房间置 `act-entry`，不提前执行 Ancient，也不开放 `ChooseMapPoint`；`EnterNextAncient` 对未接通的下一幕 Ancient 效果明确报告不支持。
+第二幕地图由 `base-spire:run:act_2_map` 流按同一源算法重建：14 个房间行、休息数量按 `NextGaussianInt(6,1,6,7)`、未知数量按 `StandardRandomUnknownCount − 1`，宝箱固定在倒数第七行、Boss 行随长度变化。生成后所有节点清空 `Selectable`／`Visited`，`Phase` 与本房间置 `act-entry`，不提前执行 Ancient，也不开放 `ChooseMapPoint`；`EnterNextAncient` 对未接通的下一幕 Ancient 效果明确报告不支持。该地图与原生 `Hive`／`StandardActMap` 的独立向量逐节点核对节点数、类型、双向边、公开顺序与游标（10 组 seed），向量不读取 DSL 结果。
 
 正常战斗死亡在战斗结算稳定边界创建 `NormalRunDefeat` 终局，公开元数据映射为失败；该终局路径与正常跨幕分别验证，不用于推断完整 Run 可用。
 

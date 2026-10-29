@@ -61,7 +61,7 @@ object[] Definitions()
 }
 var definitions = Definitions();
 var seeds = new[] { "20261018", "777", "1234", "99", "ABC", "abc", "BASE-DSL-STDIO-00", "斩杀尖塔2", "A😀B", "" };
-var openings = new List<object>(); var maps = new List<object>(); var gaussians = new List<object>(); var combats = new List<object>(); var slimes = new List<object>();
+var openings = new List<object>(); var maps = new List<object>(); var act2maps = new List<object>(); var gaussians = new List<object>(); var combats = new List<object>(); var slimes = new List<object>();
 foreach (var seed in seeds.Append("20261021"))
 {
     var run = new RunState(seed, Acts());
@@ -103,6 +103,18 @@ foreach (var seed in seeds.Append("20261021"))
     var publication = map.GetAllMapPoints().Append(map.StartingMapPoint).Append(map.BossMapPoint)
         .Select((point, index) => new { index, col = point.coord.col, row = point.coord.row }).ToArray();
     maps.Add(new { seed, draws = mapRng.Counter, cells, publication });
+    // Act 2 Hive map: independent 14-row generation from the act_2_map stream, no second boss.
+    var hive = new Hive();
+    var act2Rng = new Rng(run.Rng.Seed, "act_2_map");
+    var act2Counts = hive.GetMapPointTypes(act2Rng, run.Ascension);
+    var act2 = new Sts2Sim.Core.Map.StandardActMap(act2Rng, hive.BaseNumberOfRooms, act2Counts, hasSecondBoss: false);
+    var act2Points = Enumerable.Range(0, act2.GetRowCount()).SelectMany(act2.GetPointsInRow).Append(act2.StartingMapPoint).Append(act2.BossMapPoint).Distinct().ToArray();
+    var act2Cells = act2Points.OrderBy(p => p.coord.row).ThenBy(p => p.coord.col)
+        .Select(p => new { row = p.coord.row, col = p.coord.col, type = (int)p.PointType,
+            children = p.Children.Sum(c => 1L << c.coord.col), parents = act2Points.Where(candidate => candidate.Children.Contains(p)).Sum(c => 1L << c.coord.col) }).ToArray();
+    var act2Publication = act2.GetAllMapPoints().Append(act2.StartingMapPoint).Append(act2.BossMapPoint)
+        .Select((point, index) => new { index, col = point.coord.col, row = point.coord.row }).ToArray();
+    act2maps.Add(new { seed, rooms = hive.BaseNumberOfRooms, draws = act2Rng.Counter, cells = act2Cells, publication = act2Publication });
     var gaussianRng = new Rng(run.Rng.Seed, "act_1_map"); var gaussianCalls = new List<object>();
     foreach (var (mean, deviation, min, max) in Enumerable.Repeat(new[] { (7, 1, 6, 7), (12, 1, 10, 14) }, 4).SelectMany(x => x))
     {
@@ -151,6 +163,7 @@ var mapHashes = Subset("Content/Acts/Overgrowth.cs", "Map/", "Random/", "Helpers
 Write("normal-opening-vectors.json", new { format = "source-normal-opening-vectors@2", profile = "ironclad-a0-fully-unlocked-singleplayer-fixed-acts", reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", source_sha256 = openingHashes,
     definitions, vectors = openings.Take(10), regression_vectors = openings.Skip(10) });
 Write("act-one-map-vectors.json", new { format = "source-map-vectors@2", reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", source_sha256 = mapHashes, vectors = maps.Take(10) });
+Write("act-two-map-vectors.json", new { format = "source-map-vectors@2", reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", source_sha256 = mapHashes, vectors = act2maps.Take(10) });
 Write("map-gaussian-vectors.json", new { format = "source-map-gaussian-vectors@2", reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", source_sha256 = mapHashes, vectors = gaussians.Take(10) });
 Write("normal-combat-vectors.json", new { reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", vectors = combats });
 Write("slimes-vectors.json", new { reference_lock = locked.RootElement.Clone(), source_hash_encoding = "utf8-lf", source_sha256 = Subset("Content/Acts/Overgrowth.cs", "Rooms/RoomFactory.cs", "Models/Monsters/LeafSlime", "Models/Monsters/TwigSlime", "Models/MonsterModel.cs", "MonsterMoves/", "Random/", "Entities/Creatures/Creature.cs", "Combat/CombatState.cs"), vectors = slimes });

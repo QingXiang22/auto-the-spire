@@ -16,6 +16,7 @@ python -X utf8 tools/rng-oracle/refresh_locked_vectors.py --output .artifacts/rn
 | --- | --- |
 | normal-opening-vectors、reference-pool-metadata | 原生RunState、Player、Neow，完整遗物袋、三幕来源队列、候选资格与顺序；固定Overgrowth／Hive／Glory，不声称随机替代幕选择 |
 | act-one-map-vectors、map-gaussian-vectors | 原生Overgrowth与StandardActMap，最终节点／类型／边／游标、真实GetAllMapPoints后接独立起点／Boss的公开序列与位置，以及Gaussian拒绝抽样 |
+| act-two-map-vectors | 原生Hive与StandardActMap的14行第二幕地图，节点／类型／边／游标与公开序列；休息数量按Gaussian(6)与未知数量减一 |
 | normal-combat-vectors | seed777正常Neow选择BoomingConch，首个合法后继真实遭遇、HP、首招、手牌与抽牌堆 |
 | neow-effects-vector | seed777真实Neow选择WingedBoots／CursedPearl后首战；另列WingedBoots三次非连接入房与两seed正负初始Strength的FlexPotion受控组件，保存资源、实例顺序和随机四字状态／游标 |
 | slimes-vectors | 十组原seed，原生SlimesWeak累计楼层2的受控编队、HP、三回合行动、Slimed与游标 |
