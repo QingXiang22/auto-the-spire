@@ -5,6 +5,8 @@ template PlowPowerModule { body = {
   procedure Break { parameters = { result = Ref(DamageResult) listener = Ref(Power) } locals = { target = Binding state = Binding node = Binding } body = {
     let = { into = target value = field(listener, Power.HolderEnemy) }
     if = { condition = or(not(equal(target, field(result, DamageResult.Enemy))), or(lessOrEqual(field(result, DamageResult.Unblocked), 0), greater(field(target, Enemy.Hp), field(listener, Power.Stacks)))) then = { return = {} } }
+    # Mangle is the supported enemy TemporaryStrengthPower; remove its delayed restoration too.
+    forEach = { query = where(collection(Powers), p, and(equal(field(p, Power.HolderEnemy), target), equal(field(p, Power.DefinitionId), "base-spire:mangle-power"))) item = temporary body = { call = { procedure = RemovePower args = { power = temporary } } } }
     forEach = { query = where(collection(Powers), p, and(equal(field(p, Power.HolderEnemy), target), equal(field(p, Power.DefinitionId), "base-spire:strength-power"))) item = strength body = { call = { procedure = RemovePower args = { power = strength } } } }
     let = { into = state value = first(where(type(EnemyMoveState), s, equal(field(s, EnemyMoveState.Enemy), target))) }
     let = { into = node value = pureCall(FindEnemyMoveNode, field(state, EnemyMoveState.Graph), "BEAST_CRY_MOVE") }

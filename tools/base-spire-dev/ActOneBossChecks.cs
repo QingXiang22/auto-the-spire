@@ -105,6 +105,23 @@ internal static partial class PackageChecks
             True(!s.LegalActions(s.Participant(0)).Any(a => a.Definition.QualifiedId is "base-spire:PlayTargetedCard" or "base-spire:PlayAttackFromHand" or "base-spire:PlayCardFromHand" && a.Bindings.Any(b => b.Any(v => v.Kind == ValueKind.Ref && v.AsRef() == second))), "Ringing blocks any second card");
             Next(s); Hit(s, enemy); Healthy(s);
         }, "base-spire:ceremonial-beast", "base-spire:ceremonial-beast-boss");
+        Case("ACT1 BOSS Plow removes Mangle before its delayed Strength restoration", () =>
+        {
+            var s = Combat("CeremonialBeastBoss"); var enemy = FirstTarget(s);
+            Next(s); Next(s);
+            Set(s, enemy, "Enemy", "Hp", Value.Of(170L));
+            Set(s, Player(s), "Player", "Energy", Value.Of(30L));
+            var mangle = IcAdd(s, "Mangle");
+            Submit(s, "PlayTargetedCard", mangle);
+            s.Answer(new DecisionAnswer(s.PendingDecision!.RequestId, Instances: [enemy])); Healthy(s);
+            Equal(155L, EnemyHp(s), "Mangle leaves Plow intact before the breaking hit");
+            Equal(10L, Power(s, enemy, "mangle-power"), "pending temporary Strength restoration");
+            Hit(s, enemy);
+            Equal(0L, Power(s, enemy, "plow-power"), "next hit breaks Plow");
+            Equal(0L, Power(s, enemy, "mangle-power"), "break also removes temporary Strength");
+            Next(s);
+            Equal(0L, Power(s, enemy, "strength-power"), "removed Mangle cannot restore Strength after stun");
+        }, "base-spire:ceremonial-beast", "base-spire:ceremonial-beast-boss");
         return witnesses.ToDictionary(row => row.Key, row => row.Value.ToArray());
     }
 }
