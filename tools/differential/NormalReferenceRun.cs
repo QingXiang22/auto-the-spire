@@ -74,6 +74,7 @@ internal sealed class NormalReferenceRun : IDisposable
             player = Player.CreateForNewRun(ModelDb.Character<Ironclad>(), run); run.AddPlayer(player);
             random.Name(run, player);
             foreach (var card in player.Deck.Cards) permanent.Add(card, "permanent:" + permanent.Count.ToString("D2"));
+            if (diagnostics) random.WatchShuffle(player, Card);
             run.AddVisitedMapCoord(run.Map.StartingMapPoint.coord);
             opening = (EventRoom)RoomFactory.CreateAncientEventRoom(run); run.PushRoom(opening);
         }
@@ -230,6 +231,7 @@ internal sealed class NormalReferenceRun : IDisposable
                 await combat.Exit(run); run.PopCurrentRoom(); Phase = "map"; break;
             default: throw new NotSupportedException(action.Kind);
         }
+        if (diagnostics) random.VerifyShuffle();
     }
     private async Task Resolve()
     {
@@ -423,7 +425,7 @@ internal sealed class NormalReferenceRun : IDisposable
             NormalOpeningQueues.Validate(random.WeightedCalls(), attempts, queues);
             Put("random.weighted_attempts", attempts); Put("random.opening_queues", queues);
         }
-        if (diagnostics) { Put("random.step_states", random.StepStates()); Put("random.stream_states", random.ConsumedStates()); Put("random.float32_calls", random.Float32Calls()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
+        if (diagnostics) { Put("random.step_states", random.StepStates()); Put("random.shuffle_candidates", random.ShuffleCalls()); Put("random.stream_states", random.ConsumedStates()); Put("random.float32_calls", random.Float32Calls()); Put("events.observed_order", observedEvents.ToArray()); Put("lifecycle.settlement", settlement.ToArray()); }
         Put("decisions.current", targetedCard is not null ? new { min = 1, max = 1,
             candidates = CombatTargetCandidates.ForCard(combat!.Engine.State, player, targetedCard.TargetType).Select(Creature).ToArray() }
             : Phase == "neow" ? Neow.IsFinished ? new { min = 0, max = 0, candidates = new[] { "true" } } :
@@ -469,6 +471,46 @@ internal sealed class NormalReferenceRandom : IDisposable
         Sts2Sim.Core.Saves.SerializableRng StateAfter);
     private readonly Dictionary<Rng, Draw> pending = [];
     private readonly List<Call> calls = [];
+    private Player? shufflePlayer;
+    private Func<CardModel, string>? shuffleIdentity;
+    private List<CardModel>? shuffled;
+    private int shuffleExpected;
+    private bool firstShuffle = true;
+    private readonly List<NormalShuffleCall> shuffleCalls = [];
+    internal void WatchShuffle(Player player, Func<CardModel, string> identity) { shufflePlayer = player; shuffleIdentity = identity; }
+    private void ObserveShuffle(int cursor, Draw parameters, string result)
+    {
+        if (shufflePlayer?.PlayerCombatState is not { } state || shuffleIdentity is null
+            || parameters is not { Operation: "NextInt", Arity: 1, Minimum: 0 })
+            throw NormalShuffleTrace.Missing("unsupported native shuffle call");
+        var count = checked((int)parameters.Maximum);
+        if (shuffled is null)
+        {
+            shuffled = state.DiscardPile.Cards.Concat(state.DrawPile.Cards).ToList();
+            if (!firstShuffle) shuffled.Sort();
+            firstShuffle = false; shuffleExpected = shuffled.Count;
+        }
+        if (count != shuffleExpected || count < 2) throw NormalShuffleTrace.Missing("native shuffle candidate count");
+        var selected = int.Parse(result, System.Globalization.CultureInfo.InvariantCulture);
+        if (selected < 0 || selected >= count) throw NormalShuffleTrace.Missing("native shuffle index");
+        shuffleCalls.Add(new(cursor - 1L, cursor, selected, shuffled.Take(count).Select(shuffleIdentity).ToArray()));
+        (shuffled[count - 1], shuffled[selected]) = (shuffled[selected], shuffled[count - 1]);
+        shuffleExpected--;
+    }
+    internal void VerifyShuffle()
+    {
+        if (shuffled is null) return;
+        var state = shufflePlayer!.PlayerCombatState!;
+        var seen = state.Hand.Cards.Concat(state.DrawPile.Cards).Where(shuffled.Contains).ToArray();
+        if (shuffleExpected != 1 || !seen.SequenceEqual(shuffled)) throw NormalShuffleTrace.Missing("native shuffle result does not match actual piles");
+        shuffled = null;
+    }
+    internal NormalShuffleCall[] ShuffleCalls()
+    {
+        var stream = names.Single(pair => pair.Value == "base-spire:run:shuffle").Key;
+        if (dropped != 0 || shuffled is not null || stream.Counter != shuffleCalls.Count) throw NormalShuffleTrace.Missing("incomplete native shuffle observation");
+        return NormalShuffleTrace.Canonical(shuffleCalls);
+    }
     private readonly Dictionary<Call, NormalScalarCall> hpCalls = [];
     private NormalHpOrigin[] hpOrigins = [];
     internal int CallCount => calls.Count;
@@ -515,6 +557,7 @@ internal sealed class NormalReferenceRandom : IDisposable
             var parameters = pending[rng]; pending.Remove(rng);
             if (calls.Count == 20_000) { dropped++; return; }
             calls.Add(new(rng, op, result, cursor - 1, cursor, parameters, rng.ToSerializable()));
+            if (Name(rng) == "base-spire:run:shuffle") ObserveShuffle(cursor, parameters, result);
             if (parameters.Weighted is not null) opening!.Result(double.Parse(result, System.Globalization.CultureInfo.InvariantCulture));
         };
         hook.SetValue(rng, observer); attached.Add(rng);
