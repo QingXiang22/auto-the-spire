@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text.Json;
+using CoreTheSpire.Engine;
 
 namespace Differential;
 
@@ -33,7 +34,40 @@ internal static class NormalReportChecks
             }
             if (!restored.SequenceEqual(Enumerable.Range(0, 192)))
                 throw new InvalidOperationException("Report storage changed history content or order.");
+            CheckCachedHistory(directory);
         }
         finally { Directory.Delete(directory, true); }
+    }
+
+    private static void CheckCachedHistory(string directory)
+    {
+        var path = Path.Combine(directory, "cached.zip");
+        var records = Enumerable.Range(0, 192).Select(i => new SessionDebugRecord(i, SessionDebugKind.EventEmit,
+            "history", "source " + i, null, i, SessionStatus.Running, 0)).ToArray();
+        var altered = records.ToArray(); altered[17] = altered[17] with { Detail = "changed historical argument" };
+        var inputs = new Dictionary<string, SessionDebugRecord[]>
+        {
+            ["early"] = records[..128], ["partial"] = records[..129], ["late"] = records,
+            ["altered"] = altered, ["missing"] = records[..^1], ["reordered"] = records.Reverse().ToArray()
+        };
+        string packed;
+        using (var store = new NormalReportStore(path)) packed = store.Pack(inputs)!.ToJsonString();
+        using var document = JsonDocument.Parse(packed);
+        using var archive = ZipFile.OpenRead(path);
+        foreach (var (key, expected) in inputs)
+        {
+            var history = document.RootElement.GetProperty(key); var restored = new List<SessionDebugRecord>();
+            foreach (var reference in history.GetProperty("$chunks").EnumerateArray())
+            {
+                using var stream = archive.GetEntry(reference.GetProperty("$artifact").GetString()!)!.Open();
+                restored.AddRange(JsonSerializer.Deserialize<SessionDebugRecord[]>(stream, NormalReportStore.Options)!);
+            }
+            if (history.GetProperty("$count").GetInt32() != expected.Length || !restored.SequenceEqual(expected))
+                throw new InvalidOperationException("Cached history changed original, partial, altered or reordered records: " + key);
+        }
+        var early = document.RootElement.GetProperty("early").GetProperty("$chunks")[0].GetRawText();
+        if (early != document.RootElement.GetProperty("late").GetProperty("$chunks")[0].GetRawText()
+            || early == document.RootElement.GetProperty("altered").GetProperty("$chunks")[0].GetRawText())
+            throw new InvalidOperationException("Only unchanged diagnostic segments may reuse an artifact.");
     }
 }

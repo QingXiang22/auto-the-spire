@@ -49,6 +49,7 @@ internal sealed class NormalReferenceRun : IDisposable
     private readonly List<NormalSettlement> settlement = [];
     private bool cardEffectFinished;
     private readonly NormalReferenceRandom random;
+    private NormalReferenceHookJournal? hookJournal;
     private readonly bool diagnostics;
     private CombatRoom? combat;
     private NormalReferenceRewards? rewardObservation;
@@ -75,6 +76,7 @@ internal sealed class NormalReferenceRun : IDisposable
         random = new NormalReferenceRandom(diagnostics);
         try
         {
+            if (diagnostics) hookJournal = new();
             Sts2Sim.Core.Content.ActDefinition[] acts = [new Overgrowth(), new Hive(), new Glory()];
             random.WatchOpening(acts);
             run = new RunState(seed, acts);
@@ -92,7 +94,7 @@ internal sealed class NormalReferenceRun : IDisposable
                 initialization = initializationObserver.Capture(random.InitializationDraws(), random.WeightedCalls());
             }
         }
-        catch { random.Dispose(); throw; }
+        catch { hookJournal?.Dispose(); random.Dispose(); throw; }
     }
     public void Start()
     {
@@ -182,6 +184,7 @@ internal sealed class NormalReferenceRun : IDisposable
                     var observer = DispatchProxy.Create(observerType, typeof(NormalReferenceObserver));
                     ((NormalReferenceObserver)observer).Record = (name, args) =>
                     {
+                        hookJournal!.Notification(name, args);
                         var projectedBefore = observedEvents.Count;
                         events.Add(new { name, arguments = args.Select(EventArgument).ToArray() });
                         if (name == "CardPlayStarted") cardEffectFinished = false;
@@ -279,6 +282,7 @@ internal sealed class NormalReferenceRun : IDisposable
     }
     private NormalAction[] Actions()
     {
+        using var inspection = hookJournal?.Query();
         if (Phase == "neow") return Neow.IsFinished ? [new("leave-neow", [])] : Neow.CurrentOptions.Select(o => new NormalAction("neow", [Relic(o.Key)])).ToArray();
         if (Phase == "map") return run.CurrentMapPoint!.Children.Where(n => !run.VisitedMapCoords.Contains(n.coord))
             .Select(n => new NormalAction("map", [n.coord.col + "," + n.coord.row])).Concat(PotionDiscards()).ToArray();
@@ -315,6 +319,7 @@ internal sealed class NormalReferenceRun : IDisposable
     }
     public NormalBoundary Capture(string kind)
     {
+        using var inspection = hookJournal?.Query();
         var v = new SortedDictionary<string, string>(StringComparer.Ordinal);
         var configuration = NormalReferenceConfiguration.Capture(run, player);
         var restContext = NormalReferenceRestState.Capture(run);
@@ -469,6 +474,7 @@ internal sealed class NormalReferenceRun : IDisposable
         return new(kind, v, missing,
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
                 native_player_history = new { active, retained_plays = lastCombatState?.CardsPlayedThisCombat, retained_hp_losses = history.Length },
+                native_hook_journal = hookJournal?.Capture(),
                 native_configuration = configuration,
                 native_neow_option_callbacks = neowPublicOptions,
                 native_potion_capability_probes = visiblePotions.Select(NormalReferencePotionCapabilities.Read).Distinct().ToArray(),
@@ -482,9 +488,10 @@ internal sealed class NormalReferenceRun : IDisposable
                 unmapped_weighted_semantics = Array.Empty<string>(),
                 encounter = combat?.Encounter?.IdEntry, native_root_seed = run.Rng.Seed, normal_state_injection = false });
     }
-    public void Dispose() => random.Dispose();
+    public void Dispose() { hookJournal?.Dispose(); random.Dispose(); }
     internal string KnownRandomState => random.KnownState();
 #else
+    internal string KnownRandomState => throw new NotSupportedException("unsupported_reference_adapter");
     public string Phase => throw new NotSupportedException("unsupported_reference_adapter");
     public NormalReferenceRun(string seed, bool diagnostics = true) => throw new NotSupportedException("unsupported_reference_adapter: clean locked reference required");
     public void Start() => throw new NotSupportedException("unsupported_reference_adapter");

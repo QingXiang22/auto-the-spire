@@ -17,5 +17,6 @@
   </PropertyGroup>
   <ItemGroup Condition="'$(UseReference)' == 'true'">
     <ProjectReference Include="../../reference/sts2-sim/src/Sts2Sim.Core/Sts2Sim.Core.csproj" />
+    <PackageReference Include="Lib.Harmony" Version="2.4.3" PrivateAssets="all" />
   </ItemGroup>
 </Project>

@@ -20,6 +20,50 @@ def source_hash(path: Path) -> str:
     return hashlib.sha256(path.read_text(encoding="utf-8").encode("utf-8")).hexdigest()
 
 
+def check_native_hook_journal(journal: dict, notifications: int) -> None:
+    records, audit, provenance = journal["records"], journal["audit"], journal["provenance"]
+    def method_key(method):
+        return (method["declaring_type"], method["signature"], method["body_hash"], method["argument_count"], method["default_implementation"])
+    declared = {method_key(m) for m in provenance["targets"]}
+    if (provenance["observer"] != "value-only-positional@1" or provenance["reference_depth"] != 2
+            or len(declared) < 1000 or len(provenance["runtime_library_sha256"]) != 64
+            or audit["records"] != len(records) or audit["notifications"] != notifications):
+        raise ValueError("native hook journal omitted runtime/source identity or actual records")
+    stack, calls, points = [], 0, 0
+    for index, record in enumerate(records, 1):
+        if record["sequence"] != index or record["context"] not in ("gameplay", "query"):
+            raise ValueError("native hook journal missing or reordered a record/context")
+        if record["stage"] == "exit":
+            if not stack:
+                raise ValueError("native hook journal has a completion without its entry")
+            entry = stack.pop()
+            if (any(record[k] != entry[k] for k in ("call", "parent", "name", "kind", "context", "method"))
+                    or record["receiver"]["reference"] != entry["receiver"]["reference"] or record["result"] is None
+                    or record["result"]["kind"] == "task" and record["result"]["scalar"] != "completed"):
+                raise ValueError("native hook journal paired a foreign or incomplete return")
+        elif record["parent"] != (stack[-1]["call"] if stack else 0):
+            raise ValueError("native hook journal has an invalid parent")
+        if record["kind"] == "observer":
+            if record["stage"] != "point" or record["call"] != 0 or record["method"] is not None:
+                raise ValueError("native hook journal has an invalid notification")
+            points += 1
+            continue
+        method = record["method"]
+        if (record["kind"] not in ("listener", "dispatch") or record["stage"] not in ("enter", "exit")
+                or method_key(method) not in declared or len(record["arguments"]) != method["argument_count"]
+                or not method["signature"].startswith(record["name"] + "(")
+                or (method["declaring_type"] == "Sts2Sim.Core.Hooks.Hook") != (record["kind"] == "dispatch")
+                or method["default_implementation"] is not None and method["declaring_type"] != "Sts2Sim.Core.Models.AbstractModel"):
+            raise ValueError("native hook journal lost arguments or mislabeled an override as default")
+        if record["stage"] == "enter":
+            calls += 1
+            if record["call"] != calls or record["result"] is not None:
+                raise ValueError("native hook journal lost or duplicated an invocation")
+            stack.append(record)
+    if stack or calls != audit["calls"] or points != audit["notifications"]:
+        raise ValueError("native hook journal has pending or unreported calls")
+
+
 def check_projects() -> int:
     solution = (ROOT / "AutoTheSpire.sln").read_text(encoding="utf-8-sig")
     projects = [ROOT / p.replace("\\", "/") for p in re.findall(r'"([^"\n]+\.csproj)"', solution)]
@@ -581,6 +625,7 @@ def main() -> int:
                        or c["reason"] or c["first_difference"] or not c["returned_to_map"] or len(c["boundaries"]) < 19
                        or not c["boundaries"][-1]["left"]["missing_dimensions"]
                        or len(c["protocol_checks"]) != len(c["boundaries"])
+                       or c["native_diagnostic_boundaries_checked"] != len(c["boundaries"])
                        or any(not p["evidence"]["passed"] for p in c["protocol_checks"])
                        or any(b["left"]["diagnostic"]["unmapped_public_actions"] for b in c["boundaries"])
                        or any(b["left"]["diagnostic"]["unmapped_public_fields"] for b in c["boundaries"])
@@ -625,6 +670,8 @@ def main() -> int:
                     or len(neow[0]["Positives"]) != 15 or len(neow[0]["Options"]) != 3
                     or [c["Kind"] for c in neow[0]["Calls"]].count("pair") != 3):
                 raise ValueError("normal paths must compare every Neow candidate phase and the actual options")
+            native = case["boundaries"][-1]["right"]["diagnostic"]
+            check_native_hook_journal(native["native_hook_journal"], native["native_event_coverage"]["total"])
             for boundary in case["boundaries"]:
                 for side in ("left", "right"):
                     state = boundary[side]

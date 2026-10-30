@@ -26,6 +26,7 @@ internal sealed record NormalCase(string Id, string Status, string? Reason, Norm
     NormalPair[] Boundaries, NormalDifference? FirstDifference, bool ReturnedToMap)
 {
     public NormalProtocolBoundary[] ProtocolChecks { get; init; } = [];
+    public int NativeDiagnosticBoundariesChecked { get; init; }
     public bool Complete => ReturnedToMap && Status == "passed";
     public bool IndependentVerified => Complete;
 }
@@ -51,6 +52,7 @@ internal static class NormalRunComparison
         return null;
     }
     internal static bool Certified(NormalCase item) => item.Reason is null && item.ReturnedToMap && item.Boundaries.Length > 4
+        && item.NativeDiagnosticBoundariesChecked == item.Boundaries.Length
         && item.ProtocolChecks.Length == item.Boundaries.Length && item.ProtocolChecks.All(p => p.Evidence.Passed)
         && item.FirstDifference is null && item.Boundaries.All(p => new[] { p.Left, p.Right }.All(b =>
             b.MissingDimensions.Length == 0 && RequiredPaths.All(b.Values.ContainsKey)))
@@ -59,6 +61,13 @@ internal static class NormalRunComparison
         && (!item.Id.StartsWith("m01-targeted-", StringComparison.Ordinal)
             || (item.Prefix.Any(a => a.Kind == "targeted-play") && item.Prefix.Any(a => a.Kind == "choose-target")))
         && item.Boundaries[0].Left.Kind == "neow-ready" && item.Boundaries[^1].Left.Kind == "map-return";
+
+    internal static string DiagnosticFingerprint(NormalBoundary boundary, string randomState) => NormalPreflight.Json(new
+    {
+        values = boundary.Values.Where(p => !p.Key.StartsWith("random.", StringComparison.Ordinal)
+            && !p.Key.StartsWith("events.", StringComparison.Ordinal) && !p.Key.StartsWith("lifecycle.", StringComparison.Ordinal)).ToArray(),
+        randomState
+    });
 
     public static int Run(string repository, string[] args)
     {
@@ -80,6 +89,7 @@ internal static class NormalRunComparison
             var targeted = id.StartsWith("m01-targeted-", StringComparison.Ordinal);
             var prefix = new List<NormalAction>(); var boundaries = new List<NormalPair>();
             var protocolChecks = new List<NormalProtocolBoundary>();
+            var nativeFingerprints = new List<string>(); var nativeChecked = 0;
             NormalDifference? difference = null; var returned = false; string? error = null;
             try
             {
@@ -125,14 +135,33 @@ internal static class NormalRunComparison
                 {
                     protocolChecks.Add(new(kind, left.CheckRequestReplay()));
                     var a = left.Capture(kind); var b = right.Capture(kind);
+                    nativeFingerprints.Add(DiagnosticFingerprint(b, right.KnownRandomState));
                     difference ??= First(boundaries.Count, a, b);
                     boundaries.Add(new(a with { Diagnostic = evidence.Pack(a.Diagnostic)! },
                         b with { Diagnostic = evidence.Pack(b.Diagnostic)! }));
                 }
             }
             catch (Exception e) { error = e.GetType().Name + ": " + e.Message; }
+            if (error is null)
+            {
+                try
+                {
+                    // The observed run has disposed and removed its runtime patches.
+                    // Replay the exact original actions on a separate, unobserved Run.
+                    using var plain = new NormalReferenceRun("777", diagnostics: false); plain.Start(); CheckNative();
+                    foreach (var action in prefix) { plain.Apply(action); CheckNative(); }
+                    void CheckNative()
+                    {
+                        var actual = DiagnosticFingerprint(plain.Capture(boundaries[nativeChecked].Right.Kind), plain.KnownRandomState);
+                        if (actual != nativeFingerprints[nativeChecked]) throw new InvalidOperationException("Native diagnostics changed state, public result or RNG at " + boundaries[nativeChecked].Right.Kind);
+                        nativeChecked++;
+                    }
+                }
+                catch (Exception e) { error = e.GetType().Name + ": " + e.Message; }
+            }
             var item = new NormalCase(id, difference is null ? "blocked_compare" : "diverged", error,
-                prefix.ToArray(), boundaries.ToArray(), difference, returned) { ProtocolChecks = protocolChecks.ToArray() };
+                prefix.ToArray(), boundaries.ToArray(), difference, returned)
+                { ProtocolChecks = protocolChecks.ToArray(), NativeDiagnosticBoundariesChecked = nativeChecked };
             if (error is null && Certified(item)) item = item with { Status = "passed" };
             results.Add(item);
             Console.WriteLine($"{item.Id}: {item.Status}; paired boundaries={boundaries.Count}; first={difference?.Kind}/{difference?.Path}; {error}");
