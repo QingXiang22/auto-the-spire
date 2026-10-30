@@ -589,7 +589,8 @@ def main() -> int:
                               or "lifecycle.settlement" not in b[side]["values"]
                               or any(path not in b[side]["values"] for path in (
                                   "public.snapshot", "public.map", "public.run", "public.neow", "public.reward_offer", "public.potions", "public.potion_inventory",
-                                  "public.relic_inventory", "public.cards", "public.player", "public.enemies", "public.powers", "public.visits", "random.shuffle_candidates", "random.reward_candidates", "random.initialization_candidates", "random.neow_candidates"))
+                                  "public.relic_inventory", "public.cards", "public.player", "public.enemies", "public.powers", "public.visits", "random.shuffle_candidates", "random.reward_candidates", "random.initialization_candidates", "random.neow_candidates",
+                                  "random.trace", "random.roots", "random.map_candidates", "random.combat_candidates"))
                               for b in c["boundaries"] for side in ("left", "right"))
                        or any(not json.loads(c["boundaries"][-1][side]["values"]["events.observed_order"])
                               for side in ("left", "right"))
@@ -599,6 +600,10 @@ def main() -> int:
                            and not any(a["kind"] == "choose-target" for a in c["prefix"])) for c in paired["cases"])):
             raise ValueError("all four normal paths must return with matching dimensions, real target decisions and protocol evidence while rejecting incomplete M01")
         for case in paired["cases"]:
+            full = [json.loads(case["boundaries"][-1][side]["values"]["random.trace"]) for side in ("left", "right")]
+            if (full[0] != full[1] or len(full[0]["Calls"]) != 736 or len(full[0]["Roots"]["Seeds"]) != 18
+                    or len({(c["Stream"], c["Before"]) for c in full[0]["Calls"]}) != 736):
+                raise ValueError("normal paths must compare all 736 actual draws and all 18 source seed derivations")
             shuffles = [json.loads(case["boundaries"][-1][side]["values"]["random.shuffle_candidates"])
                         for side in ("left", "right")]
             if shuffles[0] != shuffles[1] or len(shuffles[0]) != 19:
@@ -623,6 +628,11 @@ def main() -> int:
             for boundary in case["boundaries"]:
                 for side in ("left", "right"):
                     state = boundary[side]
+                    history = json.loads(state["values"]["random.trace"])
+                    if (len(history["Calls"]) != len(json.loads(state["values"]["random.step_states"]))
+                            or history["Roots"] != json.loads(state["values"]["random.roots"])
+                            or any(d.startswith("random:") for d in state["missing_dimensions"])):
+                        raise ValueError("every original boundary must retain complete random semantics and actual state coverage")
                     public = json.loads(state["values"]["public.snapshot"])
                     if (public["status"] != "decision" or not public["projections"]
                             or any(p.startswith("public:") for p in state["missing_dimensions"])

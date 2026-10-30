@@ -23,11 +23,13 @@ internal sealed class NormalDslRun : IDisposable
     private NormalInitializationCandidates? initialization;
     private NormalInitializationSources? initializationSources;
     private NormalNeowEvidence? neowEvidence;
+    private NormalMapCandidates? mapCandidates;
     private int actionIndex = -1;
     private int number;
     private RequestDto? lastStep;
     private ResponseDto? lastStepResponse;
     private string sessionId = "";
+    private string inputSeed = "";
     private IdentityDto? identity;
     public PublicSnapshotDto Snapshot { get; private set; } = null!;
     private Session Engine => host.GetSessionForTests(sessionId).EngineForTests;
@@ -49,7 +51,8 @@ internal sealed class NormalDslRun : IDisposable
         var setup = factory.GetMethod("CreatePackage")!.Invoke(null,
             [Path.Combine(repository, "mod-the-spire/base-spire/package.json"), null, 4096, null,
                 debug ? new SessionDebugOptions(MaxRecords: 200_000, MaxTextLength: 8192, MaxCandidates: 4096, CaptureValues: captureValues,
-                    CaptureCandidateReferences: true, CaptureCandidateRelations: true, CaptureProcedures: [NormalNeowTrace.OptionProcedure]) : null])!;
+                    CaptureCandidateReferences: true, CaptureCandidateRelations: true,
+                    CaptureProcedures: [NormalNeowTrace.OptionProcedure, .. NormalDslMapCandidates.Captures.Concat(NormalDslCombatCandidates.Captures).Select(p => "base-spire:" + p)]) : null])!;
         var configured = (ControlHost)setup.GetType().GetProperty("Host")!.GetValue(setup)!;
         // A fixed namespace is scoped to each isolated tool host. It makes on/off diagnostic
         // snapshots byte-comparable; protocol handles still never cross live sessions.
@@ -85,6 +88,7 @@ internal sealed class NormalDslRun : IDisposable
     private static WireValue Get(ResponseDto r, string f) => ((WireObject)r.Result!).Get(f)!;
     public void Start(string seed)
     {
+        inputSeed = seed;
         var describe = DescribeResultDto.FromWire(Send(Operation.Describe).Result!);
         identity = describe.Identity;
         var r = Send(Operation.Start, ("seed", WireValue.Str(seed)), ("expected_identity", describe.Identity.ToWire()),
@@ -104,6 +108,9 @@ internal sealed class NormalDslRun : IDisposable
         if (HasDebug && action.ActionType == "net:action:base-spire:StartNormalRun")
         {
             CaptureInitialization();
+            var run = Instances("Run").Single();
+            mapCandidates = NormalDslMapCandidates.Capture(DebugRecords, Engine.Debug!.DroppedRecords,
+                checked((int)Field(run, "Run", "RestCount").AsInt()), checked((int)Field(run, "Run", "UnknownCount").AsInt()));
             neowEvidence = NormalNeowTrace.Dsl(DebugRecords, Engine.Debug!.DroppedRecords,
                 Instances("NeowOption").OrderBy(o => Field(o, "NeowOption", "Position").AsInt()).Select(o => Field(o, "NeowOption", "RelicId").AsString()).ToArray());
         }
@@ -153,6 +160,14 @@ internal sealed class NormalDslRun : IDisposable
     private InstanceId[] Instances(string type) => Engine.State.AllInstances(Engine.RuleSet.TypeByQualifiedId("base-spire:" + type).Id).ToArray();
     private InstanceId[] Members(string name) => Engine.State.CollectionMembers(Engine.RuleSet.Collections.Single(c => c.QualifiedId == "base-spire:" + name).Id).ToArray();
     private Value Field(InstanceId id, string type, string name) => Engine.State.GetField(id, Engine.RuleSet.TypeByQualifiedId("base-spire:" + type).FieldIndex(name));
+    internal string[][] EncounterSources => NormalDslCombatCandidates.EncounterSources(Engine.RuleSet);
+    internal NormalDslMoveBranch[] MoveBranches => Instances("EnemyMoveBranch").Select(b =>
+    {
+        var node = Field(b, "EnemyMoveBranch", "Node").AsRef(); var target = Field(b, "EnemyMoveBranch", "Target").AsRef();
+        return new NormalDslMoveBranch(node.Value, target.Value, Field(target, "EnemyMoveNode", "Id").AsString(),
+            Field(b, "EnemyMoveBranch", "Weight").AsInt(), checked((int)Field(b, "EnemyMoveBranch", "MaxRepeats").AsInt()),
+            checked((int)Field(b, "EnemyMoveBranch", "Cooldown").AsInt()), Field(b, "EnemyMoveBranch", "Once").AsBool());
+    }).ToArray();
     private void Remember()
     {
         var cardOffers = Members("CardRewardOptions");
@@ -295,17 +310,24 @@ internal sealed class NormalDslRun : IDisposable
         if (trace is not null) Put("random.reward_candidates", NormalRewardCandidateTrace.Dsl(trace.Capture(), trace.DroppedRecords));
         if (trace is not null) Put("random.initialization_candidates", initialization ?? throw NormalInitializationTrace.Missing("missing actual DSL initialization capture"));
         if (trace is not null) Put("random.neow_candidates", neowEvidence?.Candidates ?? throw NormalNeowTrace.Missing("missing actual DSL Neow capture"));
+        if (trace is not null) Put("random.map_candidates", mapCandidates ?? throw NormalMapCandidatesTrace.Missing("missing actual DSL map capture"));
+        if (trace is not null) Put("random.combat_candidates", NormalDslCombatCandidates.Capture(trace.Capture(), trace.DroppedRecords, EncounterSources, MoveBranches));
         if (trace is not null)
         {
             var randomState = Engine.Random.Capture();
             Put("random.step_states", NormalRandomStateTrace.Dsl(trace.Capture(), trace.DroppedRecords, randomState));
+            Put("random.roots", NormalRandomRoots.Dsl(inputSeed, randomState, NormalRandomStateTrace.Dsl(trace.Capture(), trace.DroppedRecords, randomState),
+                Instances("RunVisit").Select(i => Field(i, "RunVisit", "EncounterId").AsString().Replace("base-spire:", "", StringComparison.Ordinal).Replace('-', '_').ToUpperInvariant()).FirstOrDefault(),
+                Field(Instances("Run").Single(), "Run", "TotalFloor").AsInt()));
             Put("random.stream_states", randomState.Streams.OrderBy(s => s.Name, StringComparer.Ordinal)
                 .Select(s => new { stream = s.Name, draws = s.Draws, words = new[] { s.S0, s.S1, s.S2, s.S3 }.Select(w => w.ToString("x16")).ToArray() }).ToArray());
         }
         NormalPublicSnapshot.ValidateEnvelope(Snapshot, identity ?? throw new InvalidOperationException("No actual Host handshake."), sessionId);
+        if (trace is not null) Put("random.trace", NormalFullRandomTrace.Capture(v));
         var unmappedFields = NormalPublicObservation.UnmappedFields(Snapshot);
         var publicComplete = NormalPublicSnapshot.Add(v, unmappedFields, Snapshot.Status);
-        string[] missing = [.. (publicComplete ? Array.Empty<string>() : new[] { "public: complete cross-backend projection" }), "random: full initialization candidates/normalization", "events: cross-backend event projection"];
+        string[] missing = [.. (publicComplete ? Array.Empty<string>() : new[] { "public: complete cross-backend projection" }),
+            .. (trace is null ? new[] { "random: diagnostics disabled" } : Array.Empty<string>()), "events: cross-backend event projection"];
         if (unmapped.Length > 0) missing = [.. missing, $"actions: {unmapped.Length} public candidates have no normal reference mapping"];
         return new(kind, v, missing,
             new { backend = "dsl:public-host", public_snapshot = WireCanonical.Text(Snapshot.ToWire()),
@@ -317,8 +339,8 @@ internal sealed class NormalDslRun : IDisposable
                 dsl_initialization_sources = initializationSources,
                 dsl_neow_sources = neowEvidence?.Sources,
                 debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
-                    or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault || NormalInitializationTrace.Relevant(r) || NormalNeowTrace.Relevant(r))
-                    .Select(r => r with { Snapshot = r.Kind == SessionDebugKind.ProcedureEnter && r.Subject == NormalNeowTrace.OptionProcedure ? r.Snapshot
+                    or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault || NormalInitializationTrace.Relevant(r) || NormalNeowTrace.Relevant(r) || NormalDslMapCandidates.Relevant(r) || NormalDslCombatCandidates.Relevant(r))
+                    .Select(r => r with { Snapshot = r.Kind == SessionDebugKind.ProcedureEnter && (r.Subject == NormalNeowTrace.OptionProcedure || NormalDslMapCandidates.Relevant(r) || NormalDslCombatCandidates.Relevant(r)) ? r.Snapshot
                         : r.Subject == NormalNeowTrace.Stream && r.Random?.Operation == "pick" ? r.Snapshot
                         : r.Subject == NormalInitializationTrace.Stream && r.Random?.Operation == "pick"
                         && r.Snapshot?.Entities.All(e => e.Type != "base-spire:OpeningListItem") == true ? r.Snapshot : null }).ToArray(), dropped = trace?.DroppedRecords,

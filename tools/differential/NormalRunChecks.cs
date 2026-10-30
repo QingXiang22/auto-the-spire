@@ -132,6 +132,8 @@ internal static class NormalRunChecks
         NormalRewardCandidateChecks.Run(left.DebugRecords, victory, right.Capture("victory"));
         NormalInitializationChecks.Run(left.DebugRecords, left.InitializationSources, victory, right.Capture("victory"));
         NormalNeowChecks.Run(left.DebugRecords, victory, right.Capture("victory"), left.IsLive);
+        NormalMapChecks.Run(left.DebugRecords, victory, right.Capture("victory"));
+        NormalFullRandomChecks.Run(left.DebugRecords, left.RandomSnapshot, left.EncounterSources, left.MoveBranches, victory, right.Capture("victory"));
         var shuffleCalls = System.Text.Json.JsonSerializer.Deserialize<NormalShuffleCall[]>(victory.Values["random.shuffle_candidates"])!;
         Require(shuffleCalls.Length == 19 && victory.Values["random.shuffle_candidates"] == right.Capture("victory").Values["random.shuffle_candidates"],
             "both actual shuffles retain all 19 ordered candidate lists");
@@ -293,6 +295,8 @@ internal static class NormalRunChecks
         using var plain = new NormalDslRun(repository, Path.Combine(directory, "plain.ndjson"), debug: false);
         observed.Start("777"); plain.Start("777");
         observed.Step(observed.Action("StartNormalRun")); plain.Step(plain.Action("StartNormalRun"));
+        Require(plain.Capture("disabled").MissingDimensions.Contains("random: diagnostics disabled") && !plain.Capture("disabled").Values.ContainsKey("random.trace"),
+            "disabled diagnostics explicitly retain missing random evidence");
         CheckPublicProjection(observed.Snapshot);
         Check();
         foreach (var action in new[] { new NormalAction("neow", ["base-spire:booming-conch"]), new("leave-neow", []) })
