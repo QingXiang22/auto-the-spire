@@ -58,6 +58,7 @@ internal sealed class NormalReferenceRun : IDisposable
     private object? initializationSources;
     private NormalNeowCandidates? neowCandidates;
     private object? neowSources;
+    private NormalMapCandidates? mapCandidates;
     private CardModel? targetedCard;
     private PlayerCombatState? lastCombatState;
     private string[] neowOptions = [];
@@ -79,6 +80,7 @@ internal sealed class NormalReferenceRun : IDisposable
             run = new RunState(seed, acts);
             player = Player.CreateForNewRun(ModelDb.Character<Ironclad>(), run); run.AddPlayer(player);
             random.Name(run, player);
+            if (diagnostics) mapCandidates = NormalReferenceMapCandidates.Capture((Sts2Sim.Core.Map.StandardActMap)run.Map, random.MapDraws());
             var initializationObserver = diagnostics ? new NormalReferenceInitialization(acts, run, player) : null;
             foreach (var card in player.Deck.Cards) permanent.Add(card, "permanent:" + permanent.Count.ToString("D2"));
             if (diagnostics) random.WatchShuffle(player, Card);
@@ -444,6 +446,9 @@ internal sealed class NormalReferenceRun : IDisposable
         if (diagnostics) Put("random.reward_candidates", rewardCandidates);
         if (diagnostics) Put("random.initialization_candidates", initialization);
         if (diagnostics) Put("random.neow_candidates", neowCandidates);
+        if (diagnostics) Put("random.map_candidates", mapCandidates);
+        if (diagnostics) Put("random.roots", random.Roots(run, player));
+        if (diagnostics) Put("random.combat_candidates", random.CombatCandidates());
         if (diagnostics)
         {
             var attempts = random.OpeningAttempts(); var queues = NormalOpeningQueues.Reference(run);
@@ -456,8 +461,10 @@ internal sealed class NormalReferenceRun : IDisposable
             : Phase == "neow" ? Neow.IsFinished ? new { min = 0, max = 0, candidates = new[] { "true" } } :
             new { min = 1, max = 1, candidates = Neow.CurrentOptions.Select(o => Relic(o.Key)).Order(StringComparer.Ordinal).ToArray() } : null);
         var coverage = eventCoverage.Capture();
+        if (diagnostics) Put("random.trace", NormalFullRandomTrace.Capture(v));
         var publicComplete = NormalPublicSnapshot.Add(v, [], Actions().Length > 0 ? "decision" : "unmapped-outcome");
-        string[] missing = [.. (publicComplete ? Array.Empty<string>() : new[] { "public: complete cross-backend projection" }), "random: full initialization candidates/normalization", "events: cross-backend event projection"];
+        string[] missing = [.. (publicComplete ? Array.Empty<string>() : new[] { "public: complete cross-backend projection" }),
+            .. (diagnostics ? Array.Empty<string>() : new[] { "random: diagnostics disabled" }), "events: cross-backend event projection"];
         if (coverage.Unmapped.Length > 0) missing = [.. missing, $"events: {coverage.Unmapped.Length} native notifications remain unmapped"];
         return new(kind, v, missing,
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
@@ -492,6 +499,7 @@ internal sealed class NormalReferenceRandom : IDisposable
 {
     private readonly FieldInfo hook = typeof(Rng).GetField("_drawObserver", BindingFlags.NonPublic | BindingFlags.Instance)!;
     private readonly Dictionary<Rng, string> names = [];
+    private readonly Dictionary<Rng, ulong> encounterSeeds = [];
     private readonly List<Rng> attached = [];
     private sealed record Draw(string Operation, double Minimum, double Maximum, int Arity, Sts2Sim.Core.Saves.SerializableRng State)
     { public NormalWeightedSnapshot? Weighted { get; init; } }
@@ -541,7 +549,15 @@ internal sealed class NormalReferenceRandom : IDisposable
     }
     private readonly Dictionary<Call, NormalScalarCall> hpCalls = [];
     private NormalHpOrigin[] hpOrigins = [];
+    private NormalReferenceMoveCandidates? moveCandidates;
+    private string[] birthDefinitions = [];
     internal int CallCount => calls.Count;
+    internal NormalInitializationDraw[] MapDraws()
+    {
+        if (dropped != 0 || pending.Count != 0) throw NormalMapCandidatesTrace.Missing("incomplete native map diagnostics");
+        return calls.Where(c => Name(c.Rng) == NormalMapCandidatesTrace.Stream).Select(c => new NormalInitializationDraw(
+            c.Parameters.Operation, c.Before, c.After, c.Parameters.Minimum, c.Parameters.Maximum, c.Parameters.Arity, c.Result)).ToArray();
+    }
     internal NormalInitializationDraw[] NeowDraws()
     {
         if (dropped != 0 || pending.Count != 0) throw NormalNeowTrace.Missing("incomplete native Neow diagnostics");
@@ -570,11 +586,47 @@ internal sealed class NormalReferenceRandom : IDisposable
             throw new NotSupportedException("missing_dimension: non-integer HP initialization draw");
         hpOrigins = state.SpawnedEnemies.Select((e, i) => new NormalHpOrigin("enemy:" + i + ":" + NormalReferenceRun.Id(e.Monster!.Id),
             e.Monster.MinInitialHp, checked((long)e.Monster.MaxInitialHp + 1), e.MaxHp)).ToArray();
+        birthDefinitions = state.SpawnedEnemies.Select(e => NormalReferenceRun.Id(e.Monster!.Id)).ToArray();
+        moveCandidates = new(state);
         var normalized = NormalHpTrace.Normalize(hpOrigins, draws.Select(c => NormalScalarTrace.Integer(Name(c.Rng), c.Before, c.After,
             checked((long)c.Parameters.Minimum), checked((long)c.Parameters.Maximum), long.Parse(c.Result, System.Globalization.CultureInfo.InvariantCulture))).ToArray());
         for (var i = 0; i < draws.Length; i++) hpCalls.Add(draws[i], normalized[i]);
     }
     private long dropped;
+    internal NormalCombatCandidates CombatCandidates()
+    {
+        if (dropped != 0 || pending.Count != 0) throw NormalCombatCandidateTrace.Missing("incomplete native combat random evidence");
+        var result = new List<NormalCombatPick>();
+        var factory = calls.Where(c => Name(c.Rng) == "base-spire:encounter:monsters").ToArray();
+        if (factory.Length > 0)
+        {
+            if (factory.Length != 3 || birthDefinitions.Length != 3 || hpOrigins.Length != 3)
+                throw NormalCombatCandidateTrace.Missing("incomplete native SlimesWeak creation evidence");
+            string Id<T>() where T : MonsterModel => NormalReferenceRun.Id(ModelDb.GetId(typeof(T)));
+            var small = new List<string> { Id<Sts2Sim.Core.Models.Monsters.LeafSlimeS>(), Id<Sts2Sim.Core.Models.Monsters.TwigSlimeS>() };
+            var medium = new[] { Id<Sts2Sim.Core.Models.Monsters.LeafSlimeM>(), Id<Sts2Sim.Core.Models.Monsters.TwigSlimeM>() };
+            int Pick(Call call, string kind, string owner, string[] candidates)
+            {
+                var p = call.Parameters; var selected = int.Parse(call.Result, System.Globalization.CultureInfo.InvariantCulture);
+                if (p.Operation != "NextInt" || p.Minimum != 0 || p.Maximum != candidates.Length || selected < 0 || selected >= candidates.Length)
+                    throw NormalCombatCandidateTrace.Missing("native combat source parameters or index");
+                result.Add(new(kind, owner, call.Before, call.After, selected, candidates)); return selected;
+            }
+            var first = small[Pick(factory[0], "encounter", "small-first", small.ToArray())]; small.Remove(first);
+            var last = small[Pick(factory[1], "encounter", "small-last", small.ToArray())];
+            var middle = medium[Pick(factory[2], "encounter", "medium", medium)];
+            if (!birthDefinitions.SequenceEqual(new[] { first, middle, last })) throw NormalCombatCandidateTrace.Missing("native source selection differs from real created monsters");
+            var hpDraws = hpCalls.Keys.OrderBy(c => c.Before).ToArray(); var used = new List<long>();
+            if (hpDraws.Length != hpOrigins.Length) throw NormalCombatCandidateTrace.Missing("missing actual HP draw");
+            for (var i = 0; i < hpOrigins.Length; i++)
+            {
+                var origin = hpOrigins[i]; var values = Enumerable.Range((int)origin.Minimum, (int)(origin.Maximum - origin.Minimum)).Select(n => (long)n).Where(n => !used.Contains(n)).ToArray();
+                var selected = Pick(hpDraws[i], "hp", "enemy:" + i, values.Select(n => n.ToString(System.Globalization.CultureInfo.InvariantCulture)).ToArray());
+                if (values[selected] != origin.Hp) throw NormalCombatCandidateTrace.Missing("native HP candidates differ from actual birth HP"); used.Add(origin.Hp);
+            }
+        }
+        return new(result.ToArray(), moveCandidates?.Capture() ?? []);
+    }
     private readonly RngDrawObserver? previous;
     private readonly bool enabled;
     private NormalReferenceWeightedBags? opening;
@@ -589,6 +641,12 @@ internal sealed class NormalReferenceRandom : IDisposable
     }
     private void Before(Rng rng, string operation, double minimum, double maximum, int arity)
     {
+        moveCandidates?.Finish();
+        if (Name(rng) == "base-spire:run:monster_ai")
+        {
+            if (operation != "NextFloat" || moveCandidates is null) throw NormalCombatCandidateTrace.Missing("unsupported native AI draw");
+            moveCandidates.Begin((float)maximum);
+        }
         opening?.FinishPending();
         // Upstream advances Counter before this callback, and the PRNG word afterwards.
         // Capture both real states; this hook never draws, replays or replaces a generator.
@@ -604,6 +662,7 @@ internal sealed class NormalReferenceRandom : IDisposable
             var parameters = pending[rng]; pending.Remove(rng);
             if (calls.Count == 20_000) { dropped++; return; }
             calls.Add(new(rng, op, result, cursor - 1, cursor, parameters, rng.ToSerializable()));
+            if (Name(rng) == "base-spire:run:monster_ai") moveCandidates!.Result(cursor - 1, cursor, float.Parse(result, System.Globalization.CultureInfo.InvariantCulture));
             if (Name(rng) == "base-spire:run:shuffle") ObserveShuffle(cursor, parameters, result);
             if (parameters.Weighted is not null) opening!.Result(double.Parse(result, System.Globalization.CultureInfo.InvariantCulture));
         };
@@ -629,6 +688,7 @@ internal sealed class NormalReferenceRandom : IDisposable
         if (candidates.Length != 1) throw new NotSupportedException("Encounter RNG cannot be identified uniquely from its actual initial state.");
         var sequence = names.Count(p => p.Value.StartsWith("base-spire:encounter:monsters", StringComparison.Ordinal));
         Name(candidates[0], sequence == 0 ? "base-spire:encounter:monsters" : "base-spire:encounter:monsters:" + sequence);
+        encounterSeeds.Add(candidates[0], seed);
     }
     public object ConsumedStates() => attached.OrderBy(Name, StringComparer.Ordinal).Select(r =>
     {
@@ -636,6 +696,24 @@ internal sealed class NormalReferenceRandom : IDisposable
         return new { stream = Name(r), draws = (long)s.counter,
             words = new[] { s.state0, s.state1, s.state2, s.state3 }.Select(w => w.ToString("x16")).ToArray() };
     }).ToArray();
+    internal NormalRandomRoot Roots(RunState run, Player player)
+    {
+        if (dropped != 0 || pending.Count != 0) throw NormalRandomRoots.Missing("incomplete native derivation evidence");
+        var seeds = names.Keys.Concat(attached).Distinct().Select(rng =>
+        {
+            var name = Name(rng); ulong seed;
+            if (name.StartsWith("base-spire:run:", StringComparison.Ordinal) || name.StartsWith("base-spire:player:", StringComparison.Ordinal))
+                seed = unchecked(run.Rng.Seed + StringHelper.GetDeterministicHashCode(name[(name.LastIndexOf(':') + 1)..]));
+            else if (name == "base-spire:event:neow")
+                seed = unchecked(run.Rng.Seed + (ulong)run.Players.ToList().IndexOf(player) + StringHelper.GetDeterministicHashCode("NEOW"));
+            else if (!encounterSeeds.TryGetValue(rng, out seed)) throw NormalRandomRoots.Missing("unknown native seed origin: " + name);
+            var actual = calls.FirstOrDefault(c => c.Rng == rng)?.Parameters.State ?? rng.ToSerializable();
+            var expected = new Rng(seed).ToSerializable(); // Constructor only, no draw and no live object mutation.
+            if (actual != expected) throw NormalRandomRoots.Missing("native source seed differs from actual first or unused stream state");
+            return new NormalRandomSeed(name, NormalRandomRoots.Word(seed), NormalRandomStateTrace.Words(actual.state0, actual.state1, actual.state2, actual.state3));
+        }).OrderBy(s => s.Stream, StringComparer.Ordinal).ToArray();
+        return NormalRandomRoots.Validate(new(run.Rng.StringSeed, NormalRandomRoots.Word(run.Rng.Seed), seeds), StepStates());
+    }
     public void Name(RunState run, Player player)
     {
         foreach (var type in Enum.GetValues<RunRngType>()) names.Add(run.Rng.GetRng(type), "base-spire:run:" + StringHelper.SnakeCase(type.ToString()));
