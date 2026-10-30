@@ -15,10 +15,12 @@ internal static class NormalRunChecks
             boundary with { Kind = i == 5 ? "map-return" : "neow-ready" })).ToArray();
         NormalAction[] prefix = [new("neow", ["relic"]), new("leave-neow", []), new("map", ["0,1"]), new("play", ["card"]), new("close-rewards", [])];
         var item = new NormalCase("fault-injection", "blocked_compare", null, prefix, pairs, null, true)
-        { ProtocolChecks = pairs.Select(_ => new NormalProtocolBoundary("synthetic", new(true, true, true, true, "synthetic-gate-check"))).ToArray() };
+        { ProtocolChecks = pairs.Select(_ => new NormalProtocolBoundary("synthetic", new(true, true, true, true, "synthetic-gate-check"))).ToArray(),
+            NativeDiagnosticBoundariesChecked = pairs.Length };
         // Synthetic records exercise the evidence gate only. They never count as gameplay passes.
         Require(NormalRunComparison.Certified(item), "complete synthetic evidence gate");
         Require(!NormalRunComparison.Certified(item with { ProtocolChecks = [] }), "missing protocol replay evidence");
+        Require(!NormalRunComparison.Certified(item with { NativeDiagnosticBoundariesChecked = 0 }), "missing unobserved native replay");
         foreach (var failed in new[] { new NormalProtocolCheck(false, true, true, true, "synthetic"),
             new(true, false, true, true, "synthetic"), new(true, true, false, true, "synthetic"), new(true, true, true, false, "synthetic") })
             Require(!NormalRunComparison.Certified(item with { ProtocolChecks = [.. item.ProtocolChecks[..^1], item.ProtocolChecks[^1] with { Evidence = failed }] }), "failed protocol invariant");
@@ -161,6 +163,7 @@ internal static class NormalRunChecks
         NormalWeightedChecks.Run(left.DebugRecords, victory);
         NormalOpeningAttemptChecks.Run(left.DebugRecords, victory);
         CheckNativeEventCoverage(right.Capture("victory"));
+        NormalReferenceHookChecks.Run(right.Capture("victory"));
         var floatCalls = System.Text.Json.JsonSerializer.Deserialize<NormalFloat32Call[]>(victory.Values["random.float32_calls"])!;
         Require(floatCalls.Length == 11 && floatCalls.Count(c => c.Stream == "base-spire:run:monster_ai") == 3
             && floatCalls.Count(c => c.Stream == "base-spire:player:rewards") == 8,
@@ -271,14 +274,18 @@ internal static class NormalRunChecks
     private static void CheckReferenceDiagnostics()
     {
         var enabled = Replay(true); var disabled = Replay(false);
+        Require(!NormalReferenceHookJournal.HasPatches, "disposal restores every observed native entry");
         Require(enabled.SequenceEqual(disabled), "reference combat/RNG observers leave every measured boundary and named stream unchanged");
         string[] Replay(bool diagnostics)
         {
             using var reference = new NormalReferenceRun("777", diagnostics); reference.Start();
             var result = new List<string>(); Capture();
+            var original = diagnostics ? NormalReferenceHookChecks.Read(reference.Capture("history")) : null;
+            var frozen = NormalPreflight.Json(original);
             foreach (var action in new[] { new NormalAction("neow", ["base-spire:booming-conch"]), new("leave-neow", []), new("map", ["0,1"]),
                 new("play", ["permanent:09:base-spire:bash", "first-legal-target"]), new("play", ["permanent:02:base-spire:strike-ironclad", "first-legal-target"]), new("end-turn", []) })
             { reference.Apply(action); Capture(); }
+            Require(NormalPreflight.Json(original) == frozen, "later real actions do not rewrite earlier captured hook arguments");
             return result.ToArray();
             void Capture()
             {

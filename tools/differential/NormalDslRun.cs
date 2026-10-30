@@ -19,6 +19,8 @@ internal sealed class NormalDslRun : IDisposable
     private readonly Dictionary<InstanceId, string> potionOrigins = [];
     private readonly Dictionary<InstanceId, string> rewardCardOrigins = [];
     private readonly HashSet<int> generatedActions = [];
+    private readonly List<SessionDebugRecord> exportedDebug = [];
+    private int exportedDebugCount;
     private NormalSettlement[]? settlement;
     private NormalInitializationCandidates? initialization;
     private NormalInitializationSources? initializationSources;
@@ -47,12 +49,18 @@ internal sealed class NormalDslRun : IDisposable
     }
     public NormalDslRun(string repository, string path, bool debug = true, bool captureValues = true)
     {
+        var captures = new List<string> { NormalNeowTrace.OptionProcedure, "base-spire:ResolveCardEffects", "base-spire:FinishCardPlay" };
+        captures.AddRange(NormalDslMapCandidates.Captures.Concat(NormalDslCombatCandidates.Captures).Select(p => "base-spire:" + p));
         var factory = typeof(TextRuleProviderSpec).Assembly.GetType("NetTheSpire.Host.TextRuleScenario")!;
         var setup = factory.GetMethod("CreatePackage")!.Invoke(null,
             [Path.Combine(repository, "mod-the-spire/base-spire/package.json"), null, 4096, null,
                 debug ? new SessionDebugOptions(MaxRecords: 200_000, MaxTextLength: 8192, MaxCandidates: 4096, CaptureValues: captureValues,
                     CaptureCandidateReferences: true, CaptureCandidateRelations: true,
-                    CaptureProcedures: [NormalNeowTrace.OptionProcedure, .. NormalDslMapCandidates.Captures.Concat(NormalDslCombatCandidates.Captures).Select(p => "base-spire:" + p)]) : null])!;
+                    CaptureProcedures: captures) : null])!;
+        // Source-derived selection is finalized before any Session is created. The
+        // engine copies the list at Session construction, as its SDK contract requires.
+        var rules = (RuleSet)setup.GetType().GetProperty("Rules")!.GetValue(setup)!;
+        captures.AddRange(rules.Subscriptions.Select(s => s.Reaction.QualifiedId));
         var configured = (ControlHost)setup.GetType().GetProperty("Host")!.GetValue(setup)!;
         // A fixed namespace is scoped to each isolated tool host. It makes on/off diagnostic
         // snapshots byte-comparable; protocol handles still never cross live sessions.
@@ -338,13 +346,22 @@ internal sealed class NormalDslRun : IDisposable
                 unmapped_weighted_semantics = Array.Empty<string>(),
                 dsl_initialization_sources = initializationSources,
                 dsl_neow_sources = neowEvidence?.Sources,
-                debug = trace?.Capture().Where(r => r.Kind is SessionDebugKind.RandomCall or SessionDebugKind.EventEmit or SessionDebugKind.ListenerEnter
-                    or SessionDebugKind.DecisionRequested or SessionDebugKind.DecisionAnswered or SessionDebugKind.Fault || NormalInitializationTrace.Relevant(r) || NormalNeowTrace.Relevant(r) || NormalDslMapCandidates.Relevant(r) || NormalDslCombatCandidates.Relevant(r))
-                    .Select(r => r with { Snapshot = r.Kind == SessionDebugKind.ProcedureEnter && (r.Subject == NormalNeowTrace.OptionProcedure || NormalDslMapCandidates.Relevant(r) || NormalDslCombatCandidates.Relevant(r)) ? r.Snapshot
-                        : r.Subject == NormalNeowTrace.Stream && r.Random?.Operation == "pick" ? r.Snapshot
-                        : r.Subject == NormalInitializationTrace.Stream && r.Random?.Operation == "pick"
-                        && r.Snapshot?.Entities.All(e => e.Type != "base-spire:OpeningListItem") == true ? r.Snapshot : null }).ToArray(), dropped = trace?.DroppedRecords,
+                debug = trace is null ? null : ExportDebug(trace.Capture()), dropped = trace?.DroppedRecords,
                 streams = Engine.Random.Capture(), instance_mapping = identities.Select(p => new { instance = p.Key.Value, identity = p.Value }).ToArray() });
+    }
+    private SessionDebugRecord[] ExportDebug(IReadOnlyList<SessionDebugRecord> records)
+    {
+        foreach (var record in records.Skip(exportedDebugCount))
+        {
+            if (record.Kind == SessionDebugKind.Instruction) continue;
+            var keep = record.Kind is SessionDebugKind.ProcedureEnter or SessionDebugKind.EventEmit
+                || record.Subject == NormalNeowTrace.Stream && record.Random?.Operation == "pick"
+                || record.Subject == NormalInitializationTrace.Stream && record.Random?.Operation == "pick"
+                    && record.Snapshot?.Entities.All(e => e.Type != "base-spire:OpeningListItem") == true;
+            exportedDebug.Add(keep ? record : record with { Snapshot = null });
+        }
+        exportedDebugCount = records.Count;
+        return exportedDebug.ToArray();
     }
     private NormalSettlement[] Settlement()
     {
