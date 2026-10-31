@@ -70,8 +70,12 @@ internal static partial class PackageChecks
               call = { procedure = AddOpeningDefinition args = { run = first(type(Run)) category = "event" act = 0 definition = "base-spire:dense-vegetation" room = "none" rarity = "none" weak = false } into = definition }
               call = { procedure = AddOpeningRoomPlan args = { run = first(type(Run)) act = 0 room = "event" definition = definition } }
             } }
-            action SetupUnsupportedUnknownEventQueue { role = player locals = { definition = Binding } body = {
+            action SetupAromaUnknownEventQueue { role = player locals = { definition = Binding } body = {
               call = { procedure = AddOpeningDefinition args = { run = first(type(Run)) category = "event" act = 0 definition = "base-spire:aroma-of-chaos" room = "none" rarity = "none" weak = false } into = definition }
+              call = { procedure = AddOpeningRoomPlan args = { run = first(type(Run)) act = 0 room = "event" definition = definition } }
+            } }
+            action SetupUnsupportedUnknownEventQueue { role = player locals = { definition = Binding } body = {
+              call = { procedure = AddOpeningDefinition args = { run = first(type(Run)) category = "event" act = 0 definition = "base-spire:this-or-that" room = "none" rarity = "none" weak = false } into = definition }
               call = { procedure = AddOpeningRoomPlan args = { run = first(type(Run)) act = 0 room = "event" definition = definition } }
             } }
             """);
@@ -139,12 +143,24 @@ internal static partial class PackageChecks
             Equal(hash, s.State.StateHash(), "foreign node cannot create a visit or change odds");
             Equal(random, System.Text.Json.JsonSerializer.Serialize(s.Random.Capture()), "foreign node consumes no random stream");
         });
+        check("UNKNOWN retained Aroma input now enters the real event after one classification draw", () =>
+        {
+            var s = New("event-only"); Submit(s, "SetupForeignChild"); Submit(s, "MakeOwnChild"); Submit(s, "SetupAromaUnknownEventQueue");
+            var odds = Odds(s).Select(o => IntField(s, o, "UnknownRoomOdds", "Current")).ToArray();
+            Submit(s, "EnterForeignChild"); Healthy(s);
+            Equal(1L, s.Random.DrawCount(stream), "formerly unsupported Aroma keeps one classification draw");
+            True(odds.SequenceEqual(Odds(s).Select(o => IntField(s, o, "UnknownRoomOdds", "Current"))), "event-only leaves excluded odds unchanged");
+            Equal(1, Members(s, "RunVisits").Count, "Aroma creates its real visit instead of an empty effect");
+            Equal("base-spire:aroma-of-chaos", TextField(s, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:EventVisit").Id).Single(), "EventVisit", "DefinitionId"), "retained selected source identity");
+            True(s.PendingDecision is { Kind: DecisionResponseKind.Bool }, "real Aroma branch decision is pending");
+        });
         check("UNKNOWN unsupported actual Event fails by name after one real classification draw", () =>
         {
             var s = New("event-only"); Submit(s, "SetupForeignChild"); Submit(s, "MakeOwnChild"); Submit(s, "SetupUnsupportedUnknownEventQueue");
             var odds = Odds(s).Select(o => IntField(s, o, "UnknownRoomOdds", "Current")).ToArray();
             Throws<EngineFaultException>(() => Submit(s, "EnterForeignChild"));
             True(s.Fault!.Message.Contains("source normal Event effect", StringComparison.Ordinal), "unsupported actual effect is explicit");
+            Equal("base-spire:this-or-that", TextField(s, s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:Run").Id).First(), "Run", "SelectedNormalEvent"), "remaining unimplemented source identity is retained");
             Equal(1L, s.Random.DrawCount(stream), "unsupported actual room does not compensate or retry its draw");
             True(odds.SequenceEqual(Odds(s).Select(o => IntField(s, o, "UnknownRoomOdds", "Current"))), "event-only leaves excluded odds unchanged");
             Equal(0, Members(s, "RunVisits").Count, "unsupported room creates no empty visit");
