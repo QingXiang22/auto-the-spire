@@ -815,8 +815,8 @@ internal static class BaseDslPathChecks
                 var hand = snapshot.LegalActions.Where(a => a.ActionType is "net:action:base-spire:PlayCardFromHand" or "net:action:base-spire:PlayAttackFromHand")
                     .Select(a => ((WireString)a.Fields.Single().Value!).Value).Distinct().ToArray();
                 var deck = BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers;
-                Check.Equal(5, hand.Length, "five actual combat copies have legal play candidates");
-                Check.Equal(10, deck.Count, "ten permanent instances remain distinct");
+                Check.Equal(unsupportedEvent ? 4 : 5, hand.Length, "source playable combat copies exclude the CursedPearl Greed curse");
+                Check.Equal(unsupportedEvent ? 11 : 10, deck.Count, "starter instances plus the actual CursedPearl curse remain distinct");
                 Check.False(hand.Any(id => deck.Contains(id)), "opening hand uses separate combat instances");
                 Check.False(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "unresolved combat blocks another map visit");
                 var payload = WireCanonical.Text(snapshot.ToWire());
@@ -862,7 +862,7 @@ internal static class BaseDslPathChecks
                     Check.Equal("map", Public(snapshot, "Player.Room"), "rewards close into the normal map");
                     Check.Equal((mode == "normal-claim" ? initialGold + amount : initialGold).ToString(System.Globalization.CultureInfo.InvariantCulture), Public(snapshot, "Player.Gold"), "claim or skip credits gold once");
                     var finalDeck = BaseDslPileChecks.Pile(snapshot, "RunDeck").VisibleMembers.ToHashSet();
-                    Check.Equal(mode == "normal-claim" ? 11 : 10, finalDeck.Count, "reward changes only the permanent deck");
+                    Check.Equal(mode == "normal-claim" || unsupportedEvent ? 11 : 10, finalDeck.Count, "reward changes only the permanent deck");
                     Check.True(deck.All(finalDeck.Contains), "permanent starter identities survive the actual combat");
                     Check.True(offered.Skip(mode == "normal-claim" ? 1 : 0).All(id => !snapshot.Entities.Any(e => e.InstanceId == id)), "unselected actual instances are removed");
                     Check.True(snapshot.LegalActions.Any(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "legal source successors are published");
