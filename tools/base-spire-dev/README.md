@@ -52,3 +52,7 @@ AttackModifierRelicChecks随同一定向入口执行MiniatureCannon／PaperPhrog
 正常首战奖励返回可定向执行 `dotnet run --project tools/base-spire-dev -c Release -- check --normal-return-only`。该组也包含在 `--normal-run-only` 中；使用纳管的 `fixtures/normal-first-combat.json` 固定 seed、Neow 选择、公开动作优先级和领取／跳过路径，可作为正常双侧比较的输入。它验证真实首战与合法后继，另用受控状态检查 Feed 末杀、回合余效和药水消耗顺序；完整独立比较仍未验证。首幕固定通关路线使用 `python tools/base-spire-dev/normal_act_one_smoke.py --host-dll <Host dll> --output .artifacts/issue177/receiver-public`，由真实 stdio 公开协议执行固定的 173 步参考决策并停在第二幕入口；`normal_defeat_smoke.py` 用同一协议连续结束回合直到正常首战失败，核对 `loss` 终局、`NormalRunDefeat` 原因、零动作与零地图后继。net CI 组在 Host 构建后运行两者。
 
 `check --card-behavior-only --filter NEOW-EFFECT`消费独立原生`neow-effects-vector.json`。两条seed777正常开局比较WingedBoots／CursedPearl获得后的资源、永久牌、首战手牌及五条随机流完整状态；受控组件另核对地图自由旅行和FlexPotion的正负力量、叠加、直接改量及真实攻击。边界检查覆盖三次旅行用尽、网格外连接、子访问、移除／熔化资格、Greed战斗副本与永久移除拒绝、药水重复消费及跨战清理。受控熔化资格检查不代表完整熔化入口，组件测试也不代表正常整局或全公开双侧比较。
+
+`check --content-model-only` 同时消费独立原生 `normal-event-deck-vector.json`，验证 AromaOfChaos／MorphicGrove 四个正常分支的完整变换池、有序双卡回答、替换追加顺序、实例、资源与事件随机状态；受控组件另验空域、自动选择、升级／附魔不转移、Eternal／Quest 排除与未支持原池明确失败。
+
+`python tools/base-spire-dev/normal_event_deck_smoke.py --host-dll <Host dll> --output .artifacts/normal-event-deck` 通过真实 stdio 执行四个分支并返回地图，保存响应帧和结果摘要。它按公开手牌顺序选首战动作，可能与原生内部手牌顺序策略产生不同入事件生命；因此核对实际入事件生命及原生事件的生命变化，而不声称首战动作逐步一致。公开 RunDeck 只发布成员关系，检查据此匹配同定义的不同实例；准确牌组顺序由前述引擎／原生比较验证。net CI 在 Host 构建后运行该脚本，保留旧未实现事件的明确失败检查。

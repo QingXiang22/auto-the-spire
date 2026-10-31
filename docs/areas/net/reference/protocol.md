@@ -95,9 +95,15 @@ LegalAction 为 `{candidate_id, action_type, fields}`。fields 沿用字段结�
 
 所有无序数组及 legal_actions 遵守[规范排序与动作语义键](../spec/contract-artifacts.md#3-公开数组与动作语义键)；Sequence.elements 仍保留公开真实顺序。candidate_id 不参与排序。排序不能代替公开 ID 来源审计，也不得把数组序号当作游戏位置。
 
-正式0.2的`net:action:net.answer_decision`在目录中将`Instance`声明为optional。必选单选（1..1）仅发布带Instance的候选；可选单选（0..1，Engine EntityRefList）额外发布同action_type且fields=[]的取消候选，提交后向Engine回答空实例列表。只能提交当步实际发布的候选，不能自行省略字段制造取消。多于一项的选择仍明确拒绝。快照与step的wire形状不变，C#/Python沿通用optional_fields校验；目录及后端标识随该声明改变。
+正式0.2的`net:action:net.answer_decision`在目录中将`Instance`声明为optional。必选单选（1..1）仅发布带Instance的候选；可选单选（0..1，Engine EntityRefList）额外发布同action_type且fields=[]的取消候选，提交后向Engine回答空实例列表。只能提交当步实际发布的候选，不能自行省略字段制造取消。恰选两项的有序应答见下述SecondInstance扩展；其他多选范围仍明确拒绝。快照与step的wire形状不变，C#/Python沿通用optional_fields校验；目录及后端标识随该声明改变。
 
-2026-10-20，BEHAVIOR-01在派生0.2应答目录增加optional的`net:field:net.answer_decision.Flag`，值类型为boolean。Engine Bool暂停只发布两个同action_type候选，分别包含Flag=false或Flag=true，不含Instance，也不发布空字段取消候选；实体应答仍只含Instance或允许的空取消。step仍提交当前candidate_id，宿主从已发布绑定恢复RequestId与Flag，不接收客户端自拼的应答字段。重复／过期／跨会话候选继续经过同一账本与观察版本检查。目录摘要和后端标识改变，已有boolean字段及optional_fields的C#/Python/schema形状复用；未声明 Flag 的 Profile 不开放 Bool 应答。Int、Enum和多实体选择仍明确报告未支持。
+2026-10-20，BEHAVIOR-01在派生0.2应答目录增加optional的`net:field:net.answer_decision.Flag`，值类型为boolean。Engine Bool暂停只发布两个同action_type候选，分别包含Flag=false或Flag=true，不含Instance，也不发布空字段取消候选；单实体应答仍只含Instance或允许的空取消。step仍提交当前candidate_id，宿主从已发布绑定恢复RequestId与Flag，不接收客户端自拼的应答字段。重复／过期／跨会话候选继续经过同一账本与观察版本检查。目录摘要和后端标识改变，已有boolean字段及optional_fields的C#/Python/schema形状复用；未声明 Flag 的 Profile 不开放 Bool 应答。Int、Enum及尚未声明的多选范围仍明确报告未支持。
+
+### 正式0.2的有序双实例应答
+
+MorphicGrove 的 GROUP 使用一次 EntityRefList 2..2 决策。派生目录为同一个 `net:action:net.answer_decision` 增加 optional 的 `net:field:net.answer_decision.SecondInstance`，类型仍为 entity_ref，引用当前快照的公开实例。每个有序、不重复的二元答案发布一个候选，fields 同时包含 Instance 与 SecondInstance；顺序表示传给 Engine 的实例列表顺序，交换两项是不同候选。不得只发布无序组合或拆成两次单选。
+
+step 仍只提交当前 candidate_id，宿主从绑定恢复同一 RequestId 和两项实例，一次续接。客户端不自拼实例参数。单选、取消、Bool／Confirm 的候选内容保持原行为，正式0.1不声明SecondInstance且继续拒绝多选。C#／Python及机器schema沿用已有entity_ref字段和optional_fields形状；目录摘要、规则包标识及后端标识随声明改变。当前新增范围只覆盖恰选两项，其他多选范围明确未支持；任何候选数量限制都不得静默截断答案集合。
 
 引用的目标均在同一快照内。此前公开且当前有效的信息直接表现为字段、关系和位置；没有历史事件流、独立 known_top、模型字典标识、完整隐藏牌序或 RNG。UI 文案与内部诊断置于隔离调试通道，不默认成为训练输入。
 

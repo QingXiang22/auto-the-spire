@@ -25,7 +25,8 @@ internal static class BaseDslPathChecks
         foreach (var path in new[] { "claim", "skip" })
             yield return ("ENV-T05 real stdio normal combat rewards and map return: " + path, () => StdioTrajectory("normal-" + path));
         yield return ("UNKNOWN real stdio normal victory, map return and actual Unknown→Monster", () => StdioTrajectory("normal-unknown"));
-        yield return ("EVENT real stdio normal victory and source-selected unsupported Event failure", () => StdioTrajectory("normal-event"));
+        yield return ("EVENT real stdio normal victory and Aroma upgrade/map return", () => StdioTrajectory("normal-event"));
+        yield return ("EVENT real stdio registered unimplemented ThisOrThat remains a cached failure", () => StdioTrajectory("normal-event-unsupported"));
         foreach (var branch in new[] { "eat", "plant" })
             yield return ("EVENT real stdio normal SapphireSeed and map return: " + branch, () => StdioTrajectory("normal-sapphire-" + branch));
         foreach (var branch in new[] { "trudge", "fight-skip", "fight-claim" })
@@ -202,11 +203,11 @@ internal static class BaseDslPathChecks
             Send(Request("pipe-describe", Operation.Describe));
             Send(Request("pipe-catalog", Operation.GetCatalog, ("catalog_id", WireValue.Str(host.Profile.CatalogId))));
             var identity = new IdentityDto(NetProtocol.V02, host.Profile.RulesetId, host.Profile.CatalogId, host.Profile.BackendProfileId).ToWire();
-            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str(mode.StartsWith("normal-dense-", StringComparison.Ordinal) ? "dense-normal-30" : mode.StartsWith("normal-sapphire-", StringComparison.Ordinal) ? "sapphire-normal-79" : mode == "normal-event" ? "event-normal-11" : mode == "normal-unknown" ? "unknown-normal-354" : mode.StartsWith("normal-", StringComparison.Ordinal) ? "777" : "BASE-DSL-STDIO-00"))));
+            var start = Send(Request("pipe-start", Operation.Start, ("expected_identity", identity), ("scenario_profile", WireValue.Str(host.SupportedScenarioProfile)), ("seed", WireValue.Str(mode.StartsWith("normal-dense-", StringComparison.Ordinal) ? "dense-normal-30" : mode.StartsWith("normal-sapphire-", StringComparison.Ordinal) ? "sapphire-normal-79" : mode == "normal-event-unsupported" ? "morphic-normal-13" : mode == "normal-event" ? "event-normal-11" : mode == "normal-unknown" ? "unknown-normal-354" : mode.StartsWith("normal-", StringComparison.Ordinal) ? "777" : "BASE-DSL-STDIO-00"))));
             var sessionId = ((WireString)Field(start, "session_id")).Value; var snapshot = Snapshot(start);
             (string Action, string Block, bool Active, string Energy, string Turn, bool TurnOpen, string Target)[] sequence = mode switch
             {
-                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" or "normal-sapphire-eat" or "normal-sapphire-plant" or "normal-dense-trudge" or "normal-dense-fight-skip" or "normal-dense-fight-claim" or "battleworn-event" or "normal-neow-boots" or "normal-neow-pearl" or "flex-potion" or "draw-permission" => [],
+                "normal-opening" or "normal-claim" or "normal-skip" or "normal-unknown" or "normal-event" or "normal-event-unsupported" or "normal-sapphire-eat" or "normal-sapphire-plant" or "normal-dense-trudge" or "normal-dense-fight-skip" or "normal-dense-fight-claim" or "battleworn-event" or "normal-neow-boots" or "normal-neow-pearl" or "flex-potion" or "draw-permission" => [],
                 "whistle" => [
                     ("FuzzyWurmCrawler.Spawn", "0", false, "0", "0", false, "55"),
                     ("Whistle.AddToHand", "0", false, "0", "0", false, "55"),
@@ -726,11 +727,12 @@ internal static class BaseDslPathChecks
             if (mode.StartsWith("normal-", StringComparison.Ordinal) && !mode.StartsWith("normal-neow-", StringComparison.Ordinal))
             {
                 var unknown = mode == "normal-unknown";
-                var eventSelection = mode == "normal-event";
+                var unsupportedEvent = mode == "normal-event-unsupported";
+                var eventSelection = mode == "normal-event" || unsupportedEvent;
                 var sapphire = mode.StartsWith("normal-sapphire-", StringComparison.Ordinal);
                 var dense = mode.StartsWith("normal-dense-", StringComparison.Ordinal);
-                var relic = unknown ? "base-spire:golden-pearl" : "base-spire:booming-conch";
-                var initialGold = unknown ? 249 : 99;
+                var relic = unsupportedEvent ? "base-spire:cursed-pearl" : unknown ? "base-spire:golden-pearl" : "base-spire:booming-conch";
+                var initialGold = unsupportedEvent ? 432 : unknown ? 249 : 99;
                 string EntityValue(EntityDto entity, string suffix) => ((WireString)entity.Fields.Single(f => f.FieldId.EndsWith(":" + suffix, StringComparison.Ordinal)).Value!).Value;
                 LegalActionDto MapAt(string col, string row)
                 {
@@ -789,10 +791,18 @@ internal static class BaseDslPathChecks
                         Check.Equal(sourceOrder[i].GetProperty("row").ToString(), EntityValue(node, "MapNode.Row"), "native public map row order");
                     }
                 }
-                StepOpening(dense ? MapAt("1", "1") : sapphire ? MapAt("0", "1") : eventSelection ? MapAt("2", "1") : unknown ? MapAt("3", "1") : snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
+                StepOpening(dense ? MapAt("1", "1") : sapphire ? MapAt("0", "1") : eventSelection ? MapAt(unsupportedEvent ? "1" : "2", "1") : unknown ? MapAt("3", "1") : snapshot.LegalActions.First(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"));
                 using var combatVectors = JsonDocument.Parse(File.ReadAllText(Path.Combine(Root(), "tools/base-spire-dev/fixtures/normal-combat-vectors.json")));
                 var sourceMonsters = combatVectors.RootElement.GetProperty("vectors")[0].GetProperty("monsters");
-                Check.Equal(sourceMonsters.GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:Enemy"), "complete actual SlimesWeak formation");
+                if (unsupportedEvent)
+                {
+                    // Independently inspected locked native seed morphic-normal-13,
+                    // CursedPearl and first node (1,1): one FuzzyWurmCrawler at 55 HP.
+                    var enemy = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:Enemy");
+                    Check.Equal("base-spire:fuzzy-wurm-crawler", enemy.ContentId, "registered unsupported-event prefix keeps its actual source encounter");
+                    Check.Equal("55", EntityValue(enemy, "Enemy.Hp"), "locked native first encounter HP");
+                }
+                else Check.Equal(sourceMonsters.GetArrayLength(), snapshot.Entities.Count(e => e.KindId == "net:kind:base-spire:Enemy"), "complete actual SlimesWeak formation");
                 foreach (var expected in sourceMonsters.EnumerateArray().Where(_ => !unknown && !eventSelection && !sapphire && !dense))
                 {
                     var monster = snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:Enemy" && e.ContentId == expected.GetProperty("id").GetString());
@@ -963,17 +973,33 @@ internal static class BaseDslPathChecks
                         Check.True(long.Parse(Public(snapshot, "Player.Hp"), System.Globalization.CultureInfo.InvariantCulture) > 0, "real public candidate strategy survives the combat");
                         var visible = WireCanonical.Text(snapshot.ToWire());
                         Check.False(visible.Contains("NormalEventHistory", StringComparison.Ordinal) || visible.Contains("NormalEventIndex", StringComparison.Ordinal) || visible.Contains("SelectedNormalEvent", StringComparison.Ordinal), "event queue and history are hidden");
-                        var request = Request("normal-event-failure", Operation.Step,
-                            ("session_id", WireValue.Str(sessionId)),
-                            ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)),
-                            ("candidate_id", WireValue.Str(MapAt("1", "2").CandidateId)));
-                        var failed = Send(request, expectSuccess: false);
-                        Check.Equal("backend_fault", failed.Error!.Code, "unsupported source effect is a real protocol failure");
-                        Check.True(failed.Error.Message.Contains("selected source normal Event effect", StringComparison.Ordinal), "effect gap is named");
-                        Check.Equal(WireCanonical.Text(failed.ToWire()), WireCanonical.Text(Send(request, expectSuccess: false).ToWire()), "replayed failure cannot select or pay twice");
-                        var observation = Send(Request("normal-event-fault-observe", Operation.Observe, ("session_id", WireValue.Str(sessionId))));
-                        Check.Equal("faulted", ((WireString)Field(observation, "session_status")).Value, "unsupported effect stops the session");
-                        Check.True(Field(observation, "snapshot") is WireNull, "faulted session exposes no hidden selection snapshot");
+                        if (unsupportedEvent)
+                        {
+                            var request = Request("normal-event-failure", Operation.Step,
+                                ("session_id", WireValue.Str(sessionId)),
+                                ("expected_observation_id", WireValue.Integer(snapshot.ObservationId)),
+                                ("candidate_id", WireValue.Str(MapAt("0", "2").CandidateId)));
+                            var failed = Send(request, expectSuccess: false);
+                            Check.Equal("backend_fault", failed.Error!.Code, "unsupported source effect is a real protocol failure");
+                            Check.True(failed.Error.Message.Contains("selected source normal Event effect", StringComparison.Ordinal), "effect gap is named");
+                            Check.Equal(WireCanonical.Text(failed.ToWire()), WireCanonical.Text(Send(request, expectSuccess: false).ToWire()), "replayed failure cannot select or pay twice");
+                            var observation = Send(Request("normal-event-fault-observe", Operation.Observe, ("session_id", WireValue.Str(sessionId))));
+                            Check.Equal("faulted", ((WireString)Field(observation, "session_status")).Value, "unsupported effect stops the session");
+                            Check.True(Field(observation, "snapshot") is WireNull, "faulted session exposes no hidden selection snapshot");
+                        }
+                        else
+                        {
+                            StepOpening(MapAt("1", "2"));
+                            Check.Equal("base-spire:aroma-of-chaos", snapshot.Entities.Single(e => e.KindId == "net:kind:base-spire:EventVisit").ContentId, "retained seed naturally reaches Aroma");
+                            StepOpening(snapshot.LegalActions.Single(a => a.Fields.Any(f => f.Value is WireBool b && !b.Value)));
+                            var chosen = snapshot.LegalActions.First();
+                            var chosenId = ((WireString)chosen.Fields.Single().Value!).Value;
+                            StepOpening(chosen);
+                            Check.True(((WireBool)snapshot.Entities.Single(e => e.InstanceId == chosenId).Fields.Single(f => f.FieldId.EndsWith(":Card.Upgraded", StringComparison.Ordinal)).Value!).Value, "real chosen permanent card upgrades");
+                            StepOpening(snapshot.LegalActions.Single(a => a.ActionType == "net:action:base-spire:CloseNormalEvent"));
+                            Check.Equal("map", Public(snapshot, "Player.Room"), "Aroma returns to map without replaying the upgrade");
+                            Check.Equal(2, snapshot.LegalActions.Count(a => a.ActionType == "net:action:base-spire:ChooseMapPoint"), "both native successors remain available");
+                        }
                     }
                     if (unknown)
                     {

@@ -112,7 +112,10 @@ def main() -> int:
              "--output", str(output / "normal-act-one")],
             [sys.executable, "-X", "utf8", "tools/base-spire-dev/normal_defeat_smoke.py",
              "--host-dll", f"net-the-spire/Net.TheSpire.Host/bin/{config}/net9.0/Net.TheSpire.Host.dll",
-             "--output", str(output / "normal-defeat")]]
+             "--output", str(output / "normal-defeat")],
+            [sys.executable, "-X", "utf8", "tools/base-spire-dev/normal_event_deck_smoke.py",
+             "--host-dll", f"net-the-spire/Net.TheSpire.Host/bin/{config}/net9.0/Net.TheSpire.Host.dll",
+             "--output", str(output / "normal-event-deck")]]
     elif args.suite == "migration":
         commands = [[sys.executable, "-X", "utf8", "tools/differential/prepare_reference.py"],
                     build("tools/differential/Differential.csproj"),

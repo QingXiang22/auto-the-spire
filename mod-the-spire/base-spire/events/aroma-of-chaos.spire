@@ -1,0 +1,24 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure AromaOfChaosVisit {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) }
+  locals = { letGo = Bool card = Binding }
+  body = {
+    seedStream64 = { stream = pureCall(EventVisitStream, visit) seed = pureCall(SourceContentSeed, 0, "AROMA_OF_CHAOS", 0) }
+    call = { procedure = NotifyNormalEventRoomEntered args = { owner = owner visit = visit } }
+    decide = { participant = field(owner, Player.Owner) kind = Bool prompt = "Aroma of Chaos: let go (true) or maintain control (false)" into = letGo }
+    if = { condition = letGo then = {
+      call = { procedure = SelectAndTransformPermanentCards args = { owner = owner amount = 1 stream = pureCall(EventVisitStream, visit) } }
+      call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "let-go" } }
+    } else = {
+      call = { procedure = SelectPermanentCard args = { owner = owner purpose = "upgrade" enchantment = "" cancelable = false } into = card }
+      if = { condition = not(isNone(card)) then = { call = { procedure = UpgradeCard args = { card = card } } } }
+      call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "maintain-control" } }
+    } }
+  }
+}
+dispatchCase AromaOfChaosVisit { dispatch = ExecuteEventVisit key = "base-spire:aroma-of-chaos" procedure = AromaOfChaosVisit }
+action EnterDevelopmentAromaOfChaos { role = player requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), pureCall(CanEnterDevelopmentEvent, first(type(Player)))) body = {
+  call = { procedure = EnterDevelopmentEvent args = { owner = first(type(Player)) definition = "base-spire:aroma-of-chaos" } }
+} }

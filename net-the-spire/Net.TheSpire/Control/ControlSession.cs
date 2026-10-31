@@ -241,7 +241,8 @@ public sealed class ControlSession
             else if (binding.DecisionRequestId is { } decisionRequestId && binding.DecisionInstance is { } instance)
             {
                 // 决策候选：投影器已把 RequestId 与所选实例写进绑定，直接还原为一条应答。
-                _session.Answer(new DecisionAnswer(decisionRequestId, Instances: [instance]));
+                _session.Answer(new DecisionAnswer(decisionRequestId,
+                    Instances: binding.DecisionSecondInstance is { } second ? [instance, second] : [instance]));
             }
             else if (binding.Action is { } action)
             {

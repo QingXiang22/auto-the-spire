@@ -50,6 +50,7 @@ public static class DerivedPublicProfile
 
     public const string AnswerInstanceFieldId = "net:field:net.answer_decision.Instance";
     public const string AnswerFlagFieldId = "net:field:net.answer_decision.Flag";
+    public const string AnswerSecondInstanceFieldId = "net:field:net.answer_decision.SecondInstance";
 
     /// <summary>
     /// 从规则集与所选投影派生正式公开 Profile。
@@ -523,7 +524,11 @@ public static class DerivedPublicProfile
                         .ToList()),
             };
         if (protocolVersion == NetProtocol.V02)
+        {
             parameters[1] = new PublicActionField(AnswerFlagFieldId, PublicValueKind.Boolean, Required: false);
+            parameters[2] = new PublicActionField(AnswerSecondInstanceFieldId, PublicValueKind.EntityRef, Required: false,
+                TargetKindIds: included.Select(id => KindPrefix + id).OrderBy(id => id, StringComparer.Ordinal).ToList());
+        }
         return new PublicActionRule(AnswerActionTypeId, parameters, NetDeclared: true);
     }
 

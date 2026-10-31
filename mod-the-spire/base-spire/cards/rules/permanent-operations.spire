@@ -8,6 +8,7 @@ procedure PermanentCardEligible {
     if = { condition = not(and(equal(field(owner, Player.Owner), field(card, Card.Owner)), greaterOrEqual(collectionIndex(RunDeck, card), 0))) then = { return = { value = false } } }
     if = { condition = equal(purpose, "upgrade") then = { return = { value = and(field(card, Card.CanUpgrade), not(field(card, Card.Upgraded))) } } }
     if = { condition = equal(purpose, "remove") then = { return = { value = not(pureCall(CardHasKeyword, card, "eternal")) } } }
+    if = { condition = equal(purpose, "transform") then = { return = { value = and(not(equal(field(card, Card.Kind), "quest")), not(pureCall(CardHasKeyword, card, "eternal"))) } } }
     if = { condition = equal(purpose, "enchant") then = { return = { value = pureCall(CanApplyCardEnchantment, enchantment, owner, card) } } }
     fail = { message = "Unknown permanent-card selection purpose" }
   }

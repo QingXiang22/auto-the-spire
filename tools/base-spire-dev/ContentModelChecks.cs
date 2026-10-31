@@ -6,7 +6,9 @@ internal static partial class PackageChecks
     public static int RunContentModelOnly(DslPackage package)
     {
         var count = 0;
-        RunContentModelChecks(package, (name, body) => { body(); count++; Console.WriteLine("ok   " + name); });
+        void Check(string name, Action body) { body(); count++; Console.WriteLine("ok   " + name); }
+        RunContentModelChecks(package, Check);
+        RunEventDeckChecks(package, Check);
         Console.WriteLine($"All {count} focused content-model checks passed; run full check for coverage evidence.");
         return 0;
     }

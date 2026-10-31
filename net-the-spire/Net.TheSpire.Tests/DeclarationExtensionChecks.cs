@@ -40,6 +40,7 @@ internal static class DeclarationExtensionChecks
         yield return ("E-07 [真实] 描述文件遇到未支持结构显式抛错，不静默丢公开事实", UnsupportedMetadataIsExplicit);
         yield return ("E-08 [真实] text-rules 的每类真实响应帧都通过 0.2 wire schema（与 Python 侧同一文件）", SchemaConformance);
         yield return ("E-09 [真实] 无状态写入的连续决策与空动作推进观察版本，重发和拒绝不推进", ObservationBoundaries);
+        yield return ("E-10 [真实] 双实例候选保留全部有序答案，一次续接且请求重放无副作用", OrderedPairs);
     }
 
     // ---- E-01 -----------------------------------------------------------------
@@ -474,6 +475,39 @@ internal static class DeclarationExtensionChecks
         }
         string Signature() => engine.State.StateHash() + System.Text.Json.JsonSerializer.Serialize(engine.Random.Capture())
             + System.Text.Json.JsonSerializer.Serialize(engine.PendingDecision) + engine.StateVersion + engine.Status;
+    }
+
+    private static void OrderedPairs()
+    {
+        var fixture = new FixtureHost(nameof(OrderedPairs), "ordered-pair.spire");
+        var (sessionId, initial) = Start(fixture, "pair-start", BaselineSeed);
+        var start = initial.LegalActions.Single(a => a.ActionType == "net:action:pair:ChoosePair");
+        var paused = Step(fixture, "pair-open", sessionId, initial.ObservationId, start.CandidateId);
+        Check.True(paused.Ok, "generic pair pause publishes a real stable snapshot");
+        var snapshot = Snapshot(paused); var engine = fixture.Host.GetSessionForTests(sessionId).EngineForTests;
+        Check.Equal(2, engine.PendingDecision!.Minimum, "pair minimum is retained");
+        Check.Equal(2, engine.PendingDecision.Maximum, "pair maximum is retained");
+        Check.Equal(12, snapshot.LegalActions.Count, "four visible instances have all twelve ordered distinct pairs");
+        string Instance(LegalActionDto a, string id) => ((WireString)a.Fields.Single(f => f.FieldId == id).Value!).Value;
+        var first = DerivedPublicProfile.AnswerInstanceFieldId; var second = DerivedPublicProfile.AnswerSecondInstanceFieldId;
+        var pairs = snapshot.LegalActions.Select(a => (Instance(a, first), Instance(a, second))).ToArray();
+        Check.True(pairs.All(p => p.Item1 != p.Item2) && pairs.Distinct().Count() == 12, "no repeated identities or duplicate semantic candidates");
+        Check.True(pairs.All(p => pairs.Contains((p.Item2, p.Item1))), "both answer orders are present");
+        var chosen = snapshot.LegalActions[0]; var one = Instance(chosen, first); var two = Instance(chosen, second);
+        long Value(PublicSnapshotDto s, string id) => long.Parse(((WireString)s.Entities.Single(e => e.InstanceId == id).Fields.Single(f => f.FieldId == ValueFieldId).Value!).Value, System.Globalization.CultureInfo.InvariantCulture);
+        var beforeOne = Value(snapshot, one); var beforeTwo = Value(snapshot, two);
+        var response = Step(fixture, "pair-answer", sessionId, snapshot.ObservationId, chosen.CandidateId);
+        Check.True(response.Ok, "one real candidate resumes the full pair");
+        var complete = Snapshot(response);
+        Check.Equal(beforeOne + 10, Value(complete, one), "first selected identity executes first");
+        Check.Equal(beforeTwo + 20, Value(complete, two), "second selected identity executes second");
+        Check.True(engine.PendingDecision is null, "no second single-select pause is invented");
+        var signature = engine.State.StateHash() + System.Text.Json.JsonSerializer.Serialize(engine.Random.Capture());
+        Check.Equal(WireCanonical.Text(response.ToWire()), WireCanonical.Text(Step(fixture, "pair-answer", sessionId, snapshot.ObservationId, chosen.CandidateId).ToWire()), "same request returns its original pair response");
+        var stale = Step(fixture, "pair-stale", sessionId, snapshot.ObservationId, chosen.CandidateId);
+        Check.Equal("stale_observation", ErrorCode(stale), "fresh stale request cannot execute a pair again");
+        Check.Equal(WireCanonical.Text(stale.ToWire()), WireCanonical.Text(Step(fixture, "pair-stale", sessionId, snapshot.ObservationId, chosen.CandidateId).ToWire()), "stale pair rejection is cached");
+        Check.Equal(signature, engine.State.StateHash() + System.Text.Json.JsonSerializer.Serialize(engine.Random.Capture()), "pair replay and rejection preserve state and random streams");
     }
 
     // ---- 脚手架 ---------------------------------------------------------------

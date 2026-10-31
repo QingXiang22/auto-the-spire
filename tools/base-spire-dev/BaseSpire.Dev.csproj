@@ -22,6 +22,7 @@
     <EmbeddedResource Include="fixtures/normal-first-combat.json" />
     <EmbeddedResource Include="fixtures/normal-unknown-room-vector.json" />
     <EmbeddedResource Include="fixtures/normal-event-selection-vector.json" />
+    <EmbeddedResource Include="fixtures/normal-event-deck-vector.json" />
     <EmbeddedResource Include="fixtures/normal-sapphire-seed-vector.json" />
     <EmbeddedResource Include="fixtures/normal-dense-vegetation-vector.json" />
     <EmbeddedResource Include="fixtures/battleworn-continuation-vector.json" />

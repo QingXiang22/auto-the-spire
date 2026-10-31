@@ -20,6 +20,7 @@ python -X utf8 tools/rng-oracle/refresh_locked_vectors.py --output .artifacts/rn
 | normal-act-one-route（`tools/base-spire-dev/fixtures`） | 锁定参考的真实RunDriver在seed777上执行173个语义决策的首幕通关记录，含每步floor／HP／gold与终点；这是固定的验收输入，不能重新选策略或按DSL结果改写 |
 | normal-combat-vectors | seed777正常Neow选择BoomingConch，首个合法后继真实遭遇、HP、首招、手牌与抽牌堆 |
 | neow-effects-vector | seed777真实Neow选择WingedBoots／CursedPearl后首战；另列WingedBoots三次非连接入房与两seed正负初始Strength的FlexPotion受控组件，保存资源、实例顺序和随机四字状态／游标 |
+| normal-event-deck-vector | AromaOfChaos／MorphicGrove 四个分支的真实正常前缀、一次完整选择的候选与回答顺序、80项原池、永久实例和资源、独立事件随机流与地图后继；生成器不注入游戏状态 |
 | slimes-vectors | 十组原seed，原生SlimesWeak累计楼层2的受控编队、HP、三回合行动、Slimed与游标 |
 | ironclad-source-metadata | 原生90项完整池及GiantRock；五项多人资格、基本／升级属性与来源摘要 |
 | source-rng-vectors | Python独立派生，15条流、初始／重洗、局部金币／卡牌；保留原seed并增加old前缀边界 |

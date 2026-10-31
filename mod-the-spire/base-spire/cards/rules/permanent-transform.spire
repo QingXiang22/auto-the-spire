@@ -1,0 +1,40 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+# CardFactory.GetDefaultTransformationOptions: outside-combat, unlocked single-player
+# Ironclad C/U/R in native pool order, excluding the original definition.
+procedure TransformPermanentCardToRandom {
+  parameters = { owner = Ref(Player) card = Ref(Card) stream = String(length = 128) }
+  locals = { original = Binding chosen = Binding replacement = Binding }
+  body = {
+    if = { condition = or(field(owner, Player.CombatActive), not(pureCall(PermanentCardEligible, owner, card, "transform", ""))) then = {
+      fail = { message = "Permanent transformation requires an owned eligible deck card outside combat" }
+    } }
+    let = { into = original value = first(where(collection(CardLibrary), b, equal(field(b, CardBlueprint.DefinitionId), field(card, Card.DefinitionId)))) }
+    if = { condition = or(isNone(original), not(field(original, CardBlueprint.InIroncladPool))) then = {
+      fail = { message = "unsupported_capability: permanent transformation source pool is not the loaded Ironclad pool" }
+    } }
+    samplePick = { stream = stream candidates = where(collection(CardLibrary), b, and(field(b, CardBlueprint.InIroncladPool), and(not(equal(field(b, CardBlueprint.DefinitionId), field(card, Card.DefinitionId))), or(equal(field(b, CardBlueprint.Rarity), "common"), or(equal(field(b, CardBlueprint.Rarity), "uncommon"), equal(field(b, CardBlueprint.Rarity), "rare")))))) into = chosen }
+    call = { procedure = CreateCardInstance args = { owner = owner definition = field(chosen, CardBlueprint.DefinitionId) } into = replacement }
+    call = { procedure = RemovePermanentCard args = { owner = owner card = card } }
+    call = { procedure = AcquirePermanentCard args = { owner = owner card = replacement } }
+  }
+}
+
+procedure SelectAndTransformPermanentCards {
+  parameters = { owner = Ref(Player) amount = Int(min = 1, max = 2) stream = String(length = 128) }
+  locals = { selected = List(Ref(Card), length = 2) }
+  body = {
+    if = { condition = lessOrEqual(count(where(collection(RunDeck), c, pureCall(PermanentCardEligible, owner, c, "transform", ""))), amount) then = {
+      # The source automatically selects the full candidate snapshot, including an empty domain.
+      forEach = { query = where(collection(RunDeck), c, pureCall(PermanentCardEligible, owner, c, "transform", "")) item = card body = {
+        call = { procedure = TransformPermanentCardToRandom args = { owner = owner card = card stream = stream } }
+      } }
+    } else = {
+      decide = { participant = field(owner, Player.Owner) kind = EntityRefList prompt = "Choose permanent cards to transform" into = selected min = amount max = amount candidates = where(collection(RunDeck), c, pureCall(PermanentCardEligible, owner, c, "transform", "")) }
+      forEach = { query = refList(selected) item = card body = {
+        call = { procedure = TransformPermanentCardToRandom args = { owner = owner card = card stream = stream } }
+      } }
+    } }
+  }
+}

@@ -4,7 +4,7 @@
 
 正常战斗用公开候选`EndTurn`结束回合：同一次DSL调用完成玩家收尾、敌方阶段与下一普通玩家回合的开始，返回时可继续出牌；遇到胜负或选择则返回对应边界。客户端只提交一次候选，不补发开始动作。正常Run及真实事件子战斗不公开`BeginDevelopmentTurn`／`EndDevelopmentTurn`；这两个分步动作只供没有Run和事件子战斗的开发配置使用。当前正式内容没有额外回合消费者，额外回合仍未支持。
 
-首幕正常事件选择由 `PullNextNormalEvent` 使用完整31项源队列，资格读取当前资源、永久牌组与进入目标前的累计楼层。Neow进入推进同一游标一次；第一轮优先未访问且合资格的自然事件，耗尽后允许已访问或临时不合资格者，永久禁止自然出现项仍排除。选择不抽随机数，pure `ModifyNextNormalEvent` 修正后才记录最终标识。后幕及未审计profile明确失败；SapphireSeed与DenseVegetation已接入正常事件效果，其余选中事件仍具名失败且不创建空访问。
+首幕正常事件选择由 `PullNextNormalEvent` 使用完整31项源队列，资格读取当前资源、永久牌组与进入目标前的累计楼层。Neow进入推进同一游标一次；第一轮优先未访问且合资格的自然事件，耗尽后允许已访问或临时不合资格者，永久禁止自然出现项仍排除。选择不抽随机数，pure `ModifyNextNormalEvent` 修正后才记录最终标识。后幕及未审计profile明确失败；SapphireSeed、DenseVegetation、AromaOfChaos与MorphicGrove已接入正常事件效果，其余选中事件仍具名失败且不创建空访问。
 
 文档类型：操作指南（How-to）。适用于角色／进阶、正常开局、地图、战斗／商店／营火／宝箱／事件、奖励、永久状态、Ancient、跨幕与终局。SetupDevelopmentDraw 创建开发玩家和三张占位牌；可用下述显式入口建立铁甲战士基础初态。完整 Run 仍需按本页方法恢复，不提供旧 SinglePlayer 工厂或房间 C# 接口。
 
@@ -17,6 +17,10 @@ SapphireSeed／DoorsOfLightAndDark开发访问使用共享EventVisit及永久选
 正常seed `dense-normal-30` 选择BoomingConch，沿(1,1)首战自然胜利、跳过奖励后进入(0,2)问号，实际选择DenseVegetation。回答false执行TRUDGE_ON，先扣8生命再获得独立事件流预先抽取的61～99金币，完成后提交 `CloseNormalEvent(visit)`。回答true执行REST，按营火规则治疗最大生命的30%，随后只能提交 `DenseVegetationFight(visit)`，进入四只Wriggler的真实子战斗。
 
 子访问的公开 `RunVisit.Parent` 指向原访问，原 `EventVisit.ChildVisit` 指向子访问；两者使用同一地图节点，子战斗不增加楼层或普通遭遇游标。胜利后按普通战斗领取或跳过奖励，提交 `CloseDevelopmentRewards` 一次关闭子访问和已完成的父事件，返回真实后继(0,3)。父事件不会再次展示选项。踩踏致死或子战斗死亡均结束父访问，不提供地图后继或奖励；其他正常事件的战后续接另行实现。
+
+正常 seed `event-normal-11` 选择 BoomingConch，沿(2,1)首战正常胜利、跳过全部奖励，再进入(1,2)问号，实际选择 AromaOfChaos。回答 true 执行 LET_GO，从永久牌组选择一张变换；回答 false 执行 MAINTAIN_CONTROL，选择一张升级。完成后提交 `CloseNormalEvent(visit)`，返回(1,3)／(2,3)。
+
+正常 seed `morphic-normal-14` 选择 BoomingConch，沿(4,1)首战正常胜利、领取金币并跳过其余奖励，再进入(3,2)问号，实际选择 MorphicGrove。回答 true 执行 GROUP，先失去全部金币，再一次选择两张永久牌并按回答顺序变换；回答 false 执行 LONER，最大生命与当前生命各增加5。完成后关闭同一事件，返回(2,3)。双卡应答选择同一 `net.answer_decision` 候选中的 `Instance` 与 `SecondInstance`，不能拆成两个单选。变换资格、自动选择与当前 Ironclad 原池边界见[永久牌变换约定](../spec/permanent-deck-smith.md#事件中的永久牌变换)。这些路线证明指定正常前缀与事件返回，未扩展为任意 seed 或完整 Run。
 
 开发初态先提交 `Ironclad.Initialize`，再提交 `EnterDevelopmentBattlewornDummy`，从三个真实 `BattlewornOption` 候选选择SETTING_2。入口要求无旧敌人和未清奖励。战斗沿真实150HP BattleFriendV2及三回合时限；普通击杀恢复同一父事件并随机升级最多两张永久牌，超时返回但不升级，死亡不返回。此战不产生普通Monster奖励，父事件完成后用 `CloseDevelopmentEvent(visit)` 返回开发位置。SETTING_1药水与SETTING_3遗物保留候选，选择后明确报未支持，不能继续该会话。该入口不代表第三幕正常可达。
 
