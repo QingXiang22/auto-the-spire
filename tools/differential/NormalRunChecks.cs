@@ -164,6 +164,7 @@ internal static class NormalRunChecks
         NormalOpeningAttemptChecks.Run(left.DebugRecords, victory);
         CheckNativeEventCoverage(right.Capture("victory"));
         NormalReferenceHookChecks.Run(right.Capture("victory"));
+        NormalEventChecks.Run(left, right);
         var floatCalls = System.Text.Json.JsonSerializer.Deserialize<NormalFloat32Call[]>(victory.Values["random.float32_calls"])!;
         Require(floatCalls.Length == 11 && floatCalls.Count(c => c.Stream == "base-spire:run:monster_ai") == 3
             && floatCalls.Count(c => c.Stream == "base-spire:player:rewards") == 8,

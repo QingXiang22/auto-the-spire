@@ -41,6 +41,7 @@ internal sealed class NormalReferenceRun : IDisposable
     private readonly Dictionary<CardModel, string> generated = [];
     private readonly Dictionary<PotionModel, string> potionOrigins = [];
     private readonly Dictionary<CardModel, string> rewardCardOrigins = [];
+    private readonly Dictionary<RelicModel, int> eventRelics = [];
     private readonly HashSet<int> generatedActions = [];
     private int actionIndex = -1;
     private readonly List<object> events = [];
@@ -81,6 +82,7 @@ internal sealed class NormalReferenceRun : IDisposable
             random.WatchOpening(acts);
             run = new RunState(seed, acts);
             player = Player.CreateForNewRun(ModelDb.Character<Ironclad>(), run); run.AddPlayer(player);
+            RememberEventSources();
             random.Name(run, player);
             if (diagnostics) mapCandidates = NormalReferenceMapCandidates.Capture((Sts2Sim.Core.Map.StandardActMap)run.Map, random.MapDraws());
             var initializationObserver = diagnostics ? new NormalReferenceInitialization(acts, run, player) : null;
@@ -255,6 +257,29 @@ internal sealed class NormalReferenceRun : IDisposable
             default: throw new NotSupportedException(action.Kind);
         }
         if (diagnostics) random.VerifyShuffle();
+        RememberEventSources();
+    }
+    private void RememberEventSources()
+    {
+        foreach (var relic in player.Relics) if (!eventRelics.ContainsKey(relic)) eventRelics.Add(relic, eventRelics.Count);
+    }
+    private string EventIdentity(NormalHookValue value)
+    {
+        var item = hookJournal!.Object(value.Reference);
+        if (item is Creature creature) return Creature(creature);
+        if (item is Player owner && ReferenceEquals(owner, player)) return "player";
+        if (item is MonsterModel monster) return Creature(monster.Creature);
+        if (item is RelicModel relic && eventRelics.TryGetValue(relic, out var relicId)) return "relic:" + relicId;
+        if (item is PotionModel potion && potionOrigins.TryGetValue(potion, out var potionOrigin))
+            return potionOrigin + ":" + value.Fields!["definition"].Scalar;
+        if (item is CardModel card)
+        {
+            var origin = permanent.GetValueOrDefault(card.DeckVersion ?? card) ?? generated.GetValueOrDefault(card) ?? rewardCardOrigins.GetValueOrDefault(card)
+                ?? throw NormalEventTrace.Missing("native card creation origin");
+            var fields = value.Fields ?? throw NormalEventTrace.Missing("native historical card fields");
+            return origin + ":" + fields["definition"].Scalar + (fields["upgraded"].Scalar == "true" ? "+" : "");
+        }
+        throw NormalEventTrace.Missing("native instance origin " + value.Kind);
     }
     private async Task Resolve()
     {
@@ -280,6 +305,7 @@ internal sealed class NormalReferenceRun : IDisposable
                 rewardCardOrigins.Add(rewardCard, $"generated:action:{actionIndex}:card-reward:{index}");
         }
     }
+    internal NormalEventProjection ProjectEvents(NormalNativeHookJournal journal) => NormalReferenceEventTrace.Capture(journal, EventIdentity);
     private NormalAction[] Actions()
     {
         using var inspection = hookJournal?.Query();
@@ -468,13 +494,17 @@ internal sealed class NormalReferenceRun : IDisposable
         var coverage = eventCoverage.Capture();
         if (diagnostics) Put("random.trace", NormalFullRandomTrace.Capture(v));
         var publicComplete = NormalPublicSnapshot.Add(v, [], Actions().Length > 0 ? "decision" : "unmapped-outcome");
+        var nativeJournal = hookJournal?.Capture();
+        var eventProjection = nativeJournal is null ? null : NormalReferenceEventTrace.Capture(nativeJournal, EventIdentity);
+        if (eventProjection is not null) v["events.trace"] = NormalEventTrace.Canonical(eventProjection);
         string[] missing = [.. (publicComplete ? Array.Empty<string>() : new[] { "public: complete cross-backend projection" }),
-            .. (diagnostics ? Array.Empty<string>() : new[] { "random: diagnostics disabled" }), "events: cross-backend event projection"];
+            .. (diagnostics ? Array.Empty<string>() : new[] { "random: diagnostics disabled", "events: diagnostics disabled" })];
         if (coverage.Unmapped.Length > 0) missing = [.. missing, $"events: {coverage.Unmapped.Length} native notifications remain unmapped"];
         return new(kind, v, missing,
             new { backend = "reference:sts2-sim", build = NormalPreflight.Hash(typeof(RunState).Assembly.Location), events = events.ToArray(), random = random.Capture(),
                 native_player_history = new { active, retained_plays = lastCombatState?.CardsPlayedThisCombat, retained_hp_losses = history.Length },
-                native_hook_journal = hookJournal?.Capture(),
+                native_hook_journal = nativeJournal,
+                event_projection = eventProjection,
                 native_configuration = configuration,
                 native_neow_option_callbacks = neowPublicOptions,
                 native_potion_capability_probes = visiblePotions.Select(NormalReferencePotionCapabilities.Read).Distinct().ToArray(),

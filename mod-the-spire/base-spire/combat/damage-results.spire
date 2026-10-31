@@ -116,7 +116,7 @@ procedure ResolvePlayerDamage {
     return = { value = result }
   }
 }
-procedure PublishDamageResult {
+procedure PublishDamageHooks {
   parameters = { result = Binding }
   body = {
     if = { condition = not(isNone(result)) then = {
@@ -135,8 +135,6 @@ procedure PublishDamageResult {
         } else = {
           if = { condition = or(not(field(result, DamageResult.Killed)), greater(field(field(result, DamageResult.Player), Player.Hp), 0)) then = { emit = { event = AfterDamageReceived payload = { result = result } } } }
         } }
-        emit = { event = DamageResolved payload = { result = result } }
-        if = { condition = not(isNone(field(result, DamageResult.Player))) then = { call = { procedure = CheckCombatDefeat args = { owner = field(result, DamageResult.Player) } } } }
       } }
     } }
   }
@@ -162,14 +160,38 @@ procedure PublishDamageDeath {
     } }
   }
 }
+procedure PublishDamageObservation {
+  parameters = { result = Binding }
+  body = {
+    if = { condition = not(isNone(result)) then = {
+      emit = { event = DamageResolved payload = { result = result } }
+      if = { condition = not(isNone(field(result, DamageResult.Player))) then = { call = { procedure = CheckCombatDefeat args = { owner = field(result, DamageResult.Player) } } } }
+    } }
+  }
+}
+procedure PublishDamageResult {
+  parameters = { result = Binding }
+  body = {
+    if = { condition = not(isNone(result)) then = {
+      if = { condition = not(field(result, DamageResult.Published)) then = {
+        call = { procedure = PublishDamageHooks args = { result = result } }
+        call = { procedure = PublishDamageDeath args = { result = result } }
+        call = { procedure = PublishDamageObservation args = { result = result } }
+      } }
+    } }
+  }
+}
 procedure PublishDamageBatch {
   parameters = { attack = Ref(Attack) hit = Int }
   body = {
     forEach = { query = where(collection(DamageResults), r, and(equal(field(r, DamageResult.Attack), attack), equal(field(r, DamageResult.Hit), hit))) item = result body = {
-      call = { procedure = PublishDamageResult args = { result = result } }
+      call = { procedure = PublishDamageHooks args = { result = result } }
     } }
     forEach = { query = where(collection(DamageResults), r, and(equal(field(r, DamageResult.Attack), attack), equal(field(r, DamageResult.Hit), hit))) item = result body = {
       call = { procedure = PublishDamageDeath args = { result = result } }
+    } }
+    forEach = { query = where(collection(DamageResults), r, and(equal(field(r, DamageResult.Attack), attack), equal(field(r, DamageResult.Hit), hit))) item = result body = {
+      call = { procedure = PublishDamageObservation args = { result = result } }
     } }
   }
 }

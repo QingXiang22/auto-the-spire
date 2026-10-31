@@ -17,7 +17,7 @@ internal static class NormalReferenceHookChecks
         var journal = Read(boundary); var records = journal.Records; var targets = journal.Provenance.Targets;
         Require(records.Length > 1000 && journal.Audit.Notifications > 700 && targets.Length > 1000, "real normal run records the complete hook surface and notifications");
         Require(NormalPreflight.Json(NormalReferenceHookAudit.Check(records, targets)) == NormalPreflight.Json(journal.Audit), "published audit describes the actual call journal");
-        Require(journal.Audit.DefaultImplementations.All(c => c.Method.DeclaringType == typeof(AbstractModel).FullName)
+        Require(journal.Audit.DefaultImplementations.All(c => c.Method.DefaultDeclaration)
             && journal.Audit.Overrides.All(c => c.Method.DefaultImplementation is null), "only actual base implementations may be classified as defaults");
         Require(journal.Audit.UnclassifiedBase.Any(c => c.Method.Signature.StartsWith("AfterDeath(", StringComparison.Ordinal)), "virtual forwarding is retained for semantic audit");
         var zero = records.First(r => r.Stage == "enter" && r.Method?.DeclaringType == "Sts2Sim.Core.Models.Relics.BoomingConch"

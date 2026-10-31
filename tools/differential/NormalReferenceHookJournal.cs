@@ -20,7 +20,8 @@ namespace Differential;
 
 internal sealed record NormalHookValue(string Kind, int Reference = 0, string? Scalar = null,
     Dictionary<string, NormalHookValue>? Fields = null, NormalHookValue[]? Items = null, string? Projection = null);
-internal sealed record NormalHookMethod(string Signature, string DeclaringType, string BodyHash, int ArgumentCount, string? DefaultImplementation);
+internal sealed record NormalHookMethod(string Signature, string DeclaringType, string BodyHash, int ArgumentCount,
+    bool DefaultDeclaration, string? DefaultImplementation);
 internal sealed record NormalNativeHookRecord(int Sequence, int Call, int Parent, string Stage, string Kind, string Context,
     string Name, NormalHookMethod? Method, NormalHookValue? Receiver, NormalHookValue[] Arguments, NormalHookValue? Result);
 internal sealed record NormalHookProvenance(string Observer, int ReferenceDepth, string RuntimeLibrary, string RuntimeLibrarySha256, NormalHookMethod[] Targets);
@@ -48,13 +49,19 @@ internal sealed class NormalReferenceHookJournal : IDisposable
     internal NormalReferenceHookJournal()
     {
         if (active is not null) throw Missing("native runtime observer already owned");
-        var roots = typeof(AbstractModel).GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-            .Where(m => m.IsVirtual && !m.IsSpecialName && m.Name is not ("CompareTo" or "ToString")).ToHashSet();
-        var targets = typeof(AbstractModel).Assembly.GetTypes().Where(t => typeof(AbstractModel).IsAssignableFrom(t))
-            .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            .Where(m => !m.IsAbstract && roots.Contains(m.GetBaseDefinition()))
-            .Concat(typeof(Hook).GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
-                .Where(m => !m.Name.StartsWith("Iterate", StringComparison.Ordinal))).Distinct().ToArray();
+        var declared = typeof(AbstractModel).Assembly.GetTypes().Where(t => typeof(AbstractModel).IsAssignableFrom(t))
+            .SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly)).ToArray();
+        // Lifecycle callbacks have additional roots on Card/Relic/Power/Monster
+        // models. Include their real Task implementations, including protected OnPlay.
+        var roots = declared.Where(m => m.IsVirtual && !m.IsSpecialName && m.GetBaseDefinition() == m
+            && m.Name is not ("CompareTo" or "ToString")
+            && (m.DeclaringType == typeof(AbstractModel) && m.IsPublic || typeof(Task).IsAssignableFrom(m.ReturnType))).ToHashSet();
+        var hookNames = typeof(Hook).GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly)
+            .Where(m => !m.Name.StartsWith("Iterate", StringComparison.Ordinal)).Select(m => m.Name).ToHashSet(StringComparer.Ordinal);
+        var targets = declared.Where(m => m.IsVirtual && !m.IsAbstract && roots.Contains(m.GetBaseDefinition()))
+            .Append(typeof(MonsterModel).GetMethod(nameof(MonsterModel.RollMove))!)
+            .Concat(typeof(Hook).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly)
+                .Where(m => hookNames.Contains(m.Name))).Distinct().ToArray();
         try
         {
             var bridge = Bridge(targets);
@@ -75,7 +82,7 @@ internal sealed class NormalReferenceHookJournal : IDisposable
         catch { harmony.UnpatchAll(Owner); throw; }
     }
 
-    private object Object(int reference) => objects[reference - 1];
+    internal object Object(int reference) => objects[reference - 1];
     internal NormalNativeHookJournal Capture()
     {
         if (stack.Count != 0) throw Missing("unfinished native hook at stable boundary");
@@ -102,7 +109,8 @@ internal sealed class NormalReferenceHookJournal : IDisposable
         if (active is not { rendering: false } journal) return 0;
         var state = ++journal.nextCall;
         var entry = new NormalNativeHookRecord(journal.records.Count + 1, state,
-            journal.stack.TryPeek(out var parent) ? parent.Call : 0, "enter", receiver is null ? "dispatch" : "listener",
+            journal.stack.TryPeek(out var parent) ? parent.Call : 0, "enter", receiver is null ? "dispatch"
+                : method is MethodInfo { IsVirtual: false } ? "operation" : "listener",
             journal.context, method.Name, journal.methods[method], journal.Freeze(receiver), journal.Freeze(arguments), null);
         journal.Add(entry); journal.stack.Push(entry);
         return state;
@@ -147,6 +155,8 @@ internal sealed class NormalReferenceHookJournal : IDisposable
                 Field("definition", NormalReferenceRun.Id(p.Id)); Field("amount", p.Amount); Field("owner", p.Owner); break;
             case RelicModel r:
                 Field("definition", NormalReferenceRun.Id(r.Id)); Field("owner", r.Owner); break;
+            case MonsterModel monster:
+                Field("definition", NormalReferenceRun.Id(monster.Id)); Field("creature", monster.Creature); Field("move", monster.NextMove?.Id); break;
             case AbstractModel model: Field("definition", NormalReferenceRun.Id(model.Id)); break;
             case Creature creature:
                 Field("hp", creature.CurrentHp); Field("max_hp", creature.MaxHp); Field("block", creature.Block);
@@ -160,7 +170,10 @@ internal sealed class NormalReferenceHookJournal : IDisposable
                 Field("attacker", attack.Attacker); Field("source", attack.ModelSource); Field("play", attack.CardPlay); Field("props", attack.DamageProps);
                 Field("amount", typeof(AttackCommand).GetField("_damagePerHit", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(attack));
                 Field("hits", typeof(AttackCommand).GetField("_hitCount", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(attack));
-                Field("target", typeof(AttackCommand).GetField("_singleTarget", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(attack)); break;
+                var target = typeof(AttackCommand).GetField("_singleTarget", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(attack);
+                Field("target", target); Field("target_side", attack.TargetSide); Field("random", attack.IsRandomlyTargeted);
+                var context = (ICombatState?)typeof(AttackCommand).GetField("_combatState", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(attack);
+                Field("targets", target is not null ? new[] { (Creature)target } : context?.GetCreaturesOnSide(attack.TargetSide)); break;
             case ICombatState combat:
                 Field("round", combat.RoundNumber); Field("side", combat.CurrentSide); Field("ending", combat.IsOverOrEnding()); break;
             case RunState run: Field("act", run.CurrentActIndex); Field("floor", run.TotalFloor); break;
@@ -182,7 +195,8 @@ internal sealed class NormalReferenceHookJournal : IDisposable
     {
         var body = method.GetMethodBody()?.GetILAsByteArray() ?? [];
         string? neutral = null;
-        if (method.DeclaringType == typeof(AbstractModel))
+        var declaration = method.IsVirtual && method.DeclaringType!.IsAbstract && method.GetBaseDefinition() == method;
+        if (declaration)
         {
             // Classify only exact locked default bodies. A constant-returning override,
             // arithmetic, a field read or a forwarding virtual call is not an empty hook.
@@ -204,7 +218,7 @@ internal sealed class NormalReferenceHookJournal : IDisposable
             };
         }
         return new(method.Name + "(" + string.Join(',', method.GetParameters().Select(p => p.ParameterType.FullName)) + ")",
-            method.DeclaringType!.FullName!, Convert.ToHexStringLower(SHA256.HashData(body)), method.GetParameters().Length, neutral);
+            method.DeclaringType!.FullName!, Convert.ToHexStringLower(SHA256.HashData(body)), method.GetParameters().Length, declaration, neutral);
     }
     // Harmony's __args injection participates in argument write-back, including out
     // slots. Generate value-only positional observer parameters instead. The copied

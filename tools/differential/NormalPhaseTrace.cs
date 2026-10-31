@@ -6,7 +6,7 @@ internal static class NormalPhaseTrace
 {
     internal static bool Relevant(SessionDebugRecord record) => record.Kind == SessionDebugKind.ProcedureEnter && record.Subject == "base-spire:RunEnemyTurn"
         || record.Kind == SessionDebugKind.ProcedureExit && record.Subject is "base-spire:BeginDevelopmentCombat" or "base-spire:DrawDevelopmentTurnHand"
-            or "base-spire:RunEnemyTurn" or "base-spire:PerformEnemyMove";
+            or "base-spire:RunEnemyTurn" or "base-spire:PerformEnemyMove" or "base-spire:BeginDevelopmentTurn";
 
     internal static NormalObservedEvent[] Merge(IReadOnlyList<SessionDebugRecord> records, IReadOnlyDictionary<long, NormalObservedEvent> emitted)
     {
@@ -29,6 +29,7 @@ internal static class NormalPhaseTrace
             {
                 case "base-spire:BeginDevelopmentCombat": result.Add(new("combat-started")); break;
                 case "base-spire:DrawDevelopmentTurnHand": result.Add(new("player-turn-prepared")); break;
+                case "base-spire:BeginDevelopmentTurn": result.Add(new("player-turn-started")); break;
                 case "base-spire:RunEnemyTurn" when record.Kind == SessionDebugKind.ProcedureEnter:
                     if (enemyPhase) throw Missing("nested enemy phase");
                     enemyPhase = true; result.Add(new("enemy-turn-starting")); break;
