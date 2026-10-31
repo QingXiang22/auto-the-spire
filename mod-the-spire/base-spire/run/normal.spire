@@ -270,7 +270,7 @@ procedure EnterNormalMapPoint {
     } }
     if = { condition = equal(room, "event") then = {
       call = { procedure = PullNextNormalEvent args = { run = run } into = encounter }
-      if = { condition = not(or(equal(encounter, "base-spire:sapphire-seed"), equal(encounter, "base-spire:dense-vegetation"))) then = { fail = { message = "unsupported_capability: selected source normal Event effect has not been connected" } } }
+      if = { condition = not(or(or(equal(encounter, "base-spire:sapphire-seed"), equal(encounter, "base-spire:dense-vegetation")), or(equal(encounter, "base-spire:aroma-of-chaos"), equal(encounter, "base-spire:morphic-grove")))) then = { fail = { message = "unsupported_capability: selected source normal Event effect has not been connected" } } }
       call = { procedure = BeginNormalMapVisit args = { run = run node = node } into = visit }
       call = { procedure = EnterNormalEvent args = { owner = owner run = run visit = visit definition = encounter } }
       return = {}

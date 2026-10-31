@@ -1,0 +1,24 @@
+using namespace base-spire;
+dsl_version = "core/0.3"
+
+procedure MorphicGroveVisit {
+  parameters = { owner = Ref(Player) visit = Ref(EventVisit) }
+  locals = { group = Bool }
+  body = {
+    seedStream64 = { stream = pureCall(EventVisitStream, visit) seed = pureCall(SourceContentSeed, 0, "MORPHIC_GROVE", 0) }
+    call = { procedure = NotifyNormalEventRoomEntered args = { owner = owner visit = visit } }
+    decide = { participant = field(owner, Player.Owner) kind = Bool prompt = "Morphic Grove: group (true) or loner (false)" into = group }
+    if = { condition = group then = {
+      call = { procedure = LoseGold args = { owner = owner amount = field(owner, Player.Gold) reason = "stolen" source = "base-spire:morphic-grove" } }
+      call = { procedure = SelectAndTransformPermanentCards args = { owner = owner amount = 2 stream = pureCall(EventVisitStream, visit) } }
+      call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "group" } }
+    } else = {
+      call = { procedure = IncreaseMaxHp args = { owner = owner amount = 5 } }
+      call = { procedure = FinishEventVisit args = { owner = owner visit = visit page = "loner" } }
+    } }
+  }
+}
+dispatchCase MorphicGroveVisit { dispatch = ExecuteEventVisit key = "base-spire:morphic-grove" procedure = MorphicGroveVisit }
+action EnterDevelopmentMorphicGrove { role = player requires = and(pureCall(CanUseDevelopmentActions, first(type(Player))), pureCall(CanEnterDevelopmentEvent, first(type(Player)))) body = {
+  call = { procedure = EnterDevelopmentEvent args = { owner = first(type(Player)) definition = "base-spire:morphic-grove" } }
+} }

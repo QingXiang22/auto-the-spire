@@ -47,18 +47,18 @@ internal static partial class PackageChecks
         if (eventSelection)
         {
             var randomBefore = s.Random.Capture();
-            Throws<EngineFaultException>(() => Submit(s, "ChooseMapPoint", Node("unknown")));
-            True(s.Fault!.Message.Contains("selected source normal Event effect", StringComparison.Ordinal), "selected effect remains explicitly unsupported");
+            Submit(s, "ChooseMapPoint", Node("unknown"));
+            True(s.PendingDecision is { Kind: DecisionResponseKind.Bool }, "the retained Aroma failure now reaches its real options");
             Equal(expected.GetProperty("selected").GetString(), TextField(s, run, "Run", "SelectedNormalEvent"), "real source selected identity");
             Equal(expected.GetProperty("cursor").GetInt64(), IntField(s, run, "Run", "NormalEventIndex"), "complete rejected and accepted source slots");
             var history = s.State.AllInstances(s.RuleSet.TypeByQualifiedId("base-spire:NormalEventHistory").Id);
             True(history.Select(h => TextField(s, h, "NormalEventHistory", "DefinitionId")).Order(StringComparer.Ordinal)
                 .SequenceEqual(expected.GetProperty("visited").EnumerateArray().Select(v => v.GetString())), "source final event history");
-            Equal(expected.GetProperty("selection_floor").GetInt64(), IntField(s, run, "Run", "TotalFloor"), "eligibility precedes destination history append");
+            Equal(expected.GetProperty("selection_floor").GetInt64() + 1, IntField(s, run, "Run", "TotalFloor"), "one destination is appended after source eligibility");
             Equal(expected.GetProperty("hp").GetInt64(), Hp(s), "native combat permanent HP");
             Equal(expected.GetProperty("gold").GetInt64(), IntField(s, Player(s), "Player", "Gold"), "no extra event payment");
-            Equal(1, Members(s, "RunVisits").Count, "unsupported effect creates no empty visit");
-            True(!s.State.GetField(Node("unknown"), s.RuleSet.TypeByQualifiedId("base-spire:MapNode").FieldIndex("Visited")).AsBool(), "unsupported effect does not commit map entry");
+            Equal(2, Members(s, "RunVisits").Count, "the formerly unsupported event owns one actual new visit");
+            True(s.State.GetField(Node("unknown"), s.RuleSet.TypeByQualifiedId("base-spire:MapNode").FieldIndex("Visited")).AsBool(), "successful event entry visits the real source node");
             var remainingBefore = randomBefore.Streams.Where(r => r.Name != stream);
             var remainingAfter = s.Random.Capture().Streams.Where(r => r.Name != stream);
             Equal(JsonSerializer.Serialize(remainingBefore), JsonSerializer.Serialize(remainingAfter), "event selection adds no random consumption");
@@ -68,7 +68,7 @@ internal static partial class PackageChecks
             var currentOdds = Members(s, "UnknownRoomOddsOrder");
             for (var i = 0; i < currentOdds.Count; i++) Equal(expected.GetProperty("odds")[i].GetInt64(), IntField(s, currentOdds[i], "UnknownRoomOdds", "Current"), "source odds after Event roll");
             True(view.Instances.All(i => !history.Contains(i.Id)), "event selection history is hidden");
-            Console.WriteLine("ok   EVENT normal Neow, real victory and Unknown→Event preserve source selection, cursor, history and RNG before explicit unsupported effect");
+            Console.WriteLine("ok   EVENT normal Neow, real victory and Unknown→Event preserve source selection, cursor, history and RNG before the real Aroma branch decision");
             return;
         }
         Submit(s, "ChooseMapPoint", Node("unknown"));

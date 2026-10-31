@@ -35,7 +35,8 @@ public sealed record CandidateBinding(
     long? DecisionRequestId = null,
     InstanceId? DecisionInstance = null,
     bool EmptyDecision = false,
-    bool? DecisionFlag = null);
+    bool? DecisionFlag = null,
+    InstanceId? DecisionSecondInstance = null);
 
 /// <summary>一条**显式**不发布的公开事实：带规则号与理由，用来证明没有静默丢弃。</summary>
 public sealed record SkippedPublicFact(string EngineQualifiedId, string RuleId, string Reason);
@@ -897,13 +898,15 @@ public sealed class PublicSnapshotProjector
         }
         if (pending.Kind is not (DecisionResponseKind.EntityRef or DecisionResponseKind.EntityRefList))
             throw new PublicMappingException("TODO-N02-DECISION-KIND",
-                $"暂停的应答种类是 {pending.Kind}，当前Profile只支持Bool、Confirm及单实体引用应答；" +
+                $"暂停的应答种类是 {pending.Kind}，当前Profile只支持Bool、Confirm及已声明的实体引用应答；" +
                 "需要协议/协调者裁定该形状，映射层不发明第二个应答结构");
-        if (pending.Maximum != 1 || pending.Minimum is < 0 or > 1
-            || pending.Kind == DecisionResponseKind.EntityRef && pending.Minimum != 1)
+        var pair = pending.Kind == DecisionResponseKind.EntityRefList && pending.Minimum == 2 && pending.Maximum == 2
+            && _profile.AnswerAction.Parameters.Values.Any(p => p.FieldId == DerivedPublicProfile.AnswerSecondInstanceFieldId);
+        if (!pair && (pending.Maximum != 1 || pending.Minimum is < 0 or > 1
+            || pending.Kind == DecisionResponseKind.EntityRef && pending.Minimum != 1))
             throw new PublicMappingException("TODO-N02-MULTI-SELECT",
-                $"暂停要求选择 {pending.Minimum}..{pending.Maximum} 个实例，而 step 一次只完成一个候选" +
-                "（protocol.md:179）；该形状需要协议裁定，映射层不放宽数量约束", "snapshot.legal_actions");
+                $"暂停要求选择 {pending.Minimum}..{pending.Maximum} 个实例；当前Profile只支持单选与已声明的恰选两项，" +
+                "不能缩减真实决策数量", "snapshot.legal_actions");
         if (pending.Candidates.Count == 0)
             throw new PublicMappingException("TODO-N02-EMPTY-CANDIDATES",
                 "暂停没有候选实例，无法发布非空的 decision 候选（protocol.md:60）", "snapshot.legal_actions");
@@ -911,6 +914,23 @@ public sealed class PublicSnapshotProjector
         var rule = _profile.AnswerAction;
         var declared = rule.Parameters[0];
         var entries = new List<(LegalActionDto Action, CandidateBinding Binding)>();
+        if (pair)
+        {
+            var secondField = rule.Parameters.Values.Single(p => p.FieldId == DerivedPublicProfile.AnswerSecondInstanceFieldId);
+            // One candidate is one complete ordered answer. Do not split a 2..2
+            // engine decision into two actions or discard its order-sensitive pairs.
+            foreach (var first in pending.Candidates)
+            foreach (var second in pending.Candidates.Where(c => c != first))
+            {
+                var fields = SortFields([
+                    EncodeField(declared, Value.OfRef(first), -1, ids, "answer.instance", "snapshot.legal_actions"),
+                    EncodeField(secondField, Value.OfRef(second), -1, ids, "answer.second_instance", "snapshot.legal_actions")]);
+                var entry = BuildEntry(rule.ActionTypeId, fields, null, [], _candidateNamespace);
+                entries.Add((entry.Action, entry.Binding with
+                { DecisionRequestId = pending.RequestId, DecisionInstance = first, DecisionSecondInstance = second }));
+            }
+            return Finish(entries);
+        }
         if (pending.Minimum == 0)
         {
             if (declared.Required) throw new PublicMappingException(

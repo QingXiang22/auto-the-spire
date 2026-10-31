@@ -1,0 +1,20 @@
+using namespace pair;
+dsl_version = "core/0.3";
+imports = ["baseline.spire"];
+
+action ChoosePair {
+  role = player
+  requires = equal(count(type(declaration:Marker)), 1)
+  locals = { card = Binding selected = List(Ref(declaration:Marker), length = 2) weight = Int }
+  body = {
+    create = { type = declaration:Marker scope = entityScope(first(type(declaration:Marker))) into = card fields = { Value = 1 } }
+    create = { type = declaration:Marker scope = entityScope(first(type(declaration:Marker))) into = card fields = { Value = 2 } }
+    create = { type = declaration:Marker scope = entityScope(first(type(declaration:Marker))) into = card fields = { Value = 3 } }
+    decide = { participant = participant(1) kind = EntityRefList prompt = "Choose an ordered pair" into = selected min = 2 max = 2 candidates = type(declaration:Marker) }
+    let = { into = weight value = 10 }
+    forEach = { query = refList(selected) item = marker body = {
+      set = { target = marker field = declaration:Marker.Value value = add(field(marker, declaration:Marker.Value), weight) }
+      let = { into = weight value = add(weight, 10) }
+    } }
+  }
+}

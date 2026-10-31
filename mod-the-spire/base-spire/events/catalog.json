@@ -3,6 +3,10 @@
   "kind": "event",
   "entries": [
     {
+      "id": "base-spire:aroma-of-chaos",
+      "definition": "events/aroma-of-chaos.spire"
+    },
+    {
       "id": "base-spire:battleworn-dummy",
       "definition": "events/battleworn-dummy.spire"
     },
@@ -13,6 +17,10 @@
     {
       "id": "base-spire:doors-of-light-and-dark",
       "definition": "events/doors-of-light-and-dark.spire"
+    },
+    {
+      "id": "base-spire:morphic-grove",
+      "definition": "events/morphic-grove.spire"
     },
     {
       "id": "base-spire:sapphire-seed",

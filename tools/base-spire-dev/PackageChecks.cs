@@ -128,6 +128,7 @@ internal static partial class PackageChecks
         Merge(RunAttackBehaviorChecks(package, Case), witnesses);
         RunCardLifecycleChecks(package, Case);
         var events = RunVisitBehaviorChecks(package, Case);
+        Merge(RunEventDeckChecks(package, Case), events);
         const string dense = "VISIT normal DenseVegetation source branches, real child combat/rewards, death and atomic rejection";
         Case(dense, () => RunNormalDenseVegetation(package));
         events["base-spire:dense-vegetation"] = [dense];
