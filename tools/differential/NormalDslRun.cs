@@ -18,6 +18,7 @@ internal sealed class NormalDslRun : IDisposable
     private readonly Dictionary<InstanceId, string> generated = [];
     private readonly Dictionary<InstanceId, string> potionOrigins = [];
     private readonly Dictionary<InstanceId, string> rewardCardOrigins = [];
+    private readonly Dictionary<InstanceId, int> eventRelics = [];
     private readonly HashSet<int> generatedActions = [];
     private readonly List<SessionDebugRecord> exportedDebug = [];
     private int exportedDebugCount;
@@ -49,7 +50,9 @@ internal sealed class NormalDslRun : IDisposable
     }
     public NormalDslRun(string repository, string path, bool debug = true, bool captureValues = true)
     {
-        var captures = new List<string> { NormalNeowTrace.OptionProcedure, "base-spire:ResolveCardEffects", "base-spire:FinishCardPlay" };
+        var captures = new List<string> { NormalNeowTrace.OptionProcedure, "base-spire:ResolveCardEffects", "base-spire:FinishCardPlay",
+            "base-spire:ExecuteCardBody", "base-spire:ExecuteAttack", "base-spire:PerformEnemyMove",
+            "base-spire:SelectNextEnemyMove", "base-spire:PublishEnemyMove" };
         captures.AddRange(NormalDslMapCandidates.Captures.Concat(NormalDslCombatCandidates.Captures).Select(p => "base-spire:" + p));
         var factory = typeof(TextRuleProviderSpec).Assembly.GetType("NetTheSpire.Host.TextRuleScenario")!;
         var setup = factory.GetMethod("CreatePackage")!.Invoke(null,
@@ -73,6 +76,8 @@ internal sealed class NormalDslRun : IDisposable
     internal string PublicState => WireCanonical.Text(Snapshot.ToWire());
     internal bool HasCompleteDebug => Engine.Debug is { DroppedRecords: 0 };
     internal IReadOnlyList<SessionDebugRecord> DebugRecords => Engine.Debug?.Capture() ?? [];
+    internal NormalEventProjection ProjectEvents(IReadOnlyList<SessionDebugRecord> records) =>
+        NormalDslEventTrace.Capture(records, 0, Engine.RuleSet, identities, eventRelics);
     internal NormalInitializationSources InitializationSources => initializationSources ?? throw NormalInitializationTrace.Missing("missing DSL initialization sources");
     internal bool IsLive(InstanceId instance) => Engine.State.Exists(instance);
     internal string StateHash => Engine.State.StateHash();
@@ -158,7 +163,7 @@ internal sealed class NormalDslRun : IDisposable
         Unchanged();
         return new(true, true, true, true, "dsl:public-host");
         string Signature() => Engine.State.StateHash() + RandomState + NormalPreflight.Json(Engine.PendingDecision)
-            + Engine.StateVersion + Engine.Status + PublicState;
+            + Engine.StateVersion + Engine.Status + PublicState + ":events=" + DebugRecords.Count(r => r.Kind == SessionDebugKind.EventEmit);
         void Unchanged()
         {
             Snapshot = PublicSnapshotDto.FromWire(Get(Send(Operation.Observe, ("session_id", WireValue.Str(sessionId))), "snapshot"), NetProtocol.V02);
@@ -194,6 +199,7 @@ internal sealed class NormalDslRun : IDisposable
             identities[card] = slot + ":" + Field(card, "Card", "DefinitionId").AsString() + (Field(card, "Card", "Upgraded").AsBool() ? "+" : "");
         }
         identities[Instances("Player").Single()] = "player";
+        foreach (var relic in Members("Relics")) if (!eventRelics.ContainsKey(relic)) eventRelics.Add(relic, eventRelics.Count);
         var offers = Members("PotionRewardOptions");
         for (var i = 0; i < offers.Length; i++)
             if (!potionOrigins.ContainsKey(offers[i])) potionOrigins.Add(offers[i], $"generated:action:{actionIndex}:potion-reward:{i}");
@@ -334,8 +340,10 @@ internal sealed class NormalDslRun : IDisposable
         if (trace is not null) Put("random.trace", NormalFullRandomTrace.Capture(v));
         var unmappedFields = NormalPublicObservation.UnmappedFields(Snapshot);
         var publicComplete = NormalPublicSnapshot.Add(v, unmappedFields, Snapshot.Status);
+        var eventProjection = trace is null ? null : NormalDslEventTrace.Capture(trace.Capture(), trace.DroppedRecords, Engine.RuleSet, identities, eventRelics);
+        if (eventProjection is not null) v["events.trace"] = NormalEventTrace.Canonical(eventProjection);
         string[] missing = [.. (publicComplete ? Array.Empty<string>() : new[] { "public: complete cross-backend projection" }),
-            .. (trace is null ? new[] { "random: diagnostics disabled" } : Array.Empty<string>()), "events: cross-backend event projection"];
+            .. (trace is null ? new[] { "random: diagnostics disabled", "events: diagnostics disabled" } : Array.Empty<string>())];
         if (unmapped.Length > 0) missing = [.. missing, $"actions: {unmapped.Length} public candidates have no normal reference mapping"];
         return new(kind, v, missing,
             new { backend = "dsl:public-host", public_snapshot = WireCanonical.Text(Snapshot.ToWire()),
@@ -346,6 +354,7 @@ internal sealed class NormalDslRun : IDisposable
                 unmapped_weighted_semantics = Array.Empty<string>(),
                 dsl_initialization_sources = initializationSources,
                 dsl_neow_sources = neowEvidence?.Sources,
+                event_projection = eventProjection,
                 debug = trace is null ? null : ExportDebug(trace.Capture()), dropped = trace?.DroppedRecords,
                 streams = Engine.Random.Capture(), instance_mapping = identities.Select(p => new { instance = p.Key.Value, identity = p.Value }).ToArray() });
     }
@@ -395,12 +404,11 @@ internal sealed class NormalDslRun : IDisposable
         var records = DebugRecords;
         var selected = records.Where(r => r.Kind == SessionDebugKind.EventEmit && r.Subject is
             "base-spire:AfterCardDrawn" or "base-spire:BeforeCardPlayed" or "base-spire:AfterCardPlayed" or "base-spire:DamageResolved"
-            or "base-spire:PowerApplied" or "base-spire:EnemyTurnStarted" or "base-spire:AfterPlayerTurnStartLate").ToArray();
+            or "base-spire:PowerApplied" or "base-spire:EnemyTurnStarted").ToArray();
         var emitted = selected.Select(r =>
             {
                 if (r.TextTruncated || r.Snapshot is not { Complete: true }) throw new NotSupportedException("missing_dimension: event snapshot");
                 var snapshot = r.Snapshot;
-                if (r.Subject == "base-spire:AfterPlayerTurnStartLate") return new NormalObservedEvent("player-turn-started");
                 if (r.Subject == "base-spire:EnemyTurnStarted")
                 {
                     var enemy = snapshot.Entities.Single(e => e.Type == "base-spire:Enemy");

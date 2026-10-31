@@ -39,7 +39,6 @@ procedure DamageEnemyWithSource {
   set = { target = boundary field = Player.DamageDepth value = add(field(boundary, Player.DamageDepth), 1) }
   call = { procedure = ResolveEnemyDamage args = { owner = owner target = target card = none play = none attack = none amount = amount powered = false } into = result }
   call = { procedure = PublishDamageResult args = { result = result } }
-  call = { procedure = PublishDamageDeath args = { result = result } }
   set = { target = boundary field = Player.DamageDepth value = subtract(field(boundary, Player.DamageDepth), 1) }
   call = { procedure = CheckCombatVictory args = { owner = boundary } }
  }
@@ -55,8 +54,9 @@ procedure DamageAllEnemiesFromPlayer {
    call = { procedure = ResolveEnemyDamage args = { owner = owner target = target card = none play = none attack = none amount = amount powered = false } into = result }
    set = { target = result field = DamageResult.Batch value = batch }
   } }
-  forEach = { query = where(collection(DamageResults), r, equal(field(r, DamageResult.Batch), batch)) item = published body = { call = { procedure = PublishDamageResult args = { result = published } } } }
+  forEach = { query = where(collection(DamageResults), r, equal(field(r, DamageResult.Batch), batch)) item = published body = { call = { procedure = PublishDamageHooks args = { result = published } } } }
   forEach = { query = where(collection(DamageResults), r, equal(field(r, DamageResult.Batch), batch)) item = dying body = { call = { procedure = PublishDamageDeath args = { result = dying } } } }
+  forEach = { query = where(collection(DamageResults), r, equal(field(r, DamageResult.Batch), batch)) item = observed body = { call = { procedure = PublishDamageObservation args = { result = observed } } } }
   set = { target = owner field = Player.DamageDepth value = subtract(field(owner, Player.DamageDepth), 1) }
   call = { procedure = CheckCombatVictory args = { owner = owner } }
  }

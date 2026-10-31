@@ -23,7 +23,7 @@ def source_hash(path: Path) -> str:
 def check_native_hook_journal(journal: dict, notifications: int) -> None:
     records, audit, provenance = journal["records"], journal["audit"], journal["provenance"]
     def method_key(method):
-        return (method["declaring_type"], method["signature"], method["body_hash"], method["argument_count"], method["default_implementation"])
+        return (method["declaring_type"], method["signature"], method["body_hash"], method["argument_count"], method["default_declaration"], method["default_implementation"])
     declared = {method_key(m) for m in provenance["targets"]}
     if (provenance["observer"] != "value-only-positional@1" or provenance["reference_depth"] != 2
             or len(declared) < 1000 or len(provenance["runtime_library_sha256"]) != 64
@@ -49,11 +49,11 @@ def check_native_hook_journal(journal: dict, notifications: int) -> None:
             points += 1
             continue
         method = record["method"]
-        if (record["kind"] not in ("listener", "dispatch") or record["stage"] not in ("enter", "exit")
+        if (record["kind"] not in ("listener", "dispatch", "operation") or record["stage"] not in ("enter", "exit")
                 or method_key(method) not in declared or len(record["arguments"]) != method["argument_count"]
                 or not method["signature"].startswith(record["name"] + "(")
                 or (method["declaring_type"] == "Sts2Sim.Core.Hooks.Hook") != (record["kind"] == "dispatch")
-                or method["default_implementation"] is not None and method["declaring_type"] != "Sts2Sim.Core.Models.AbstractModel"):
+                or method["default_implementation"] is not None and not method["default_declaration"]):
             raise ValueError("native hook journal lost arguments or mislabeled an override as default")
         if record["stage"] == "enter":
             calls += 1
@@ -494,8 +494,9 @@ def main() -> int:
         for case in damage["cases"]:
             value = case["left"]
             if (case["status"] != "passed" or value != case["right"] or case["diagnostics_read_only"] is not True
-                    or set(value) != {"hp", "block", "energy", "player_hp", "strength", "enemy_hps", "results", "notifications"}
+                    or set(value) != {"hp", "block", "energy", "player_hp", "strength", "enemy_hps", "results", "notifications", "observer_order"}
                     or not value["results"] or not value["notifications"] or not value["enemy_hps"]
+                    or sum(p.startswith("resolved:") for p in value["observer_order"]) != len(value["results"])
                     or any(set(r) != damage_row_fields for r in value["results"])
                     or any(set(p) != damage_point_fields for p in value["notifications"])):
                 raise ValueError("Damage comparison omitted attribution, fractional amounts, results or notifications")
@@ -616,21 +617,21 @@ def main() -> int:
             raise ValueError("Boundary diagnostic summary contradicts measured cases")
 
         paired_output = args.output / "normal-paired"
-        paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 3)
+        paired = run("normal-paired", ["normal-compare", "--output", str(paired_output)], 0)
         paired_ids = ["m01-claim", "m01-skip", "m01-targeted-claim", "m01-targeted-skip"]
         if (paired["expected_case_ids"] != paired_ids or paired["executed"] != 4
                 or [c["id"] for c in paired["cases"]] != paired_ids
-                or paired["complete"] or paired["independent_verified"]
-                or any(c["status"] != "blocked_compare" or c["independent_verified"] or c["complete"]
+                or not paired["complete"] or not paired["independent_verified"]
+                or any(c["status"] != "passed" or not c["independent_verified"] or not c["complete"]
                        or c["reason"] or c["first_difference"] or not c["returned_to_map"] or len(c["boundaries"]) < 19
-                       or not c["boundaries"][-1]["left"]["missing_dimensions"]
+                       or any(b[side]["missing_dimensions"] for b in c["boundaries"] for side in ("left", "right"))
                        or len(c["protocol_checks"]) != len(c["boundaries"])
                        or c["native_diagnostic_boundaries_checked"] != len(c["boundaries"])
                        or any(not p["evidence"]["passed"] for p in c["protocol_checks"])
                        or any(b["left"]["diagnostic"]["unmapped_public_actions"] for b in c["boundaries"])
                        or any(b["left"]["diagnostic"]["unmapped_public_fields"] for b in c["boundaries"])
                        or any("public.piles" not in b[side]["values"] or "random.stream_states" not in b[side]["values"]
-                              or "events.observed_order" not in b[side]["values"]
+                              or "events.observed_order" not in b[side]["values"] or "events.trace" not in b[side]["values"]
                               or "lifecycle.settlement" not in b[side]["values"]
                               or any(path not in b[side]["values"] for path in (
                                   "public.snapshot", "public.map", "public.run", "public.neow", "public.reward_offer", "public.potions", "public.potion_inventory",
@@ -643,8 +644,17 @@ def main() -> int:
                               for side in ("left", "right"))
                        or (c["id"].startswith("m01-targeted-")
                            and not any(a["kind"] == "choose-target" for a in c["prefix"])) for c in paired["cases"])):
-            raise ValueError("all four normal paths must return with matching dimensions, real target decisions and protocol evidence while rejecting incomplete M01")
+            raise ValueError("all four normal paths must pass every dimension with real target decisions, protocol and unobserved replay evidence")
         for case in paired["cases"]:
+            for boundary in case["boundaries"]:
+                if boundary["left"]["values"]["events.trace"] != boundary["right"]["values"]["events.trace"]:
+                    raise ValueError("full event occurrences must agree at every actual normal boundary")
+            for side in ("left", "right"):
+                projection = case["boundaries"][-1][side]["diagnostic"]["event_projection"]
+                if (projection["unmapped"] or not projection["exclusions"] or len(projection["events"]) < 300
+                        or len(projection["sources"]) != len(projection["events"])
+                        or projection["events"] != json.loads(case["boundaries"][-1][side]["values"]["events.trace"])):
+                    raise ValueError("event projection must retain every occurrence source and explicit exclusion, with no unmapped callback")
             full = [json.loads(case["boundaries"][-1][side]["values"]["random.trace"]) for side in ("left", "right")]
             if (full[0] != full[1] or len(full[0]["Calls"]) != 736 or len(full[0]["Roots"]["Seeds"]) != 18
                     or len({(c["Stream"], c["Before"]) for c in full[0]["Calls"]}) != 736):
@@ -743,7 +753,8 @@ def main() -> int:
                   "original_suites": len(record["suites"]), "original_regression_exit": 3,
                   "original_regression_executed": 2, "original_regression_passed": 1, "random_trace_verified": True,
                   "strict_failure_checks": True, "normal_preflight": "native-opening-match; incomplete-M01",
-                  "normal_paired": "four-claim-skip-targeted-map-returns; protocol-replay-verified; incomplete-M01", "independent_verified": False}
+                  "normal_paired": "four-claim-skip-targeted-map-returns; all-required-dimensions-verified; protocol-replay-and-unobserved-native-verified",
+                  "event_trace_verified": True, "independent_verified": False}
         (args.output / "migration-contract.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(result))
         return 0

@@ -1,5 +1,4 @@
 #if REFERENCE_SIM
-using Sts2Sim.Core.Models;
 using Sts2Sim.Core.Hooks;
 
 namespace Differential;
@@ -34,13 +33,13 @@ internal static class NormalReferenceHookAudit
                 if (r.Stage != "point" || r.Call != 0 || r.Method is not null) throw Missing("invalid observer record");
                 notifications++; continue;
             }
-            if (r.Kind is not ("listener" or "dispatch") || r.Stage is not ("enter" or "exit") || r.Method is null
+            if (r.Kind is not ("listener" or "dispatch" or "operation") || r.Stage is not ("enter" or "exit") || r.Method is null
                 || !declared.Contains(r.Method) || !r.Method.Signature.StartsWith(r.Name + "(", StringComparison.Ordinal)
                 || r.Arguments.Length != r.Method.ArgumentCount || r.Receiver is null
                 || (r.Method.DeclaringType == typeof(Hook).FullName) != (r.Kind == "dispatch"))
                 throw Missing("missing method or argument snapshot");
             if (r.Kind == "listener" && (r.Receiver.Reference <= 0 || r.Method.DefaultImplementation is not null
-                && r.Method.DeclaringType != typeof(AbstractModel).FullName)) throw Missing("override classified as default");
+                && !r.Method.DefaultDeclaration)) throw Missing("override classified as default");
             if (r.Stage == "enter")
             {
                 if (r.Call != ++call || r.Result is not null) throw Missing("missing or duplicate invocation");
@@ -52,8 +51,7 @@ internal static class NormalReferenceHookAudit
             .GroupBy(r => r.Method!).Select(g => new NormalNativeHookCount(g.Key, g.Count()))
             .OrderBy(g => g.Method.DeclaringType, StringComparer.Ordinal).ThenBy(g => g.Method.Signature, StringComparer.Ordinal).ToArray();
         return new(records.Length, call, notifications, Count(m => m.DefaultImplementation is not null),
-            Count(m => m.DeclaringType != typeof(AbstractModel).FullName),
-            Count(m => m.DeclaringType == typeof(AbstractModel).FullName && m.DefaultImplementation is null));
+            Count(m => !m.DefaultDeclaration), Count(m => m.DefaultDeclaration && m.DefaultImplementation is null));
     }
     private static NotSupportedException Missing(string reason) => new("missing_dimension: native hook journal " + reason);
 }

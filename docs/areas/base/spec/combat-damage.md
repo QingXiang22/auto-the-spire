@@ -26,7 +26,7 @@
 
 ## 命令与通知顺序
 
-`CreatureCmd.Damage`先固定目标列表，每个目标执行数值结算并保存结果；然后逐结果依次处理破挡、实际HP变化、伤害给予和允许的伤害接收；致死结果最后统一处理潜在死亡。DSL继续使用已有DamageResult／DamageBatch，不建立第二套伤害执行器。普通攻击、Unpowered|Move攻击和直接Unpowered伤害分别保留源属性与来源，结束中各命令仍按自身资格处理。
+`CreatureCmd.Damage`先固定目标列表，每个目标执行数值结算并保存结果；然后逐结果依次处理破挡、实际HP变化、伤害给予和允许的伤害接收；再统一处理全部致死结果的潜在死亡与Power清理，最后逐条发布伤害观察结果。同击多目标须先完成全部死亡处理，再发布任一`DamageResolved`，不能每个目标死亡后立即发布自身结果。DSL继续使用已有DamageResult／DamageBatch，不建立第二套伤害执行器。普通攻击、Unpowered|Move攻击和直接Unpowered伤害分别保留源属性与来源，结束中各命令仍按自身资格处理。
 
 玩家受伤反应在本次实际结果上运行，Feed只据本次击杀事实处理末杀。反应触发的嵌套伤害不得提前结算外层战斗；结束、清理和奖励属于[战斗结束规格](combat-end.md)。回合开始清格挡、能量、AfterPlayerSideTurnStart与普通／Late通知顺序沿用[回合资源规格](combat-turn-resources.md)，不在伤害模块另建生命周期。
 

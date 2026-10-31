@@ -46,7 +46,7 @@ internal static class DamageComparison
     ];
     private sealed record Row(string Actor, string Dealer, bool Move, bool Powered, bool Unblockable, long Blocked, long Unblocked, long Overkill, bool BlockBroken, bool FullyBlocked, bool Killed);
     private sealed record Notification(string Actor, string Stage, long AmountScaled, long Hp, long Block, string Card, string Dealer, long OtherHp, bool Active, bool Ending, string Outcome);
-    private sealed record Result(long Hp, long Block, long Energy, long PlayerHp, long Strength, long[] EnemyHps, Row[] Results, Notification[] Notifications);
+    private sealed record Result(long Hp, long Block, long Energy, long PlayerHp, long Strength, long[] EnemyHps, Row[] Results, Notification[] Notifications, string[] ObserverOrder);
 
     private sealed record Outcome(Result Value, string State);
 
@@ -119,8 +119,12 @@ internal static class DamageComparison
             string S(int i) => snapshot.Values[i].Scalar!;
             return new Notification(S(0), S(1), long.Parse(S(2)), long.Parse(S(3)), long.Parse(S(4)), S(5), S(6), long.Parse(S(7)), bool.Parse(S(8)), bool.Parse(S(9)), S(10));
         }).ToArray();
+        var observerOrder = (s.Debug?.Capture() ?? []).Where(r => r.Sequence > cursor && r.Kind == SessionDebugKind.EventEmit
+            && r.Subject is "base-spire:EnemyDied" or "base-spire:DamageProbeResolved").Select(r => r.Subject == "base-spire:DamageProbeResolved"
+                ? "resolved:" + r.Snapshot!.Values[0].Scalar
+                : "death:enemy:" + r.Snapshot!.Entities.Single(e => e.Type == "base-spire:Enemy").Fields.Single(f => f.Name == "SpawnOrder").Value.Scalar).ToArray();
         var result = new Result(Field(enemy, "Enemy", "Hp").AsInt(), Field(enemy, "Enemy", "Block").AsInt(), Field(player, "Player", "Energy").AsInt(), Field(player, "Player", "Hp").AsInt(),
-            All("Power").Where(p => Field(p, "Power", "HolderPlayer") == Value.OfRef(player) && Field(p, "Power", "DefinitionId").AsString() == "base-spire:strength-power").Sum(p => Field(p, "Power", "Stacks").AsInt()), All("Enemy").Select(e => Field(e, "Enemy", "Hp").AsInt()).ToArray(), rows, notifications);
+            All("Power").Where(p => Field(p, "Power", "HolderPlayer") == Value.OfRef(player) && Field(p, "Power", "DefinitionId").AsString() == "base-spire:strength-power").Sum(p => Field(p, "Power", "Stacks").AsInt()), All("Enemy").Select(e => Field(e, "Enemy", "Hp").AsInt()).ToArray(), rows, notifications, observerOrder);
         return new(result, s.State.StateHash() + JsonSerializer.Serialize(s.Random.Capture()));
     }
 
@@ -137,14 +141,19 @@ internal static class DamageComparison
         string Actor(Creature c) => ReferenceEquals(c, player.Creature) ? "player" : "enemy:" + Array.IndexOf(enemies, c); enemy.SetMaxHpInternal(1000); enemy.SetCurrentHpInternal(1000);
         var rows = new List<Row>();
         var notifications = new List<Notification>(); var capture = false; CombatEngine? liveEngine = null;
+        var observerOrder = new List<string>();
         var probe = (DamageProbeRelic)new DamageProbeRelic().MutableClone(); probe.AssignOwner(player); player.AddRelicInternal(probe);
         probe.Capture = (stage, amount, target, card, dealer) => {
             if (capture) notifications.Add(new(Actor(target), stage, (long)(amount * 10000), target.CurrentHp, target.Block, card?.Id.Entry ?? "", ReferenceEquals(dealer, player.Creature) ? "player" : ReferenceEquals(dealer, enemy) ? "enemy" : "none", ReferenceEquals(target, player.Creature) ? enemy.CurrentHp : enemies.FirstOrDefault(e => !ReferenceEquals(e, target))?.CurrentHp ?? -1, liveEngine!.IsInProgress, combat.IsOverOrEnding(), liveEngine.IsInProgress ? "none" : liveEngine.Won ? "victory" : "defeat"));
         };
+        probe.Death = target => { if (capture && target.Player is null) observerOrder.Add("death:" + Actor(target)); };
         var observer = DispatchProxy.Create(typeof(CombatEngine).Assembly.GetType("Sts2Sim.Core.Combat.ICombatObserver")!, typeof(NormalReferenceObserver));
         ((NormalReferenceObserver)observer).Record = (name, args) => {
             if (name == "DamageResolved" && args is [var dealer, Sts2Sim.Core.Entities.Creatures.DamageResult r])
+            {
+                if (capture) observerOrder.Add("resolved:" + Actor(r.Receiver));
                 rows.Add(new(Actor(r.Receiver), ReferenceEquals(dealer, player.Creature) ? "player" : ReferenceEquals(dealer, enemy) ? "enemy" : "none", r.Props.HasFlag(ValueProp.Move), r.Props.IsPoweredAttack(), r.Props.HasFlag(ValueProp.Unblockable), r.BlockedDamage, r.UnblockedDamage, r.OverkillDamage, r.WasBlockBroken, r.WasFullyBlocked, r.WasTargetKilled));
+            }
         };
         var engine = (CombatEngine)Activator.CreateInstance(typeof(CombatEngine), BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, [combat, observer], null)!;
         liveEngine = engine; engine.StartCombatAsync().GetAwaiter().GetResult();
@@ -168,7 +177,7 @@ internal static class DamageComparison
             var card = (CardModel)canonical.MutableClone(); card.AssignOwner(player); player.PlayerCombatState!.Hand.AddInternal(card);
             engine.PlayCardAsync(player, card, plan.AllTargets ? null : enemy).GetAwaiter().GetResult();
         }
-        var value = new Result(enemy.CurrentHp, enemy.Block, player.PlayerCombatState.Energy, player.Creature.CurrentHp, (long)player.Creature.Powers.OfType<StrengthPower>().Sum(p => p.Amount), enemies.Select(e => (long)e.CurrentHp).ToArray(), rows.ToArray(), notifications.ToArray());
+        var value = new Result(enemy.CurrentHp, enemy.Block, player.PlayerCombatState.Energy, player.Creature.CurrentHp, (long)player.Creature.Powers.OfType<StrengthPower>().Sum(p => p.Amount), enemies.Select(e => (long)e.CurrentHp).ToArray(), rows.ToArray(), notifications.ToArray(), observerOrder.ToArray());
         var description = new CombatStateDescriptionBuilder(); CombatStateDescription.AppendExactState(ref description, combat);
         var state = JsonSerializer.Serialize(new { exact = description.Build(),
             rng = Enum.GetValues<RunRngType>().Select(t => run.Rng.GetRng(t).ToSerializable()),
@@ -184,6 +193,8 @@ internal static class DamageComparison
     {
         public override Sts2Sim.Core.Entities.Relics.RelicRarity Rarity => Sts2Sim.Core.Entities.Relics.RelicRarity.Event;
         internal Action<string, decimal, Creature, CardModel?, Creature?> Capture { get; set; } = (_, _, _, _, _) => { };
+        internal Action<Creature> Death { get; set; } = _ => { };
+        public override Task AfterDeath(Creature target) { Death(target); return Task.CompletedTask; }
         public override Task BeforeDamageReceived(Creature target, decimal amount, Sts2Sim.Core.ValueProps.ValueProp props, Creature? dealer, CardModel? cardSource) { Capture("before", amount, target, cardSource, dealer); return Task.CompletedTask; }
         public override Task BeforeDeath(Creature target) { Capture("death", 0, target, null, null); return Task.CompletedTask; }
         public override Task AfterBlockBroken(Creature target, Creature? breaker) { Capture("block", 0, target, null, breaker); return Task.CompletedTask; }
